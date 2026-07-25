@@ -106,3 +106,4 @@ PRD 11.4(완료 정의)·11.5(독립 재검수) 기준으로 구현 검사와 �
 | life_info 좌표 범위 CHECK 없음 | P2 | `latitude ±90`, `longitude ±180` CHECK 추가 |
 | 마이그레이션 멱등성 없음 | P2 | `create ... if not exists` / `create or replace` / `drop policy if exists` 적용 |
 | auth.users seed 실패 가능 | P2 | 스크립트 주석으로 조정 안내 유지(수용) |
+| (재재검수) anon 원본 profiles REVOKE 부재 | P2(N-1) | GRANT 전 `revoke all ... from anon, authenticated` 추가 → anon 테이블 권한 봉쇄, R9 결정적 통과 |

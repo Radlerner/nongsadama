@@ -51,6 +51,10 @@ PRD_v1_3.md를 기준으로 한 기술·제품 의사결정과 이유를 남긴�
 - **구현 메모**: 뷰는 정의자(소유자) 권한으로 실행되어 profiles RLS를 우회하나, 노출 컬럼이
   id·nickname 뿐이라 민감정보는 공개되지 않는다. Supabase 린터의 "security definer view" 경고는
   의도된 최소노출로 수용한다.
+- **방어심화(재재검수 N-1 반영)**: RLS 정책만으로는 anon이 테이블 권한을 보유할 수 있어(기본권한),
+  마이그레이션에서 anon/authenticated의 권한을 먼저 `revoke all` 후 필요한 것만 `grant` 한다.
+  이로써 anon은 profiles 원본 테이블 권한 자체가 없어 GRANT 계층에서도 노출이 봉쇄되고,
+  `rls_check.sql`의 R9(anon profiles 직접조회 거부)가 permission-denied로 결정적으로 통과한다.
 
 ### D-007. posts 삭제는 소프트·하드 병행, 소유자는 상태 무관 조회
 - **결정**: 소유자에게 `UPDATE`(status='deleted' 소프트 삭제)와 `DELETE`(하드 삭제)를 모두 허용.

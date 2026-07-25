@@ -11,6 +11,15 @@ alter table public.life_info enable row level security;
 -- 테이블/뷰 권한(GRANT). RLS가 행을 걸러도 역할에 테이블 권한이 없으면 접근이 거부되므로
 -- Supabase 기본 권한에 의존하지 않고 명시한다. 실제 행 접근은 아래 정책이 최종 통제한다.
 --
+-- 방어심화: Supabase 기본권한(default privileges)으로 anon/authenticated에 새어들 수 있는
+-- 권한을 먼저 명시적으로 회수한 뒤, 필요한 권한만 부여한다. 이로써 anon은 profiles 원본에
+-- 대한 테이블 권한 자체가 없어(RLS 이전 단계에서 차단) 개인정보 노출 경로가 GRANT 계층에서도 봉쇄된다.
+revoke all on public.regions from anon, authenticated;
+revoke all on public.profiles from anon, authenticated;
+revoke all on public.public_profiles from anon, authenticated;
+revoke all on public.posts from anon, authenticated;
+revoke all on public.life_info from anon, authenticated;
+--
 -- profiles: 원본 테이블은 authenticated에게만(본인 행 RLS). 공개 닉네임은 public_profiles 뷰로만 노출.
 grant select on public.regions to anon, authenticated;
 grant select on public.public_profiles to anon, authenticated;
