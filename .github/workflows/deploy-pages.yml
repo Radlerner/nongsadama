@@ -39,6 +39,9 @@ jobs:
         env:
           # GitHub Pages는 https://<user>.github.io/nongsadama/ 하위 경로로 서빙된다.
           BASE_PATH: /nongsadama/
+          # Supabase 공개 연결값(anon 키는 프론트 노출 전제, RLS로 보호). 저장소 Variables 참조.
+          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY }}
 
       - name: SPA fallback (딥링크 새로고침 대응)
         run: cp dist/index.html dist/404.html
