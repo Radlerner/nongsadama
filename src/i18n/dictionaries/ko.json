@@ -11,6 +11,7 @@
   "select.language": "언어",
   "select.region": "지역",
   "select.regionEmpty": "표시할 지역이 없습니다.",
+  "select.regionOther": "기타 지역",
   "select.regionLoading": "지역을 불러오는 중…",
   "select.regionError": "지역을 불러오지 못했습니다.",
   "select.continue": "계속",

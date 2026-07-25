@@ -1,9 +1,10 @@
+import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { getLocaleLabel } from '../config/app'
 import { useTranslation } from '../i18n/useTranslation'
 import { useRegions, type Region } from '../hooks/useRegions'
 import { useSelectedRegion } from '../context/SelectedRegionContext'
-import { regionName } from '../lib/regionName'
+import { regionLabel } from '../lib/regionName'
 
 /**
  * 언어·지역 선택 화면(PRD 5 IA, 4.1 흐름).
@@ -65,6 +66,13 @@ function RegionPicker() {
   const { data: regions, isLoading, isError, refetch, isFetching } = useRegions()
   const { regionId, setRegionId } = useSelectedRegion()
 
+  // P2-2: 로드된 활성 지역 목록에 없는 저장된 선택은 무효화한다(비활성/삭제된 지역의 stale id 정리).
+  useEffect(() => {
+    if (regions && regionId && !regions.some((r) => r.id === regionId)) {
+      setRegionId(null)
+    }
+  }, [regions, regionId, setRegionId])
+
   if (isLoading) {
     return (
       <p className="rounded-md bg-gray-50 px-4 py-6 text-center text-sm text-gray-500">
@@ -89,18 +97,31 @@ function RegionPicker() {
     )
   }
 
-  const cities = (regions ?? []).filter((r) => r.level === 'city')
-  const towns = (regions ?? []).filter((r) => r.level === 'town')
+  const all = regions ?? []
+  const cities = all.filter((r) => r.level === 'city')
+  const towns = all.filter((r) => r.level === 'town')
+  const cityIds = new Set(cities.map((c) => c.id))
 
-  if (cities.length === 0 && towns.length === 0) {
+  // 시별로 읍·면을 묶고, 부모 시가 없는(미분류) 읍·면은 별도 그룹으로 노출한다.
+  // (P2-1: city가 없고 town만 있을 때 아무것도 안 그려지는 무음 공백 방지)
+  const groups: { key: string; label: string; towns: Region[] }[] = cities.map((city) => ({
+    key: city.id,
+    label: regionLabel(city.id, city.names, locale),
+    towns: towns.filter((tn) => tn.parent_id === city.id),
+  }))
+  const ungrouped = towns.filter((tn) => !tn.parent_id || !cityIds.has(tn.parent_id))
+  if (ungrouped.length > 0) {
+    groups.push({ key: '__ungrouped__', label: t('select.regionOther'), towns: ungrouped })
+  }
+
+  const totalTowns = groups.reduce((n, g) => n + g.towns.length, 0)
+  if (totalTowns === 0) {
     return (
       <p className="rounded-md bg-gray-50 px-4 py-6 text-center text-sm text-gray-500">
         {t('select.regionEmpty')}
       </p>
     )
   }
-
-  const townsOf = (cityId: string) => towns.filter((r) => r.parent_id === cityId)
 
   const renderTown = (town: Region) => {
     const active = regionId === town.id
@@ -117,7 +138,7 @@ function RegionPicker() {
               : 'border-gray-300 text-gray-700',
           ].join(' ')}
         >
-          {regionName(town.names, locale)}
+          {regionLabel(town.id, town.names, locale)}
         </button>
       </li>
     )
@@ -125,14 +146,16 @@ function RegionPicker() {
 
   return (
     <div className="flex flex-col gap-4">
-      {cities.map((city) => (
-        <div key={city.id}>
-          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">
-            {regionName(city.names, locale)}
-          </p>
-          <ul className="flex flex-col gap-2">{townsOf(city.id).map(renderTown)}</ul>
-        </div>
-      ))}
+      {groups
+        .filter((g) => g.towns.length > 0)
+        .map((g) => (
+          <div key={g.key}>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">
+              {g.label}
+            </p>
+            <ul className="flex flex-col gap-2">{g.towns.map(renderTown)}</ul>
+          </div>
+        ))}
     </div>
   )
 }

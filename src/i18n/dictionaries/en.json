@@ -11,6 +11,7 @@
   "select.language": "Language",
   "select.region": "Region",
   "select.regionEmpty": "No regions to show.",
+  "select.regionOther": "Other areas",
   "select.regionLoading": "Loading regions…",
   "select.regionError": "Failed to load regions.",
   "select.continue": "Continue",
