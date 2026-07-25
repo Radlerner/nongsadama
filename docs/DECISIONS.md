@@ -72,3 +72,15 @@ PRD_v1_3.md를 기준으로 한 기술·제품 의사결정과 이유를 남긴�
   마이그레이션은 리뷰까지 완료 상태이며, 실제 적용·RLS 통과는 사용자 Supabase에서 수행한다.
 - **적용 방법**: Supabase CLI `supabase db push` 또는 SQL Editor에 마이그레이션을 순서대로 실행.
   RLS 검증은 `supabase/tests/rls_check.sql` 또는 두 실제 계정 앱 테스트(Week 3).
+- **해소(2026-07-26)**: Supabase MCP로 프로젝트 nongsadama(`ikusdwursvbdrznbcjtw`)에 적용하고
+  R1~R9 라이브 검증을 전부 통과했다(docs/TEST_CHECKLIST.md). D-009의 미실행 위험은 해소됨.
+
+### D-010. 보안 어드바이저 대응
+- **하드닝(적용)**: `set_updated_at`에 `search_path=''` 고정, 트리거 전용 함수
+  `prevent_profile_role_change`의 EXECUTE를 public/anon/authenticated에서 회수
+  (마이그레이션 `20260726000200_security_hardening.sql`). 트리거는 EXECUTE 권한과 무관하게 작동한다.
+- **수용(미변경)**:
+  - `is_admin()`의 EXECUTE는 유지한다. RLS 정책(life_info)이 이 함수를 평가하려면 호출 역할에
+    EXECUTE가 필요하며, 회수 시 anon/authenticated의 정책 평가가 깨진다. 반환값은 "본인이 admin인가"
+    뿐이라 정보 노출이 미미하다(어드바이저 WARN 수용).
+  - `public_profiles` security-definer 뷰 ERROR는 의도된 최소노출 설계다(D-006).

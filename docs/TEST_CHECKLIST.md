@@ -77,25 +77,36 @@ PRD 11.4(완료 정의)·11.5(독립 재검수) 기준으로 구현 검사와 �
 | RLS 정책이 PRD 8.2와 일치 | ✅ 공개 읽기 / 본인 쓰기 / admin 전용 life_info |
 | 권한 상승 방지 | ✅ role 자기변경 차단 트리거 + insert role='user' 고정 |
 
-### DB 적용/실행 검증 (⚠️ 사용자 Supabase에서 수행 필요)
+### DB 적용/실행 검증 — 라이브 통과 (2026-07-26)
 
-이 개발 환경에는 Supabase CLI/Docker/psql이 없어 **SQL을 실행하지 못했다**(DECISIONS D-009).
-아래는 적용 후 채울 항목이다.
+Supabase 프로젝트 **nongsadama**(`ikusdwursvbdrznbcjtw`, ap-northeast-2)에 마이그레이션 2개를
+적용하고, `rls_check.sql` 로직을 라이브 DB에서 실행(비파괴 ROLLBACK)해 아래를 확인했다.
+(MCP `execute_sql`로 역할 시뮬레이션, 결과를 표로 반환)
 
 | # | 검증 | 기대 | 결과 |
 | --- | --- | --- | --- |
-| R1 | 마이그레이션 2개 적용 | 오류 없이 테이블·정책 생성 | ⬜ 미실행 |
-| R2 | anon: 공개 게시글/생활정보/활성 지역 읽기 | 각 공개분만 조회 | ⬜ |
-| R3 | anon: 게시글 작성 시도 | 거부 | ⬜ |
-| R4 | 사용자 B가 A의 글 수정/삭제 | 0건(거부) | ⬜ |
-| R5 | 사용자 A가 자기 글 수정 | 성공 | ⬜ |
-| R6 | 일반 사용자가 life_info 작성 | 거부 | ⬜ |
-| R7 | 일반 사용자가 자기 role='admin' 변경 | 트리거 차단 | ⬜ |
-| R8 | admin이 미공개 포함 life_info 조회·작성 | 성공 | ⬜ |
-| R9 | anon이 profiles 원본 테이블 직접 조회 | 거부(공개는 public_profiles 뷰만) | ⬜ |
+| R1 | 마이그레이션 2개 적용 | 오류 없이 테이블·정책 생성 | ✅ PASS (4테이블 RLS 활성) |
+| R2 | anon: 공개 게시글/생활정보/활성 지역 + 공개 프로필(뷰) 읽기 | 각 공개분만 조회 | ✅ PASS |
+| R3 | anon: 게시글 작성 시도 | 거부 | ✅ PASS (permission denied) |
+| R4 | 사용자 B가 A의 글 수정/삭제 | 0건(거부), A 글 온전 | ✅ PASS |
+| R5 | 사용자 A가 자기 글 수정 | 성공(1행) | ✅ PASS |
+| R6 | 일반 사용자가 life_info 작성 | 거부 | ✅ PASS (RLS 위반) |
+| R7 | 일반 사용자가 자기 role='admin' 변경 | 트리거 차단 | ✅ PASS (not allowed to change role) |
+| R8 | admin이 미공개 포함 life_info 조회(2건)·작성 | 성공 | ✅ PASS |
+| R9 | anon이 profiles 원본 테이블 직접 조회 | 거부(공개는 public_profiles 뷰만) | ✅ PASS (permission denied) |
 
-> 검증 방법: `supabase/tests/rls_check.sql` 실행(비파괴, ROLLBACK) 또는 두 실제 계정 앱 테스트(Week 3).
-> R3/R6/R7/R9(거부 케이스)는 DO 블록 예외 처리로 능동 검증하며 NOTICE에 OK/FAIL을 출력한다.
+> 재현: `supabase/tests/rls_check.sql`(비파괴, ROLLBACK) 또는 두 실제 계정 앱 테스트(Week 3).
+> D-009(로컬 미실행)는 라이브 검증으로 해소됨.
+
+### 보안 어드바이저 (적용 직후)
+
+- ERROR `security_definer_view`(public_profiles): **의도된 최소노출 뷰**(D-006). id·nickname만 노출.
+- WARN `is_admin()` RPC 실행 가능(anon/authenticated): RLS 정책 평가에 필요하여 **불가피**(반환은 본인 admin 여부뿐).
+- WARN `prevent_profile_role_change()` RPC 실행 가능: **해소** — `revoke execute`(20260726000200_security_hardening.sql).
+- WARN `set_updated_at` search_path 미고정: **해소** — `set search_path=''`(동 마이그레이션).
+
+하드닝 적용 후 재점검: 위 WARN 2건 사라짐, R7(role 승격 차단)·updated_at 트리거 회귀 없음 확인.
+남은 항목은 ERROR(의도된 뷰) + `is_admin` WARN ×2(정책 평가에 필요, 수용)뿐.
 
 ### 독립 재검수 지적 반영 결과
 
