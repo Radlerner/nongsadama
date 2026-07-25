@@ -59,3 +59,38 @@ PRD 11.4(완료 정의)·11.5(독립 재검수) 기준으로 구현 검사와 �
   - 조치: 기존 정상 동작 보존과 범위 준수를 위해 이번엔 major 업그레이드하지 않고 **수용·추적**. 별도 의존성 업그레이드 작업(예: v1.1)에서 재평가.
 - **지역 선택 실기능 미구현**: `regions` 테이블·RLS(데이터 모델 작업) 이후 채운다. (DECISIONS D-001)
 - **자동 회귀 테스트 부재**: 현재 수동 체크리스트에 의존. 핵심 흐름 확장 시 자동화 도입 검토.
+
+---
+
+## 데이터 모델 + RLS (feat/data-model-rls)
+
+- 검증일: 2026-07-26
+- 산출물: `supabase/migrations/*.sql`, `supabase/tests/rls_check.sql`
+
+### 정적 검토 (이 환경에서 수행)
+
+| 항목 | 결과 |
+| --- | --- |
+| 스키마가 PRD 8.1 필드와 일치 | ✅ regions/profiles/posts/life_info 4개 테이블 |
+| 값 집합 CHECK 제약 | ✅ level/category/status/role |
+| 국가·언어 코드 하드코딩 없음 | ✅ locale/country_code/source_locale 자유 텍스트 |
+| RLS 정책이 PRD 8.2와 일치 | ✅ 공개 읽기 / 본인 쓰기 / admin 전용 life_info |
+| 권한 상승 방지 | ✅ role 자기변경 차단 트리거 + insert role='user' 고정 |
+
+### DB 적용/실행 검증 (⚠️ 사용자 Supabase에서 수행 필요)
+
+이 개발 환경에는 Supabase CLI/Docker/psql이 없어 **SQL을 실행하지 못했다**(DECISIONS D-009).
+아래는 적용 후 채울 항목이다.
+
+| # | 검증 | 기대 | 결과 |
+| --- | --- | --- | --- |
+| R1 | 마이그레이션 2개 적용 | 오류 없이 테이블·정책 생성 | ⬜ 미실행 |
+| R2 | anon: 공개 게시글/생활정보/활성 지역 읽기 | 각 공개분만 조회 | ⬜ |
+| R3 | anon: 게시글 작성 시도 | 거부 | ⬜ |
+| R4 | 사용자 B가 A의 글 수정/삭제 | 0건(거부) | ⬜ |
+| R5 | 사용자 A가 자기 글 수정 | 성공 | ⬜ |
+| R6 | 일반 사용자가 life_info 작성 | 거부 | ⬜ |
+| R7 | 일반 사용자가 자기 role='admin' 변경 | 트리거 차단 | ⬜ |
+| R8 | admin이 미공개 포함 life_info 조회·작성 | 성공 | ⬜ |
+
+> 검증 방법: `supabase/tests/rls_check.sql` 실행(비파괴, ROLLBACK) 또는 두 실제 계정 앱 테스트(Week 3).

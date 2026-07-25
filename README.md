@@ -81,6 +81,34 @@ npm run dev
 - 비즈니스 로직은 특정 언어 코드로 분기하지 않는다.
 - 언어 추가 = 사전 JSON 추가 + `dictionaries/index.ts` 등록 + `app.ts` 목록 추가 (DB 변경 불필요).
 
+## 데이터베이스 (Supabase)
+
+스키마와 RLS 정책은 `supabase/migrations/` 에 SQL로 관리한다.
+
+| 파일 | 내용 |
+| --- | --- |
+| `migrations/20260726000000_initial_schema.sql` | 테이블·제약·인덱스·함수·트리거 |
+| `migrations/20260726000100_rls_policies.sql` | RLS 활성화 및 정책 |
+| `tests/rls_check.sql` | 역할 시뮬레이션 RLS 수동 검증(비파괴) |
+
+### 적용
+
+Supabase CLI가 있으면:
+
+```bash
+supabase db push
+```
+
+없으면 Supabase 대시보드 **SQL Editor**에 두 마이그레이션을 파일명 순서대로 붙여넣어 실행한다.
+
+### 권한 요약 (RLS)
+
+- 활성 지역·공개 게시글·공개 생활정보는 비로그인 포함 누구나 읽는다.
+- 로그인 사용자는 자신의 프로필·게시글만 생성/수정/삭제한다.
+- 생활정보 생성·수정·삭제는 `admin` 역할만 가능하다.
+- 최초 `admin` 지정은 운영자가 대시보드/서비스 역할로 수행한다(RLS 우회).
+- `service_role` 키는 RLS를 우회하므로 서버·저장소에 노출하지 않는다.
+
 ## 배포
 
 - Vercel 정적 배포. SPA 라우팅은 `vercel.json` 의 rewrite로 처리한다.
