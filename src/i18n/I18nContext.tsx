@@ -1,6 +1,7 @@
 import {
   createContext,
   useCallback,
+  useEffect,
   useMemo,
   useState,
   type ReactNode,
@@ -31,6 +32,13 @@ function resolveInitialLocale(): Locale {
 
 export function I18nProvider({ children }: { children: ReactNode }) {
   const [locale, setLocaleState] = useState<Locale>(resolveInitialLocale)
+
+  // 문서 언어 속성을 현재 locale과 동기화한다(접근성/브라우저 번역).
+  useEffect(() => {
+    if (typeof document !== 'undefined') {
+      document.documentElement.lang = locale
+    }
+  }, [locale])
 
   const setLocale = useCallback((next: Locale) => {
     if (!appConfig.supportedLocales.includes(next)) return

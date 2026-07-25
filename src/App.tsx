@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { AppLayout } from './components/layout/AppLayout'
 import { Landing } from './pages/Landing'
+import { Select } from './pages/Select'
 import { Home } from './pages/Home'
 import { Board } from './pages/Board'
 import { BoardPostDetail } from './pages/BoardPostDetail'
@@ -13,6 +14,7 @@ export function App() {
   return (
     <Routes>
       <Route path="/" element={<Landing />} />
+      <Route path="/select" element={<Select />} />
       <Route element={<AppLayout />}>
         <Route path="/home" element={<Home />} />
         <Route path="/board" element={<Board />} />

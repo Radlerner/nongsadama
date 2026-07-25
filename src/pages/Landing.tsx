@@ -16,7 +16,7 @@ export function Landing() {
           <p className="mt-2 text-sm text-gray-600">{t('landing.subtitle')}</p>
         </div>
         <Link
-          to="/home"
+          to="/select"
           className="inline-flex min-h-[44px] items-center justify-center rounded-md bg-green-700 px-6 py-3 text-base font-semibold text-white"
         >
           {t('landing.enter')}

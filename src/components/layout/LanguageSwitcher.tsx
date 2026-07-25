@@ -1,3 +1,4 @@
+import { getLocaleLabel } from '../../config/app'
 import { useTranslation } from '../../i18n/useTranslation'
 
 export function LanguageSwitcher() {
@@ -10,11 +11,11 @@ export function LanguageSwitcher() {
         aria-label={t('language.label')}
         value={locale}
         onChange={(e) => setLocale(e.target.value)}
-        className="rounded border border-gray-300 bg-white px-2 py-1 text-sm"
+        className="min-h-[44px] rounded border border-gray-300 bg-white px-3 py-2 text-sm"
       >
         {supportedLocales.map((code) => (
           <option key={code} value={code}>
-            {code.toUpperCase()}
+            {getLocaleLabel(code)}
           </option>
         ))}
       </select>
