@@ -92,5 +92,17 @@ PRD 11.4(완료 정의)·11.5(독립 재검수) 기준으로 구현 검사와 �
 | R6 | 일반 사용자가 life_info 작성 | 거부 | ⬜ |
 | R7 | 일반 사용자가 자기 role='admin' 변경 | 트리거 차단 | ⬜ |
 | R8 | admin이 미공개 포함 life_info 조회·작성 | 성공 | ⬜ |
+| R9 | anon이 profiles 원본 테이블 직접 조회 | 거부(공개는 public_profiles 뷰만) | ⬜ |
 
 > 검증 방법: `supabase/tests/rls_check.sql` 실행(비파괴, ROLLBACK) 또는 두 실제 계정 앱 테스트(Week 3).
+> R3/R6/R7/R9(거부 케이스)는 DO 블록 예외 처리로 능동 검증하며 NOTICE에 OK/FAIL을 출력한다.
+
+### 독립 재검수 지적 반영 결과
+
+| 지적 | 심각도 | 조치 |
+| --- | --- | --- |
+| profiles 전체 컬럼 anon 노출 | P1 | 원본 profiles를 본인 조회로 제한, 공개 닉네임은 `public_profiles(id,nickname)` 뷰로만 노출(D-006 개정) |
+| rls_check 거부 케이스 미검증(주석) | P2 | DO 블록 예외 처리로 R3/R6/R7/R9 능동 검증 |
+| life_info 좌표 범위 CHECK 없음 | P2 | `latitude ±90`, `longitude ±180` CHECK 추가 |
+| 마이그레이션 멱등성 없음 | P2 | `create ... if not exists` / `create or replace` / `drop policy if exists` 적용 |
+| auth.users seed 실패 가능 | P2 | 스크립트 주석으로 조정 안내 유지(수용) |

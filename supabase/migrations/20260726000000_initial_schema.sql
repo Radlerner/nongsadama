@@ -4,6 +4,9 @@
 --
 -- 값 집합(level/category/status/role)은 Postgres ENUM 대신 text + CHECK 제약을 사용한다.
 -- (값 추가/변경 시 ALTER TYPE 없이 마이그레이션이 간단하다. 결정 근거: docs/DECISIONS.md D-005)
+--
+-- 멱등성: 마이그레이션 프레임워크는 1회만 실행하지만, 대시보드 SQL Editor 수동 재실행을 고려해
+-- create table if not exists / create or replace / drop ... if exists 를 사용한다.
 
 create extension if not exists pgcrypto;
 
@@ -19,20 +22,20 @@ end;
 $$;
 
 -- regions -------------------------------------------------------------------
-create table public.regions (
+create table if not exists public.regions (
   id uuid primary key default gen_random_uuid(),
   parent_id uuid references public.regions(id) on delete set null,
   names jsonb not null check (jsonb_typeof(names) = 'object'),
   level text not null check (level in ('city', 'town')),
   is_active boolean not null default true
 );
-create index regions_parent_id_idx on public.regions(parent_id);
-create index regions_active_idx on public.regions(is_active);
+create index if not exists regions_parent_id_idx on public.regions(parent_id);
+create index if not exists regions_active_idx on public.regions(is_active);
 
 comment on table public.regions is '시군(city)·읍면동(town) 지역. names는 locale을 키로 하는 지역명 JSON.';
 
 -- profiles ------------------------------------------------------------------
-create table public.profiles (
+create table if not exists public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
   nickname text not null check (char_length(nickname) between 1 and 40),
   preferred_locale text not null check (char_length(preferred_locale) between 2 and 35),
@@ -42,12 +45,19 @@ create table public.profiles (
   role text not null default 'user' check (role in ('user', 'admin')),
   created_at timestamptz not null default now()
 );
-create index profiles_region_id_idx on public.profiles(region_id);
+create index if not exists profiles_region_id_idx on public.profiles(region_id);
 
-comment on table public.profiles is 'Supabase Auth 사용자 프로필. country_code는 선택 입력이며 국적 인증이 아니다(PRD 8.1).';
+comment on table public.profiles is 'Supabase Auth 사용자 프로필. country_code는 선택 입력이며 국적 인증이 아니다(PRD 8.1). 민감 컬럼은 공개하지 않는다 → public_profiles 뷰 참조.';
+
+-- 공개 프로필 뷰: 게시글 작성자 닉네임 표시에 필요한 최소 컬럼(id, nickname)만 노출한다.
+-- 뷰는 소유자 권한으로 실행되어(정의자) profiles RLS를 우회하지만, 노출 컬럼이 id·nickname 뿐이라
+-- 국가/지역/인증수단 등 개인정보는 공개되지 않는다. anon/authenticated에 이 뷰만 읽기 허용한다.
+-- (P1 재검수 반영, 결정 근거: docs/DECISIONS.md D-006)
+create or replace view public.public_profiles as
+  select id, nickname from public.profiles;
 
 -- posts ---------------------------------------------------------------------
-create table public.posts (
+create table if not exists public.posts (
   id uuid primary key default gen_random_uuid(),
   author_id uuid not null references auth.users(id) on delete cascade,
   region_id uuid not null references public.regions(id) on delete restrict,
@@ -59,31 +69,31 @@ create table public.posts (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
-create index posts_feed_idx on public.posts(region_id, status, created_at desc);
-create index posts_author_idx on public.posts(author_id);
+create index if not exists posts_feed_idx on public.posts(region_id, status, created_at desc);
+create index if not exists posts_author_idx on public.posts(author_id);
 
-create trigger posts_set_updated_at
+create or replace trigger posts_set_updated_at
 before update on public.posts
 for each row execute function public.set_updated_at();
 
 comment on table public.posts is '지역 게시글. source_locale은 작성 원문 언어(UI 언어와 다를 수 있음, PRD 6.2).';
 
 -- life_info -----------------------------------------------------------------
-create table public.life_info (
+create table if not exists public.life_info (
   id uuid primary key default gen_random_uuid(),
   region_id uuid not null references public.regions(id) on delete restrict,
   category text not null check (category in ('hospital', 'market', 'government', 'transport', 'other')),
   localized_content jsonb not null check (jsonb_typeof(localized_content) = 'object'),
   address text,
   phone text,
-  latitude numeric(9, 6),
-  longitude numeric(9, 6),
+  latitude numeric(9, 6) check (latitude is null or latitude between -90 and 90),
+  longitude numeric(9, 6) check (longitude is null or longitude between -180 and 180),
   source_url text,
   verified_at date,
   is_published boolean not null default false
 );
-create index life_info_region_category_idx on public.life_info(region_id, category);
-create index life_info_published_idx on public.life_info(is_published);
+create index if not exists life_info_region_category_idx on public.life_info(region_id, category);
+create index if not exists life_info_published_idx on public.life_info(is_published);
 
 comment on table public.life_info is '운영자 검수 생활정보. localized_content는 locale별 명칭·설명 JSON(PRD 6.3).';
 
@@ -122,6 +132,6 @@ begin
   return new;
 end;
 $$;
-create trigger profiles_guard_role
+create or replace trigger profiles_guard_role
 before update on public.profiles
 for each row execute function public.prevent_profile_role_change();
