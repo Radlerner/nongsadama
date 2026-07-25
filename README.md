@@ -116,5 +116,17 @@ supabase db push
 
 ## 배포
 
-- Vercel 정적 배포. SPA 라우팅은 `vercel.json` 의 rewrite로 처리한다.
+### Vercel
+- Vercel 정적 배포. SPA 라우팅은 `vercel.json` 의 rewrite로 처리한다. base는 기본값 `/`.
 - 환경변수는 Vercel 프로젝트 설정에 등록한다.
+
+### GitHub Pages
+- `.github/workflows/deploy-pages.yml` 가 `main` 푸시 시 자동 빌드·배포한다.
+  Tailwind CSS는 이 빌드 단계에서 생성되므로 저장소에 CSS/`dist`를 커밋하지 않는다.
+- **1회 설정**: 저장소 Settings → Pages → Source를 **"GitHub Actions"** 로 지정.
+- 배포 URL: `https://radlerner.github.io/nongsadama/`
+- 하위 경로(`/nongsadama/`) 대응: 워크플로가 `BASE_PATH=/nongsadama/` 를 주입하고
+  (`vite.config.ts` 가 이를 읽음), `BrowserRouter` basename도 이에 맞춘다.
+- 딥링크 새로고침: Pages에는 rewrite가 없어 `404.html`(= `index.html` 복사본)로 폴백한다.
+- 데이터 연동(후속) 시 Vite가 빌드에 인라인하는 `VITE_SUPABASE_URL`/`VITE_SUPABASE_ANON_KEY`
+  를 워크플로 env(저장소 Variables)로 추가해야 한다. 현재 골격 단계에선 불필요.

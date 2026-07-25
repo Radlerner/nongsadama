@@ -12,11 +12,15 @@ if (!rootElement) {
   throw new Error('Root element #root not found in index.html')
 }
 
+// 배포 base(예: GitHub Pages의 '/nongsadama/')에 맞춰 라우터 basename을 설정한다.
+// React Router는 trailing slash가 붙은 basename을 처리하지 못하므로 제거한다.
+const routerBasename = import.meta.env.BASE_URL.replace(/\/+$/, '') || '/'
+
 createRoot(rootElement).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
       <I18nProvider>
-        <BrowserRouter>
+        <BrowserRouter basename={routerBasename}>
           <App />
         </BrowserRouter>
       </I18nProvider>

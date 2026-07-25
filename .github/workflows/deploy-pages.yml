@@ -1,0 +1,60 @@
+name: Deploy to GitHub Pages
+
+# main에 푸시되면 Vite로 빌드해 GitHub Pages에 배포한다.
+# 사전 설정(1회): 저장소 Settings → Pages → Build and deployment → Source: "GitHub Actions".
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# 동시 배포 방지(진행 중 실행은 취소)
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build (Tailwind CSS는 이 단계에서 생성됨)
+        run: npm run build
+        env:
+          # GitHub Pages는 https://<user>.github.io/nongsadama/ 하위 경로로 서빙된다.
+          BASE_PATH: /nongsadama/
+
+      - name: SPA fallback (딥링크 새로고침 대응)
+        run: cp dist/index.html dist/404.html
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
