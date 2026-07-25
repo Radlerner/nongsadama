@@ -84,3 +84,15 @@ PRD_v1_3.md를 기준으로 한 기술·제품 의사결정과 이유를 남긴�
     EXECUTE가 필요하며, 회수 시 anon/authenticated의 정책 평가가 깨진다. 반환값은 "본인이 admin인가"
     뿐이라 정보 노출이 미미하다(어드바이저 WARN 수용).
   - `public_profiles` security-definer 뷰 ERROR는 의도된 최소노출 설계다(D-006).
+
+### D-011. 마이그레이션 적용 경로와 버전 정합
+- **현황**: 초기 부트스트랩은 Supabase MCP `apply_migration`으로 수행해, 원격
+  `supabase_migrations.schema_migrations`의 버전이 저장소 파일명 타임스탬프와 다르다.
+  (예: 저장소 `20260726000000_initial_schema` ↔ 원격 `20260725170556_initial_schema`.)
+  내용은 동일하다.
+- **방침**: 원격 스키마가 실제 적용 상태의 기준이다. 이후 Supabase CLI를 도입하면
+  `supabase migration repair`로 원격 이력과 저장소 파일명을 일치시킨다. 재검수 P2-1 반영.
+- **P2-2 반영**: `set_updated_at`의 `search_path=''`를 원본 `initial_schema`에도 반영해
+  단독 재실행 시에도 어드바이저 경고가 재발하지 않게 했다.
+- **시딩**: `supabase/seed.sql`(파일럿 홍성군) — 지역은 실제 행정정보, 생활정보는
+  "[샘플] 검수 필요" 데이터(전화·주소 비움, 출처 없이 지어내지 않음, PRD 6.3).

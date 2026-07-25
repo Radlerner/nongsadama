@@ -89,7 +89,12 @@ npm run dev
 | --- | --- |
 | `migrations/20260726000000_initial_schema.sql` | 테이블·제약·인덱스·함수·트리거 |
 | `migrations/20260726000100_rls_policies.sql` | RLS 활성화 및 정책 |
+| `migrations/20260726000200_security_hardening.sql` | 보안 어드바이저 WARN 하드닝 |
 | `tests/rls_check.sql` | 역할 시뮬레이션 RLS 수동 검증(비파괴) |
+| `seed.sql` | 시딩 데이터(파일럿: 홍성군) — 지역 + 샘플 생활정보 |
+
+> 초기 스키마·시드는 데모 Supabase 프로젝트에 적용 완료. 원격 마이그레이션 버전과
+> 저장소 파일명 타임스탬프 차이 및 시드 방침은 [docs/DECISIONS.md](./docs/DECISIONS.md) D-011 참고.
 
 ### 적용
 
