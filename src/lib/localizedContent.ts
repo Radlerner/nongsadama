@@ -21,12 +21,14 @@ export function localizedContent(content: Json, locale: Locale): LocalizedText {
   const map = asObject(content)
   let entry: Record<string, Json | undefined> | null = null
   if (map) {
+    // 우선순위(현재 locale → 기본 locale → 나머지) 순으로 훑되, 각 단계에서
+    // name이 비어있지 않은 항목만 채택한다(부분 입력된 항목이 정상 폴백을 가리지 않도록).
+    const ordered = [map[locale], map[appConfig.defaultLocale], ...Object.values(map)]
+      .map(asObject)
+      .filter((e): e is Record<string, Json | undefined> => e !== null)
     entry =
-      asObject(map[locale]) ??
-      asObject(map[appConfig.defaultLocale]) ??
-      Object.values(map)
-        .map(asObject)
-        .find((e) => e !== null && typeof e.name === 'string') ??
+      ordered.find((e) => typeof e.name === 'string' && e.name.trim() !== '') ??
+      ordered[0] ??
       null
   }
   const name = entry && typeof entry.name === 'string' ? entry.name : ''

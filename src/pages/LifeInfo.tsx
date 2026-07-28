@@ -12,10 +12,22 @@ const FILTERS = ['all', ...LIFE_INFO_CATEGORIES] as const
 
 export function LifeInfo() {
   const { t, locale } = useTranslation()
-  const { data: regions, isLoading: regionsLoading } = useRegions()
+  const {
+    data: regions,
+    isLoading: regionsLoading,
+    isError: regionsError,
+    refetch: refetchRegions,
+    isFetching: regionsFetching,
+  } = useRegions()
   const { regionId } = useSelectedRegion()
   const scopeIds = countyRegionIds(regions ?? [], regionId)
-  const { data: items, isLoading, isError, refetch, isFetching } = useLifeInfoList(scopeIds)
+  // 지역이 선택돼 있으면 regions 로드가 끝나 범위(scopeIds)가 확정된 뒤에만 조회한다.
+  // (로딩 중 전체 범위로 선조회했다가 재조회하는 중복 요청·범위 오염 방지)
+  const scopeReady = !regionId || regions !== undefined
+  const { data: items, isLoading, isError, refetch, isFetching } = useLifeInfoList(
+    scopeIds,
+    scopeReady,
+  )
   const [category, setCategory] = useState<string>('all')
 
   const regionNameOf = (id: string) => {
@@ -24,7 +36,14 @@ export function LifeInfo() {
   }
 
   const filtered = (items ?? []).filter((i) => category === 'all' || i.category === category)
-  const loading = regionsLoading || isLoading
+  // 지역 범위 계산에 regions가 필요한 경우 그 실패도 오류로 다룬다(조용한 전체 폴백 방지).
+  const showError = (Boolean(regionId) && regionsError) || isError
+  const retrying = regionsFetching || isFetching
+  const retry = () => {
+    if (regionsError) void refetchRegions()
+    if (isError) void refetch()
+  }
+  const loading = !showError && (regionsLoading || isLoading || !scopeReady)
 
   return (
     <section>
@@ -56,13 +75,13 @@ export function LifeInfo() {
         <p className="rounded-md bg-gray-50 px-4 py-8 text-center text-sm text-gray-500">
           {t('lifeInfo.loading')}
         </p>
-      ) : isError ? (
+      ) : showError ? (
         <div className="rounded-md bg-red-50 px-4 py-8 text-center text-sm text-red-700">
           <p className="mb-3">{t('lifeInfo.error')}</p>
           <button
             type="button"
-            onClick={() => void refetch()}
-            disabled={isFetching}
+            onClick={retry}
+            disabled={retrying}
             className="min-h-[44px] rounded-md border border-red-300 px-4 text-red-700 disabled:opacity-50"
           >
             {t('common.retry')}
@@ -70,7 +89,7 @@ export function LifeInfo() {
         </div>
       ) : filtered.length === 0 ? (
         <p className="rounded-md bg-gray-50 px-4 py-8 text-center text-sm text-gray-500">
-          {t('lifeInfo.empty')}
+          {(items ?? []).length > 0 ? t('lifeInfo.emptyFiltered') : t('lifeInfo.empty')}
         </p>
       ) : (
         <ul className="flex flex-col gap-2">

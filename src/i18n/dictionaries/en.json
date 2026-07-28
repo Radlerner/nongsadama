@@ -24,6 +24,7 @@
   "postDetail.empty": "Post not found.",
   "lifeInfo.title": "Life Info",
   "lifeInfo.empty": "No life info yet.",
+  "lifeInfo.emptyFiltered": "No info in this category yet.",
   "lifeInfo.loading": "Loading life info…",
   "lifeInfo.error": "Failed to load life info.",
   "lifeInfo.untitled": "Untitled",
