@@ -6,6 +6,7 @@ import { Login } from './pages/Login'
 import { Home } from './pages/Home'
 import { Board } from './pages/Board'
 import { BoardPostDetail } from './pages/BoardPostDetail'
+import { PostForm } from './pages/PostForm'
 import { LifeInfo } from './pages/LifeInfo'
 import { LifeInfoDetail } from './pages/LifeInfoDetail'
 import { Profile } from './pages/Profile'
@@ -22,7 +23,9 @@ export function App() {
       <Route element={<AppLayout />}>
         <Route path="/home" element={<Home />} />
         <Route path="/board" element={<Board />} />
+        <Route path="/board/new" element={<PostForm />} />
         <Route path="/board/:postId" element={<BoardPostDetail />} />
+        <Route path="/board/:postId/edit" element={<PostForm />} />
         <Route path="/life-info" element={<LifeInfo />} />
         <Route path="/life-info/:infoId" element={<LifeInfoDetail />} />
         <Route path="/profile" element={<Profile />} />
