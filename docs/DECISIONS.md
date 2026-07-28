@@ -96,3 +96,24 @@ PRD_v1_3.md를 기준으로 한 기술·제품 의사결정과 이유를 남긴�
   단독 재실행 시에도 어드바이저 경고가 재발하지 않게 했다.
 - **시딩**: `supabase/seed.sql`(파일럿 홍성군) — 지역은 실제 행정정보, 생활정보는
   "[샘플] 검수 필요" 데이터(전화·주소 비움, 출처 없이 지어내지 않음, PRD 6.3).
+
+---
+
+## 2026-07-26 · PRD v1.4 매칭 기반 DB 확장
+
+### D-012. 이웃 매칭 노출 모델 (PRD_v1_4.md)
+- **결정**: 매칭 관련 노출은 전부 opt-in(`profiles.is_matching_visible`, 기본 false)이며
+  뷰·GRANT로 DB에서 강제한다.
+  - `public_profiles` 개정: `country_code`는 동의자 행만 값 노출(게시글 국적 표시용, 미동의 null).
+  - 신규 `neighbor_profiles` 뷰: 동의자의 닉네임·읍면·국적·작목·언어만. GRANT는 authenticated 한정,
+    뷰 정의에 `is_matching_opted_in()`(상호성: 열람자 본인도 동의자) 내장.
+  - `regions.centroid_lat/lng`: 근사 거리("약 N km") 계산용 **지역** 중심좌표(±1~2km 오차 가능,
+    공개 행정 지리정보). 사용자 위치는 여전히 수집·저장하지 않는다.
+  - `profiles.crop_type`: 재배 작목(선택, 자유 텍스트 — 작목 코드 하드코딩 없음).
+  - `life_info.opening_hours/language_support`: 재검수 발견5(PRD 4.3-3) 반영, 운영자 검수 입력용.
+- **함수 권한 학습**: 뷰에 참조된 함수는 호출자 권한으로 실행된다. `is_matching_opted_in()`은
+  authenticated에 EXECUTE 필요(회수 시 뷰가 깨짐 — 라이브에서 확인). anon/public은 회수.
+  어드바이저의 신규 ERROR(neighbor 뷰 security-definer)·WARN(is_matching_opted_in authenticated)은
+  D-010과 동일한 근거(의도된 최소노출·정책 평가 필요)로 수용한다.
+- **검증**: 라이브 M1~M8 통과 — anon 국적은 동의자만/neighbor 접근 거부, 미동의 사용자 0행(상호성),
+  동의 사용자는 동의자만 조회, 본인 동의 토글 가능, 기존 R7(권한 상승 차단) 회귀 없음.

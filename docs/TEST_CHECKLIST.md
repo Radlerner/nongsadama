@@ -108,6 +108,28 @@ Supabase 프로젝트 **nongsadama**(`ikusdwursvbdrznbcjtw`, ap-northeast-2)에 
 하드닝 적용 후 재점검: 위 WARN 2건 사라짐, R7(role 승격 차단)·updated_at 트리거 회귀 없음 확인.
 남은 항목은 ERROR(의도된 뷰) + `is_admin` WARN ×2(정책 평가에 필요, 수용)뿐.
 
+---
+
+## PRD v1.4 매칭 기반 DB 확장 (feat/matching-db) — 라이브 통과 (2026-07-26)
+
+마이그레이션 `20260726000300_matching_base.sql` 적용 + 중심좌표 시딩(12/12) 후
+라이브 역할 시뮬레이션(비파괴 ROLLBACK)으로 검증.
+
+| # | 검증 | 기대 | 결과 |
+| --- | --- | --- | --- |
+| M1 | anon: public_profiles 국적 노출 | 동의자(1명)만 값, 미동의 null | ✅ PASS |
+| M2 | anon: 미동의자 국적 | null | ✅ PASS |
+| M3 | anon: neighbor_profiles 조회 | 거부(permission denied) | ✅ PASS |
+| M4 | 미동의 로그인 사용자: neighbor 조회 | 0행(상호성) | ✅ PASS |
+| M5 | 동의 사용자: neighbor 조회 | 동의자만(2명) | ✅ PASS |
+| M6 | 미동의자 목록 미노출 | 0행 | ✅ PASS |
+| R7 | (회귀) role 자기 승격 | 트리거 차단 | ✅ PASS |
+| M7 | 본인 동의·작목 수정 | 성공(1행) | ✅ PASS |
+| M8 | 동의 후 neighbor 조회 | 전체 동의자(3명) | ✅ PASS |
+
+어드바이저: 신규 ERROR(neighbor 뷰)·WARN(is_matching_opted_in authenticated)은 D-012 수용.
+`is_matching_opted_in`의 anon EXECUTE는 회수됨(anon WARN 없음).
+
 ### 독립 재검수 지적 반영 결과
 
 | 지적 | 심각도 | 조치 |

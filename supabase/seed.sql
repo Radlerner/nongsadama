@@ -29,6 +29,22 @@ insert into public.regions (id, parent_id, names, level, is_active) values
   ('a2000000-0000-4000-8000-000000000011','a1000000-0000-4000-8000-000000000001','{"ko":"구항면","en":"Guhang-myeon"}','town',true)
 on conflict (id) do nothing;
 
+-- ── regions 중심좌표(근사) ──────────────────────────────────────────────────
+-- 공개 행정 지리정보 기반의 "지역" 중심 근사값(±1~2km 오차 가능)이며 사용자 위치가 아니다.
+-- 용도: 게시글의 "약 N km" 근사 거리 표시(PRD v1.4 §2.3). 파일럿 검수 시 교정 가능.
+update public.regions set centroid_lat = 36.601, centroid_lng = 126.665 where id = 'a1000000-0000-4000-8000-000000000001'; -- 홍성군(군청 일대)
+update public.regions set centroid_lat = 36.601, centroid_lng = 126.665 where id = 'a2000000-0000-4000-8000-000000000001'; -- 홍성읍
+update public.regions set centroid_lat = 36.525, centroid_lng = 126.630 where id = 'a2000000-0000-4000-8000-000000000002'; -- 광천읍
+update public.regions set centroid_lat = 36.666, centroid_lng = 126.703 where id = 'a2000000-0000-4000-8000-000000000003'; -- 홍북읍
+update public.regions set centroid_lat = 36.617, centroid_lng = 126.715 where id = 'a2000000-0000-4000-8000-000000000004'; -- 금마면
+update public.regions set centroid_lat = 36.565, centroid_lng = 126.687 where id = 'a2000000-0000-4000-8000-000000000005'; -- 홍동면
+update public.regions set centroid_lat = 36.550, centroid_lng = 126.740 where id = 'a2000000-0000-4000-8000-000000000006'; -- 장곡면
+update public.regions set centroid_lat = 36.505, centroid_lng = 126.585 where id = 'a2000000-0000-4000-8000-000000000007'; -- 은하면
+update public.regions set centroid_lat = 36.560, centroid_lng = 126.560 where id = 'a2000000-0000-4000-8000-000000000008'; -- 결성면
+update public.regions set centroid_lat = 36.590, centroid_lng = 126.500 where id = 'a2000000-0000-4000-8000-000000000009'; -- 서부면
+update public.regions set centroid_lat = 36.640, centroid_lng = 126.580 where id = 'a2000000-0000-4000-8000-000000000010'; -- 갈산면
+update public.regions set centroid_lat = 36.590, centroid_lng = 126.610 where id = 'a2000000-0000-4000-8000-000000000011'; -- 구항면
+
 -- ── life_info (샘플/검수 필요) ───────────────────────────────────────────────
 -- 전화·주소·좌표·출처는 비워 두고, 설명에 검수 필요·방문 전 확인 문구를 넣는다.
 -- 마지막 1건은 is_published=false 로 두어 admin 전용 가시성(미공개)을 데모한다.

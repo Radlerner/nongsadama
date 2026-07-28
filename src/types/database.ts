@@ -24,9 +24,11 @@ export type Database = {
           category: string
           id: string
           is_published: boolean
+          language_support: string | null
           latitude: number | null
           localized_content: Json
           longitude: number | null
+          opening_hours: string | null
           phone: string | null
           region_id: string
           source_url: string | null
@@ -37,9 +39,11 @@ export type Database = {
           category: string
           id?: string
           is_published?: boolean
+          language_support?: string | null
           latitude?: number | null
           localized_content: Json
           longitude?: number | null
+          opening_hours?: string | null
           phone?: string | null
           region_id: string
           source_url?: string | null
@@ -50,9 +54,11 @@ export type Database = {
           category?: string
           id?: string
           is_published?: boolean
+          language_support?: string | null
           latitude?: number | null
           localized_content?: Json
           longitude?: number | null
+          opening_hours?: string | null
           phone?: string | null
           region_id?: string
           source_url?: string | null
@@ -120,7 +126,9 @@ export type Database = {
           auth_provider: string | null
           country_code: string | null
           created_at: string
+          crop_type: string | null
           id: string
+          is_matching_visible: boolean
           nickname: string
           preferred_locale: string
           region_id: string | null
@@ -130,7 +138,9 @@ export type Database = {
           auth_provider?: string | null
           country_code?: string | null
           created_at?: string
+          crop_type?: string | null
           id: string
+          is_matching_visible?: boolean
           nickname: string
           preferred_locale: string
           region_id?: string | null
@@ -140,7 +150,9 @@ export type Database = {
           auth_provider?: string | null
           country_code?: string | null
           created_at?: string
+          crop_type?: string | null
           id?: string
+          is_matching_visible?: boolean
           nickname?: string
           preferred_locale?: string
           region_id?: string | null
@@ -158,6 +170,8 @@ export type Database = {
       }
       regions: {
         Row: {
+          centroid_lat: number | null
+          centroid_lng: number | null
           id: string
           is_active: boolean
           level: string
@@ -165,6 +179,8 @@ export type Database = {
           parent_id: string | null
         }
         Insert: {
+          centroid_lat?: number | null
+          centroid_lng?: number | null
           id?: string
           is_active?: boolean
           level: string
@@ -172,6 +188,8 @@ export type Database = {
           parent_id?: string | null
         }
         Update: {
+          centroid_lat?: number | null
+          centroid_lng?: number | null
           id?: string
           is_active?: boolean
           level?: string
@@ -190,16 +208,54 @@ export type Database = {
       }
     }
     Views: {
+      neighbor_profiles: {
+        Row: {
+          country_code: string | null
+          crop_type: string | null
+          id: string | null
+          nickname: string | null
+          preferred_locale: string | null
+          region_id: string | null
+        }
+        Insert: {
+          country_code?: string | null
+          crop_type?: string | null
+          id?: string | null
+          nickname?: string | null
+          preferred_locale?: string | null
+          region_id?: string | null
+        }
+        Update: {
+          country_code?: string | null
+          crop_type?: string | null
+          id?: string | null
+          nickname?: string | null
+          preferred_locale?: string | null
+          region_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_region_id_fkey"
+            columns: ["region_id"]
+            isOneToOne: false
+            referencedRelation: "regions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       public_profiles: {
         Row: {
+          country_code: string | null
           id: string | null
           nickname: string | null
         }
         Insert: {
+          country_code?: never
           id?: string | null
           nickname?: string | null
         }
         Update: {
+          country_code?: never
           id?: string | null
           nickname?: string | null
         }
@@ -208,6 +264,7 @@ export type Database = {
     }
     Functions: {
       is_admin: { Args: never; Returns: boolean }
+      is_matching_opted_in: { Args: never; Returns: boolean }
     }
     Enums: {
       [_ in never]: never
