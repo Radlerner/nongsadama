@@ -5,6 +5,8 @@ import { useRegions } from '../hooks/useRegions'
 import { localizedContent } from '../lib/localizedContent'
 import { categoryLabelKey } from '../lib/categories'
 import { regionLabel } from '../lib/regionName'
+import { FreshnessBadge } from '../components/FreshnessBadge'
+import { freshnessOf } from '../lib/freshness'
 
 export function LifeInfoDetail() {
   const { t, locale } = useTranslation()
@@ -57,11 +59,20 @@ export function LifeInfoDetail() {
     <article className="flex flex-col gap-4">
       <header>
         <h1 className="text-lg font-bold text-gray-900">{name || t('lifeInfo.untitled')}</h1>
-        <p className="mt-1 text-xs text-gray-500">
-          {t(categoryLabelKey(item.category))}
-          {regionName ? ` · ${regionName}` : ''}
+        <p className="mt-1 flex flex-wrap items-center gap-2 text-xs text-gray-500">
+          <span>
+            {t(categoryLabelKey(item.category))}
+            {regionName ? ` · ${regionName}` : ''}
+          </span>
+          <FreshnessBadge verifiedAt={item.verified_at} />
         </p>
       </header>
+
+      {freshnessOf(item.verified_at).kind !== 'fresh' ? (
+        <p className="rounded-md bg-amber-50 px-4 py-3 text-xs text-amber-800">
+          {t('lifeInfoDetail.freshnessNotice')}
+        </p>
+      ) : null}
 
       {description ? (
         <p className="whitespace-pre-line text-sm text-gray-800">{description}</p>

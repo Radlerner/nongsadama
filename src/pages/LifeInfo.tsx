@@ -7,6 +7,7 @@ import { useLifeInfoList, type LifeInfo as LifeInfoRow } from '../hooks/useLifeI
 import { LIFE_INFO_CATEGORIES, categoryLabelKey } from '../lib/categories'
 import { localizedContent } from '../lib/localizedContent'
 import { regionLabel } from '../lib/regionName'
+import { FreshnessBadge } from '../components/FreshnessBadge'
 
 const FILTERS = ['all', ...LIFE_INFO_CATEGORIES] as const
 
@@ -116,9 +117,12 @@ function LifeInfoCard({ item, regionName }: { item: LifeInfoRow; regionName: str
         className="block rounded-md border border-gray-200 px-4 py-3 active:bg-gray-50"
       >
         <p className="font-semibold text-gray-900">{name || t('lifeInfo.untitled')}</p>
-        <p className="mt-1 text-xs text-gray-500">
-          {t(categoryLabelKey(item.category))}
-          {regionName ? ` · ${regionName}` : ''}
+        <p className="mt-1 flex flex-wrap items-center gap-2 text-xs text-gray-500">
+          <span>
+            {t(categoryLabelKey(item.category))}
+            {regionName ? ` · ${regionName}` : ''}
+          </span>
+          <FreshnessBadge verifiedAt={item.verified_at} />
         </p>
       </Link>
     </li>
