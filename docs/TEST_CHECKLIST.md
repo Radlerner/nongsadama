@@ -169,6 +169,21 @@ Supabase 프로젝트 **nongsadama**(`ikusdwursvbdrznbcjtw`, ap-northeast-2)에 
 | D6 | anon: 국적은 동의자만 | public_profiles 경유 | ✅ (REST 확인) |
 | D7 | typecheck / 빌드 | 0 / 성공 | ✅ |
 
+### Week 3 완료 기준 — 두 계정 교차 권한 (라이브, 비파괴)
+
+| # | 시나리오 | 결과 |
+| --- | --- | --- |
+| X1 | B가 A의 글 UPDATE | ✅ 0행(차단) |
+| X2 | B가 A의 글 소프트 삭제 | ✅ 0행(차단) |
+| X3 | B가 A의 글 DELETE | ✅ 0행(차단) |
+| X4 | B가 A 명의로 글 작성(author 위조) | ✅ RLS 위반 거부 |
+| X5 | B가 A의 프로필 수정 | ✅ 0행(차단) |
+| X6 | B 본인 글 작성 | ✅ 성공 |
+| X7 | A의 글 온전 | ✅ |
+
+> 병합 전 독립 재검수는 세션 한도(2:20am 리셋)로 중단됨 → 한도 리셋 후 자동 재시도 예정.
+> 위 X 검증은 구현자가 수행한 것으로, 독립 재검수를 대체하지 않는다(PRD 11.5).
+
 ### ⚠️ 운영자 조치 필요 (아침 확인)
 
 - [ ] Supabase 대시보드 → Authentication → Sign In / Up → **Confirm email 끄기**
