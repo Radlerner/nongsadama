@@ -9,6 +9,7 @@ import {
   type ReactNode,
 } from 'react'
 import type { Session, User } from '@supabase/supabase-js'
+import { useQueryClient } from '@tanstack/react-query'
 import { getSupabaseClient } from '../lib/supabase'
 import { useTranslation } from '../i18n/useTranslation'
 import { useSelectedRegion } from '../context/SelectedRegionContext'
@@ -39,6 +40,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [initializing, setInitializing] = useState(true)
   const { locale } = useTranslation()
   const { regionId } = useSelectedRegion()
+  const queryClient = useQueryClient()
 
   // onAuthStateChange 콜백에서 최신 언어·지역을 읽기 위한 ref (PRD 4.1: 선택값을 프로필에 저장)
   const localeRef = useRef(locale)
@@ -70,10 +72,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       region_id: regionRef.current,
       auth_provider: 'email',
     })
-    if (!insertError && typeof window !== 'undefined') {
-      window.localStorage.removeItem(PENDING_NICKNAME_KEY)
+    if (!insertError) {
+      if (typeof window !== 'undefined') {
+        window.localStorage.removeItem(PENDING_NICKNAME_KEY)
+      }
+      // 첫 로그인 시 useOwnProfile이 insert 이전의 null을 캐시할 수 있으므로 무효화한다.
+      void queryClient.invalidateQueries({ queryKey: ['profiles', 'own'] })
     }
-  }, [])
+  }, [queryClient])
 
   useEffect(() => {
     const supabase = getSupabaseClient()
