@@ -10,6 +10,7 @@ import { LifeInfo } from './pages/LifeInfo'
 import { LifeInfoDetail } from './pages/LifeInfoDetail'
 import { Profile } from './pages/Profile'
 import { ProfileEdit } from './pages/ProfileEdit'
+import { Neighbors } from './pages/Neighbors'
 import { NotFound } from './pages/NotFound'
 
 export function App() {
@@ -26,6 +27,7 @@ export function App() {
         <Route path="/life-info/:infoId" element={<LifeInfoDetail />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/profile/edit" element={<ProfileEdit />} />
+        <Route path="/neighbors" element={<Neighbors />} />
       </Route>
       <Route path="/index.html" element={<Navigate to="/" replace />} />
       <Route path="*" element={<NotFound />} />

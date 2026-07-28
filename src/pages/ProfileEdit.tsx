@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { Link, useNavigate } from 'react-router-dom'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQueryClient } from '@tanstack/react-query'
 import { z } from 'zod'
 import { zodResolver } from '../lib/zodResolver'
 import { useAuth } from '../context/AuthContext'
@@ -9,9 +9,9 @@ import { useTranslation } from '../i18n/useTranslation'
 import { useSelectedRegion } from '../context/SelectedRegionContext'
 import { useRegions } from '../hooks/useRegions'
 import { getSupabaseClient } from '../lib/supabase'
+import { useOwnProfile } from '../hooks/useOwnProfile'
 import { appConfig, getLocaleLabel } from '../config/app'
 import { regionLabel } from '../lib/regionName'
-import type { Tables } from '../types/database'
 
 // zod 메시지는 번역 키(PRD 6.1). 국가 코드는 ISO alpha-2/3 형식만 검사(특정 국가 하드코딩 없음).
 const schema = z.object({
@@ -36,19 +36,7 @@ export function ProfileEdit() {
   const navigate = useNavigate()
   const [submitError, setSubmitError] = useState<string | null>(null)
 
-  const { data: profile, isLoading } = useQuery({
-    queryKey: ['profiles', 'own', user?.id],
-    queryFn: async (): Promise<Tables<'profiles'> | null> => {
-      const { data, error } = await getSupabaseClient()
-        .from('profiles')
-        .select('*')
-        .eq('id', user?.id as string)
-        .maybeSingle()
-      if (error) throw new Error(error.message)
-      return data
-    },
-    enabled: Boolean(user?.id),
-  })
+  const { data: profile, isLoading } = useOwnProfile(user?.id)
 
   const {
     register,

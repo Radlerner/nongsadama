@@ -1,28 +1,10 @@
 import { Link } from 'react-router-dom'
-import { useQuery } from '@tanstack/react-query'
 import { useAuth } from '../context/AuthContext'
 import { useTranslation } from '../i18n/useTranslation'
 import { useRegions } from '../hooks/useRegions'
-import { getSupabaseClient } from '../lib/supabase'
+import { useOwnProfile } from '../hooks/useOwnProfile'
 import { getLocaleLabel } from '../config/app'
 import { regionLabel } from '../lib/regionName'
-import type { Tables } from '../types/database'
-
-function useOwnProfile(userId: string | undefined) {
-  return useQuery({
-    queryKey: ['profiles', 'own', userId],
-    queryFn: async (): Promise<Tables<'profiles'> | null> => {
-      const { data, error } = await getSupabaseClient()
-        .from('profiles')
-        .select('*')
-        .eq('id', userId as string)
-        .maybeSingle()
-      if (error) throw new Error(error.message)
-      return data
-    },
-    enabled: Boolean(userId),
-  })
-}
 
 export function Profile() {
   const { t, locale } = useTranslation()
