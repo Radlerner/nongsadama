@@ -92,10 +92,17 @@ export function Profile() {
         </dl>
       )}
 
+      <Link
+        to="/profile/edit"
+        className="mt-4 flex min-h-[44px] items-center justify-center rounded-md bg-green-700 px-6 py-3 text-base font-semibold text-white"
+      >
+        {t('profile.editCta')}
+      </Link>
+
       <button
         type="button"
         onClick={() => void signOut()}
-        className="mt-4 min-h-[44px] w-full rounded-md border border-gray-300 px-6 py-3 text-base text-gray-700"
+        className="mt-3 min-h-[44px] w-full rounded-md border border-gray-300 px-6 py-3 text-base text-gray-700"
       >
         {t('profile.logout')}
       </button>
