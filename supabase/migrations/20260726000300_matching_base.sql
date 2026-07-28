@@ -79,3 +79,12 @@ create or replace view public.neighbor_profiles as
 
 revoke all on public.neighbor_profiles from public, anon, authenticated;
 grant select on public.neighbor_profiles to authenticated;
+
+-- 7) 방어심화(재검수 P2 반영) -------------------------------------------------
+-- security_barrier: leaky 함수 qual이 뷰 조건보다 먼저 평가되어 데이터가 새는
+-- 사이드채널(pushdown)을 차단한다. (자동 갱신 가능성 자체는 남으므로, 쓰기 차단은
+-- 아래 규칙의 GRANT 계층이 담당한다 — 라이브 확인: barrier 후에도 is_updatable=YES)
+-- 규칙: 이 뷰들을 drop 후 재생성하는 마이그레이션은 반드시 revoke-then-grant(SELECT만)와
+--       security_barrier 설정을 함께 반복해야 한다(D-012).
+alter view public.public_profiles set (security_barrier = true);
+alter view public.neighbor_profiles set (security_barrier = true);

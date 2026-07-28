@@ -117,3 +117,12 @@ PRD_v1_3.md를 기준으로 한 기술·제품 의사결정과 이유를 남긴�
   D-010과 동일한 근거(의도된 최소노출·정책 평가 필요)로 수용한다.
 - **검증**: 라이브 M1~M8 통과 — anon 국적은 동의자만/neighbor 접근 거부, 미동의 사용자 0행(상호성),
   동의 사용자는 동의자만 조회, 본인 동의 토글 가능, 기존 R7(권한 상승 차단) 회귀 없음.
+- **재검수 반영(P2)**:
+  - 두 뷰에 `security_barrier` 설정(leaky qual pushdown 차단). 자동갱신 가능성은 남으므로
+    **뷰 재생성 시 revoke-then-grant(SELECT만)+barrier를 반드시 반복**한다 — 누락 시 정의자 권한으로
+    profiles 전체가 노출/쓰기 가능해지는 P0 경로가 된다.
+  - PRD v1.4 §2.4 문면은 public_profiles에 crop_type·region_id까지 확장이나, 구현은 **의도적으로 더 좁게**
+    country_code만 public에 두고 crop_type·region_id는 neighbor_profiles(로그인+상호성)로 한정했다.
+    게시글 거리는 게시글의 region_id로 계산하므로 기능 결손 없음.
+  - `is_matching_visible` 동의 하나가 (a) 이웃 목록 노출 + (b) 게시글 국적의 **비로그인 포함 공개**를
+    겸한다. Week 3 동의 화면 문구에 (b)를 명시할 것(TEST_CHECKLIST 요건 등록).

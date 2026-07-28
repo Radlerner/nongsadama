@@ -130,6 +130,14 @@ Supabase 프로젝트 **nongsadama**(`ikusdwursvbdrznbcjtw`, ap-northeast-2)에 
 어드바이저: 신규 ERROR(neighbor 뷰)·WARN(is_matching_opted_in authenticated)은 D-012 수용.
 `is_matching_opted_in`의 anon EXECUTE는 회수됨(anon WARN 없음).
 
+독립 재검수(P0/P1 없음) 반영: 두 뷰 `security_barrier` 적용(사이드채널 pushdown 차단),
+뷰 재생성 시 revoke-then-grant 필수 규칙 명문화(D-012), §2.4 보수적 이탈 문서화.
+
+### Week 3 이월 요건 (재검수 지적)
+
+- [ ] **동의 화면 문구**: `is_matching_visible` 동의 시 "게시글에 국적이 비로그인 방문자에게도
+  표시됩니다"를 명시할 것(단일 플래그가 이웃 노출+공개 국적 표시를 겸함).
+
 ### 독립 재검수 지적 반영 결과
 
 | 지적 | 심각도 | 조치 |
