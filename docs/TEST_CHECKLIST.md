@@ -133,6 +133,31 @@ Supabase 프로젝트 **nongsadama**(`ikusdwursvbdrznbcjtw`, ap-northeast-2)에 
 독립 재검수(P0/P1 없음) 반영: 두 뷰 `security_barrier` 적용(사이드채널 pushdown 차단),
 뷰 재생성 시 revoke-then-grant 필수 규칙 명문화(D-012), §2.4 보수적 이탈 문서화.
 
+---
+
+## Week 3 작업 1 · 로그인 (feat/auth-login) — 검증 (2026-07-26 야간)
+
+| # | 시나리오 | 기대 | 결과 |
+| --- | --- | --- | --- |
+| A1 | /login 로그인 폼, 가입 전환 시 닉네임 필드 | 표시 | ✅ |
+| A2 | 데모 계정 로그인 | /home 이동, 세션 저장 | ✅ |
+| A3 | 첫 로그인 시 profiles 자동 생성 | 닉네임(가입 시 입력분)·현재 언어(ko)·선택 지역 저장, role=user, 매칭 기본 비공개 | ✅ (SQL 확인) |
+| A4 | 내 정보 탭(로그인) | 닉네임·이메일·언어·지역 표시 | ✅ |
+| A5 | 로그아웃 | 세션 제거, 로그인 유도 CTA | ✅ |
+| A6 | 잘못된 비밀번호 | "이메일 또는 비밀번호가 올바르지 않습니다" | ✅ |
+| A7 | typecheck / 빌드 | 0건 / 성공 | ✅ |
+
+- 데모 계정: `nongsadama.test.a@gmail.com`, `nongsadama.test.b@gmail.com`
+  (확인 완료 상태로 SQL 시딩. 비밀번호는 저장소에 기록하지 않음 — 운영자에게 별도 전달)
+- 가입 흐름은 이메일 확인 ON + 내장 메일 rate limit 환경에서도 동작하도록
+  "확인 메일 안내" 분기와 첫 로그인 시 프로필 생성(pending 닉네임)을 구현함.
+
+### ⚠️ 운영자 조치 필요 (아침 확인)
+
+- [ ] Supabase 대시보드 → Authentication → Sign In / Up → **Confirm email 끄기**
+  (데모 기간 신규 가입 마찰 제거. 내장 메일은 rate limit이 낮아 확인 메일 의존 불가)
+- [ ] (선택) 데모 계정 비밀번호 변경/관리
+
 ### Week 3 이월 요건 (재검수 지적)
 
 - [ ] **동의 화면 문구**: `is_matching_visible` 동의 시 "게시글에 국적이 비로그인 방문자에게도

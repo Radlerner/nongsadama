@@ -5,6 +5,7 @@ import { BrowserRouter } from 'react-router-dom'
 import { App } from './App'
 import { I18nProvider } from './i18n/I18nContext'
 import { SelectedRegionProvider } from './context/SelectedRegionContext'
+import { AuthProvider } from './context/AuthContext'
 import { queryClient } from './lib/queryClient'
 import './index.css'
 
@@ -22,9 +23,11 @@ createRoot(rootElement).render(
     <QueryClientProvider client={queryClient}>
       <I18nProvider>
         <SelectedRegionProvider>
-          <BrowserRouter basename={routerBasename}>
-            <App />
-          </BrowserRouter>
+          <AuthProvider>
+            <BrowserRouter basename={routerBasename}>
+              <App />
+            </BrowserRouter>
+          </AuthProvider>
         </SelectedRegionProvider>
       </I18nProvider>
     </QueryClientProvider>
