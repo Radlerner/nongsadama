@@ -1,10 +1,11 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { getLocaleLabel } from '../config/app'
 import { useTranslation } from '../i18n/useTranslation'
 import { useRegions, type Region } from '../hooks/useRegions'
 import { useSelectedRegion } from '../context/SelectedRegionContext'
 import { regionLabel } from '../lib/regionName'
+import { getCurrentPosition, nearestTown, OUT_OF_AREA_KM } from '../lib/geo'
 
 /**
  * 언어·지역 선택 화면(PRD 5 IA, 4.1 흐름).
@@ -65,6 +66,28 @@ function RegionPicker() {
   const { t, locale } = useTranslation()
   const { data: regions, isLoading, isError, refetch, isFetching } = useRegions()
   const { regionId, setRegionId } = useSelectedRegion()
+  const [locating, setLocating] = useState(false)
+  const [geoNotice, setGeoNotice] = useState<string | null>(null)
+
+  // 위치 동의 시 가까운 지역 추천(v1.3 §4.1). 좌표는 기기 내 계산만, 저장·전송 없음.
+  const suggestNearest = async () => {
+    setGeoNotice(null)
+    setLocating(true)
+    try {
+      const pos = await getCurrentPosition()
+      const near = nearestTown(regions ?? [], pos.lat, pos.lng)
+      if (!near) {
+        setGeoNotice('select.geoNoRegion')
+        return
+      }
+      setRegionId(near.region.id)
+      setGeoNotice(near.distanceKm > OUT_OF_AREA_KM ? 'map.outOfArea' : 'select.geoSet')
+    } catch {
+      setGeoNotice('map.geoError')
+    } finally {
+      setLocating(false)
+    }
+  }
 
   // P2-2: 로드된 활성 지역 목록에 없는 저장된 선택은 무효화한다(비활성/삭제된 지역의 stale id 정리).
   useEffect(() => {
@@ -146,6 +169,18 @@ function RegionPicker() {
 
   return (
     <div className="flex flex-col gap-4">
+      <button
+        type="button"
+        onClick={() => void suggestNearest()}
+        disabled={locating}
+        className="flex min-h-[56px] w-full items-center justify-center gap-2 rounded-md border-2 border-green-300 bg-green-50 text-base font-semibold text-green-800 disabled:opacity-60"
+      >
+        <span aria-hidden className="text-xl">📍</span>
+        {locating ? t('select.geoLocating') : t('select.geoButton')}
+      </button>
+      {geoNotice ? (
+        <p className="rounded-md bg-gray-50 px-3 py-2 text-xs text-gray-700">{t(geoNotice)}</p>
+      ) : null}
       {groups
         .filter((g) => g.towns.length > 0)
         .map((g) => (

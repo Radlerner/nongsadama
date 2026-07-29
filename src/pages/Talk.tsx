@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useTranslation } from '../i18n/useTranslation'
 import { SafetyBanner } from '../components/SafetyBanner'
 import { isSpeechAvailable, listenOnce } from '../lib/speech'
+import { isTtsAvailable, speak } from '../lib/tts'
 
 /**
  * 🎤 고민 라우터 — 단계 A (PRD v1.5 §3).
@@ -45,9 +46,30 @@ export function Talk() {
       go: () => navigate('/board/new', { state: { prefill: transcript, category: 'help', fromTalk: true } }) },
   ]
 
+  const readAloud = () => {
+    // 화면 전체를 현재 언어로 읽어준다(기기 내 TTS, 전송 없음) — 저문해력 지원
+    const lines = [
+      t('talk.title'),
+      ...options.map((o) => `${t(o.labelKey)}. ${t(o.descKey)}`),
+    ]
+    speak(lines.join('. '), locale)
+  }
+
   return (
     <section className="flex flex-col gap-4">
-      <h1 className="text-lg font-bold">{t('talk.title')}</h1>
+      <div className="flex items-center justify-between gap-2">
+        <h1 className="text-lg font-bold">{t('talk.title')}</h1>
+        {isTtsAvailable() ? (
+          <button
+            type="button"
+            onClick={readAloud}
+            className="flex min-h-[44px] items-center gap-1 rounded-full border border-gray-300 px-3 text-sm text-gray-700"
+          >
+            <span aria-hidden>🔊</span>
+            {t('talk.readAloud')}
+          </button>
+        ) : null}
+      </div>
       <p className="text-sm text-gray-600">{t('talk.subtitle')}</p>
 
       {isSpeechAvailable() ? (
