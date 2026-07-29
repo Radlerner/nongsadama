@@ -6,7 +6,8 @@ import { localizedContent } from '../lib/localizedContent'
 import { categoryLabelKey } from '../lib/categories'
 import { regionLabel } from '../lib/regionName'
 import { FreshnessBadge } from '../components/FreshnessBadge'
-import { freshnessOf } from '../lib/freshness'
+import { freshnessOf, STALE_AFTER_MONTHS_SUPPORT } from '../lib/freshness'
+import { SafetyBanner } from '../components/SafetyBanner'
 
 export function LifeInfoDetail() {
   const { t, locale } = useTranslation()
@@ -64,11 +65,20 @@ export function LifeInfoDetail() {
             {t(categoryLabelKey(item.category))}
             {regionName ? ` · ${regionName}` : ''}
           </span>
-          <FreshnessBadge verifiedAt={item.verified_at} />
+          <FreshnessBadge
+            verifiedAt={item.verified_at}
+            staleAfterMonths={item.category === 'support' ? STALE_AFTER_MONTHS_SUPPORT : undefined}
+          />
         </p>
       </header>
 
-      {freshnessOf(item.verified_at).kind !== 'fresh' ? (
+      {item.category === 'support' ? <SafetyBanner /> : null}
+
+      {freshnessOf(
+        item.verified_at,
+        new Date(),
+        item.category === 'support' ? STALE_AFTER_MONTHS_SUPPORT : undefined,
+      ).kind !== 'fresh' ? (
         <p className="rounded-md bg-amber-50 px-4 py-3 text-xs text-amber-800">
           {t('lifeInfoDetail.freshnessNotice')}
         </p>

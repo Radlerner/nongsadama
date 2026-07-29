@@ -73,9 +73,9 @@ export default function MapHome() {
     [items, category],
   )
 
-  // 지도 초기화(1회)
+  // 지도 초기화 — regions가 준비된 뒤 정확히 1회만 생성(P2-2: deps 변화로 파괴·재생성 금지)
   useEffect(() => {
-    if (!containerRef.current || mapRef.current) return
+    if (!containerRef.current || mapRef.current || regions === undefined) return
     const selected = regionId ? regionsById.get(regionId) : undefined
     const anyCentroid =
       selected && selected.centroid_lat != null
@@ -88,18 +88,23 @@ export default function MapHome() {
     // 타일: OSM 표준(§10-B 확정 전 잠정, 저트래픽 데모 — attribution 필수)
     L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 18,
-      attribution: '&copy; OpenStreetMap contributors',
+      attribution:
+        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
     }).addTo(map)
     layerRef.current = L.layerGroup().addTo(map)
     mapRef.current = map
-    return () => {
-      map.remove()
+  }, [regions, regionId, regionsById])
+
+  // 언마운트 시에만 지도 해제
+  useEffect(
+    () => () => {
+      mapRef.current?.remove()
       mapRef.current = null
       layerRef.current = null
       userMarkerRef.current = null
-    }
-    // eslint 없음 — 초기화는 regions 로드 이후 한 번이면 충분(regionsById 최초값 사용)
-  }, [regions, regionId, regionsById])
+    },
+    [],
+  )
 
   // 핀 갱신(데이터·필터 변경 시)
   useEffect(() => {
@@ -119,6 +124,10 @@ export default function MapHome() {
 
     const groups = new Map<string, LifeInfo[]>()
     for (const item of withoutCoords) {
+      // P1-2: 좌표·주소가 없고 시/군(city)에 걸린 항목(전화 전용 핫라인 등)은 물리 위치가
+      // 없으므로 지도에 핀을 만들지 않는다(위치 오인 방지). 목록·라우터 ③로만 노출.
+      const region = regionsById.get(item.region_id)
+      if (!item.address && region?.level === 'city') continue
       const arr = groups.get(item.region_id) ?? []
       arr.push(item)
       groups.set(item.region_id, arr)

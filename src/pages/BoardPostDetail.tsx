@@ -7,6 +7,7 @@ import { useRegions } from '../hooks/useRegions'
 import { useSelectedRegion } from '../context/SelectedRegionContext'
 import { regionLabel } from '../lib/regionName'
 import { regionDistanceKm } from '../lib/matching'
+import { operatorEmail } from '../config/app'
 
 export function BoardPostDetail() {
   const { t, locale } = useTranslation()
@@ -93,7 +94,7 @@ export function BoardPostDetail() {
           {/* v1.5 §5 데모 완료 조건: 만남 안전 문구 + 신고 수단 */}
           <p>{t('postDetail.helpSafety')}</p>
           <a
-            href={`mailto:casualpe@gmail.com?subject=${encodeURIComponent('[농사다마 신고] 게시글 ' + post.id)}`}
+            href={`mailto:${operatorEmail}?subject=${encodeURIComponent('[농사다마 신고] 게시글 ' + post.id)}`}
             className="mt-1 inline-block font-semibold underline"
           >
             {t('postDetail.report')}

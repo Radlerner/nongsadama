@@ -35,8 +35,10 @@ export function LifeInfo() {
     scopeIds,
     scopeReady,
   )
-  // 라우터(🎤)에서 ?category=support 등으로 진입할 수 있다(PRD v1.5 §3.1 ②③).
+  // 라우터(🎤)에서 ?category=support / ?from=talk 로 진입할 수 있다(PRD v1.5 §3.1 ②③).
   const [searchParams] = useSearchParams()
+  // §3.2-1: 라우터 경유(②) 진입 시엔 카테고리와 무관하게 도움 배너를 보인다(오분류 대비).
+  const fromTalk = searchParams.get('from') === 'talk'
   const initialCategory = searchParams.get('category')
   const [category, setCategory] = useState<string>(
     initialCategory && (LIFE_INFO_CATEGORIES as readonly string[]).includes(initialCategory)
@@ -90,7 +92,7 @@ export function LifeInfo() {
         })}
       </div>
 
-      {category === 'support' ? (
+      {category === 'support' || fromTalk ? (
         <div className="mb-4">
           <SafetyBanner />
         </div>

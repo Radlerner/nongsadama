@@ -15,10 +15,13 @@ export function Talk() {
   const [transcript, setTranscript] = useState('')
   const [listening, setListening] = useState(false)
   const [showMicNotice, setShowMicNotice] = useState(false)
+  // 제3자 전송 고지를 이 화면에서 1회 이상 확인했는가(§3.2-4 — transcript 유무로 대신하지 않는다)
+  const [noticeAccepted, setNoticeAccepted] = useState(false)
   const [speechError, setSpeechError] = useState(false)
 
   const startListening = async () => {
     setShowMicNotice(false)
+    setNoticeAccepted(true)
     setSpeechError(false)
     setListening(true)
     try {
@@ -51,7 +54,7 @@ export function Talk() {
         <div className="rounded-md border border-gray-200 px-4 py-3">
           <button
             type="button"
-            onClick={() => (transcript ? void startListening() : setShowMicNotice(true))}
+            onClick={() => (noticeAccepted ? void startListening() : setShowMicNotice(true))}
             disabled={listening}
             className="flex min-h-[64px] w-full items-center justify-center gap-3 rounded-md bg-green-700 text-lg font-bold text-white disabled:opacity-60"
           >
@@ -75,7 +78,7 @@ export function Talk() {
                   onClick={() => setShowMicNotice(false)}
                   className="min-h-[44px] flex-1 rounded-md border border-gray-300 text-gray-700"
                 >
-                  {t('postDetail.deleteCancel')}
+                  {t('talk.micCancel')}
                 </button>
               </div>
             </div>
