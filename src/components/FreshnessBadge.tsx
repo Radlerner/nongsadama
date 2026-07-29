@@ -5,9 +5,15 @@ import { useTranslation } from '../i18n/useTranslation'
  * 생활정보 신선도 배지. 확인일 미기재/오래됨은 경고색, 최근 확인은 중립색으로 표시한다.
  * (지금의 시딩 샘플은 verified_at이 없어 "검수 확인일 없음" 경고가 그대로 드러난다 — 의도됨)
  */
-export function FreshnessBadge({ verifiedAt }: { verifiedAt: string | null }) {
+export function FreshnessBadge({
+  verifiedAt,
+  staleAfterMonths,
+}: {
+  verifiedAt: string | null
+  staleAfterMonths?: number
+}) {
   const { t } = useTranslation()
-  const f = freshnessOf(verifiedAt)
+  const f = freshnessOf(verifiedAt, new Date(), staleAfterMonths)
   const label =
     f.kind === 'unverified'
       ? t('lifeInfo.freshness.unverified')

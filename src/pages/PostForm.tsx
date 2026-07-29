@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { z } from 'zod'
 import { zodResolver } from '../lib/zodResolver'
 import { useAuth } from '../context/AuthContext'
@@ -14,6 +14,7 @@ import {
   usePost,
   useUpdatePost,
 } from '../hooks/usePosts'
+import { SafetyBanner } from '../components/SafetyBanner'
 
 const schema = z.object({
   category: z.string().min(1),
@@ -35,7 +36,18 @@ export function PostForm() {
   const createPost = useCreatePost()
   const updatePost = useUpdatePost()
   const navigate = useNavigate()
+  const location = useLocation()
   const [submitError, setSubmitError] = useState<string | null>(null)
+
+  // 🎤 라우터에서 넘어온 프리필(PRD v1.5 §3.1 ①④). 음성 텍스트는 본문 초안일 뿐이며
+  // 게시 전 공개 경고 확인(§3.2-2)을 거쳐야 제출된다.
+  const talkState = (location.state ?? {}) as {
+    prefill?: string
+    category?: string
+    fromTalk?: boolean
+  }
+  const fromTalk = Boolean(talkState.fromTalk)
+  const [publicWarningOk, setPublicWarningOk] = useState(!fromTalk)
 
   const {
     register,
@@ -47,7 +59,14 @@ export function PostForm() {
       isEdit && existing
         ? { category: existing.category, title: existing.title, body: existing.body }
         : undefined,
-    defaultValues: { category: POST_CATEGORIES[0], title: '', body: '' },
+    defaultValues: {
+      category:
+        talkState.category && (POST_CATEGORIES as readonly string[]).includes(talkState.category)
+          ? talkState.category
+          : POST_CATEGORIES[0],
+      title: '',
+      body: talkState.prefill ?? '',
+    },
   })
 
   if (initializing || (isEdit && postLoading)) {
@@ -164,18 +183,36 @@ export function PostForm() {
           ) : null}
         </label>
 
+        {fromTalk ? (
+          <label className="flex items-start gap-3 rounded-md border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+            <input
+              type="checkbox"
+              checked={publicWarningOk}
+              onChange={(e) => setPublicWarningOk(e.target.checked)}
+              className="mt-1 h-5 w-5 accent-amber-600"
+            />
+            <span>{t('postForm.publicWarning')}</span>
+          </label>
+        ) : null}
+
         {submitError ? (
           <p className="rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">{t(submitError)}</p>
         ) : null}
 
         <button
           type="submit"
-          disabled={isSubmitting}
+          disabled={isSubmitting || !publicWarningOk}
           className="min-h-[44px] rounded-md bg-green-700 px-6 py-3 text-base font-semibold text-white disabled:opacity-50"
         >
           {isSubmitting ? t('auth.loading') : t('postForm.submit')}
         </button>
       </form>
+
+      {fromTalk ? (
+        <div className="mt-4">
+          <SafetyBanner />
+        </div>
+      ) : null}
 
       <Link
         to={isEdit && existing ? `/board/${existing.id}` : '/board'}

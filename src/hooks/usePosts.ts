@@ -5,7 +5,7 @@ import type { Tables, TablesInsert } from '../types/database'
 export type Post = Tables<'posts'>
 
 /** 게시글 카테고리(고정 도메인, PRD 8.1). */
-export const POST_CATEGORIES = ['question', 'info', 'daily', 'other'] as const
+export const POST_CATEGORIES = ['question', 'info', 'daily', 'other', 'help'] as const
 export function postCategoryLabelKey(category: string): string {
   return `board.category.${category}`
 }

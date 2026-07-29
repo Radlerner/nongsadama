@@ -1,13 +1,19 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { useTranslation } from '../i18n/useTranslation'
 import { useRegions, countyRegionIds } from '../hooks/useRegions'
 import { useSelectedRegion } from '../context/SelectedRegionContext'
 import { useLifeInfoList, type LifeInfo as LifeInfoRow } from '../hooks/useLifeInfo'
-import { LIFE_INFO_CATEGORIES, categoryLabelKey } from '../lib/categories'
+import {
+  LIFE_INFO_CATEGORIES,
+  LIFE_INFO_CATEGORY_ICONS,
+  categoryLabelKey,
+} from '../lib/categories'
 import { localizedContent } from '../lib/localizedContent'
 import { regionLabel } from '../lib/regionName'
 import { FreshnessBadge } from '../components/FreshnessBadge'
+import { SafetyBanner } from '../components/SafetyBanner'
+import { STALE_AFTER_MONTHS_SUPPORT } from '../lib/freshness'
 
 const FILTERS = ['all', ...LIFE_INFO_CATEGORIES] as const
 
@@ -29,7 +35,14 @@ export function LifeInfo() {
     scopeIds,
     scopeReady,
   )
-  const [category, setCategory] = useState<string>('all')
+  // 라우터(🎤)에서 ?category=support 등으로 진입할 수 있다(PRD v1.5 §3.1 ②③).
+  const [searchParams] = useSearchParams()
+  const initialCategory = searchParams.get('category')
+  const [category, setCategory] = useState<string>(
+    initialCategory && (LIFE_INFO_CATEGORIES as readonly string[]).includes(initialCategory)
+      ? initialCategory
+      : 'all',
+  )
 
   const regionNameOf = (id: string) => {
     const r = (regions ?? []).find((x) => x.id === id)
@@ -66,11 +79,22 @@ export function LifeInfo() {
                   : 'border-gray-300 text-gray-700',
               ].join(' ')}
             >
-              {c === 'all' ? t('lifeInfo.category.all') : t(categoryLabelKey(c))}
+              {c === 'all' ? t('lifeInfo.category.all') : (
+                <>
+                  <span aria-hidden className="mr-1">{LIFE_INFO_CATEGORY_ICONS[c] ?? ''}</span>
+                  {t(categoryLabelKey(c))}
+                </>
+              )}
             </button>
           )
         })}
       </div>
+
+      {category === 'support' ? (
+        <div className="mb-4">
+          <SafetyBanner />
+        </div>
+      ) : null}
 
       {loading ? (
         <p className="rounded-md bg-gray-50 px-4 py-8 text-center text-sm text-gray-500">
@@ -122,7 +146,10 @@ function LifeInfoCard({ item, regionName }: { item: LifeInfoRow; regionName: str
             {t(categoryLabelKey(item.category))}
             {regionName ? ` · ${regionName}` : ''}
           </span>
-          <FreshnessBadge verifiedAt={item.verified_at} />
+          <FreshnessBadge
+            verifiedAt={item.verified_at}
+            staleAfterMonths={item.category === 'support' ? STALE_AFTER_MONTHS_SUPPORT : undefined}
+          />
         </p>
       </Link>
     </li>

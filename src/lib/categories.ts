@@ -5,7 +5,18 @@ export const LIFE_INFO_CATEGORIES = [
   'government',
   'transport',
   'other',
+  'support',
 ] as const
+
+/** 카테고리 아이콘(직관 우선 — 색·텍스트와 병행 표기, PRD v1.5 §1). */
+export const LIFE_INFO_CATEGORY_ICONS: Record<string, string> = {
+  hospital: '🏥',
+  market: '🛒',
+  government: '🏛️',
+  transport: '🚌',
+  other: 'ℹ️',
+  support: '🆘',
+}
 
 export type LifeInfoCategory = (typeof LIFE_INFO_CATEGORIES)[number]
 

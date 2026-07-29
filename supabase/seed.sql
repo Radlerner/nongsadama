@@ -100,6 +100,21 @@ insert into public.life_info
   ('a3000000-0000-4000-8000-000000000015','a2000000-0000-4000-8000-000000000001','other',
    '{"ko":{"name":"[샘플] 다문화가족지원센터","description":"샘플입니다. 실제 운영 여부·연락처는 운영자 검수 후 제공됩니다. 방문 전 확인하세요."},"en":{"name":"[Sample] Multicultural family support center","description":"Sample. Availability/contact after operator review. Call before visiting."}}',
    null,null,null,null,true),
+  -- support: 전국 공통 공공 핫라인(안정적 공개 번호). 주소·좌표 없음.
+  -- verified_at은 운영자 최종 확인 후 기입(그 전까지 신선도 배지가 '검수 확인일 없음' 표시 — 의도).
+  -- 실기관(농촌인력인권센터 등 지역 기관)은 명칭·관할·연락처·존속 확인 후 운영자가 추가한다(PRD v1.5 §6).
+  ('a3000000-0000-4000-8000-000000000017','a1000000-0000-4000-8000-000000000001','support',
+   '{"ko":{"name":"외국인종합안내센터 ☎1345","description":"체류·비자·생활 전반을 여러 언어로 안내하는 정부 콜센터입니다. 국번 없이 1345."},"en":{"name":"Immigration Contact Center ☎1345","description":"Government call center for visa, stay and daily-life questions in many languages. Dial 1345."}}',
+   null,'1345',null,null,true),
+  ('a3000000-0000-4000-8000-000000000018','a1000000-0000-4000-8000-000000000001','support',
+   '{"ko":{"name":"고용노동부 상담센터 ☎1350","description":"임금 체불, 근로계약, 산재 등 일 문제 상담. 국번 없이 1350."},"en":{"name":"Ministry of Employment & Labor ☎1350","description":"Help with unpaid wages, contracts and workplace injuries. Dial 1350."}}',
+   null,'1350',null,null,true),
+  ('a3000000-0000-4000-8000-000000000019','a1000000-0000-4000-8000-000000000001','support',
+   '{"ko":{"name":"긴급 신고 ☎112","description":"폭력·감금 등 위급한 상황에서는 바로 112에 신고하세요."},"en":{"name":"Emergency ☎112","description":"In danger (violence, confinement), call 112 immediately."}}',
+   null,'112',null,null,true),
+  ('a3000000-0000-4000-8000-000000000020','a1000000-0000-4000-8000-000000000001','support',
+   '{"ko":{"name":"다누리콜센터 ☎1577-1366","description":"폭력 피해·가정 문제를 여러 언어로 24시간 상담합니다."},"en":{"name":"Danuri Helpline ☎1577-1366","description":"24h multilingual help for violence and family issues."}}',
+   null,'1577-1366',null,null,true),
   -- 미공개 샘플(admin 전용 가시성 데모)
   ('a3000000-0000-4000-8000-000000000016','a2000000-0000-4000-8000-000000000001','other',
    '{"ko":{"name":"[샘플·미공개] 검수 대기 항목","description":"is_published=false 예시. 공개 전에는 anon/일반 사용자에게 보이지 않고 admin만 볼 수 있다."},"en":{"name":"[Sample·unpublished] Pending review","description":"is_published=false example. Hidden from public until an admin publishes it."}}',

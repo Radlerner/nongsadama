@@ -12,6 +12,7 @@ import { LifeInfoDetail } from './pages/LifeInfoDetail'
 import { Profile } from './pages/Profile'
 import { ProfileEdit } from './pages/ProfileEdit'
 import { Neighbors } from './pages/Neighbors'
+import { Talk } from './pages/Talk'
 import { NotFound } from './pages/NotFound'
 
 export function App() {
@@ -31,6 +32,7 @@ export function App() {
         <Route path="/profile" element={<Profile />} />
         <Route path="/profile/edit" element={<ProfileEdit />} />
         <Route path="/neighbors" element={<Neighbors />} />
+        <Route path="/talk" element={<Talk />} />
       </Route>
       <Route path="/index.html" element={<Navigate to="/" replace />} />
       <Route path="*" element={<NotFound />} />
