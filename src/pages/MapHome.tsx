@@ -16,6 +16,14 @@ import { regionLabel } from '../lib/regionName'
 import { FreshnessBadge } from '../components/FreshnessBadge'
 import { STALE_AFTER_MONTHS_SUPPORT } from '../lib/freshness'
 import { getCurrentPosition, nearestTown, OUT_OF_AREA_KM } from '../lib/geo'
+import {
+  mapProvider,
+  loadKakaoMaps,
+  emojiMarkerEl,
+  type KakaoMap,
+  type KakaoMapsNs,
+  type KakaoOverlay,
+} from '../lib/kakaoMap'
 import type { Tables } from '../types/database'
 
 type Region = Tables<'regions'>
@@ -58,10 +66,16 @@ export default function MapHome() {
     outOfArea: boolean
   } | null>(null)
 
+  const provider = mapProvider() // 'kakao'(키 존재 시) | 'osm'
   const mapRef = useRef<L.Map | null>(null)
   const layerRef = useRef<L.LayerGroup | null>(null)
   const userMarkerRef = useRef<L.Marker | null>(null)
   const containerRef = useRef<HTMLDivElement | null>(null)
+  const kakaoNsRef = useRef<KakaoMapsNs | null>(null)
+  const kakaoMapRef = useRef<KakaoMap | null>(null)
+  const kakaoOverlaysRef = useRef<KakaoOverlay[]>([])
+  const kakaoUserOverlayRef = useRef<KakaoOverlay | null>(null)
+  const [kakaoError, setKakaoError] = useState(false)
 
   const regionsById = useMemo(
     () => new Map((regions ?? []).map((r) => [r.id, r])),
@@ -73,8 +87,89 @@ export default function MapHome() {
     [items, category],
   )
 
-  // 지도 초기화 — regions가 준비된 뒤 정확히 1회만 생성(P2-2: deps 변화로 파괴·재생성 금지)
+  // 제공자 공용 핀 데이터(실좌표 개별 + 읍·면 묶음, 전화 전용 시/군 항목 제외)
+  const pins = useMemo(() => {
+    const out: { lat: number; lng: number; emoji: string; count: number; items: LifeInfo[] }[] = []
+    const withCoords = filtered.filter((i) => i.latitude != null && i.longitude != null)
+    const withoutCoords = filtered.filter((i) => i.latitude == null || i.longitude == null)
+    for (const item of withCoords) {
+      out.push({
+        lat: item.latitude as number,
+        lng: item.longitude as number,
+        emoji: LIFE_INFO_CATEGORY_ICONS[item.category] ?? 'ℹ️',
+        count: 1,
+        items: [item],
+      })
+    }
+    const groups = new Map<string, LifeInfo[]>()
+    for (const item of withoutCoords) {
+      const region = regionsById.get(item.region_id)
+      if (!item.address && region?.level === 'city') continue
+      const arr = groups.get(item.region_id) ?? []
+      arr.push(item)
+      groups.set(item.region_id, arr)
+    }
+    for (const [rid, group] of groups) {
+      const region = regionsById.get(rid)
+      if (!region || region.centroid_lat == null || region.centroid_lng == null) continue
+      out.push({
+        lat: region.centroid_lat,
+        lng: region.centroid_lng,
+        emoji: group.length === 1 ? LIFE_INFO_CATEGORY_ICONS[group[0].category] ?? 'ℹ️' : '📍',
+        count: group.length,
+        items: group,
+      })
+    }
+    return out
+  }, [filtered, regionsById])
+
+  const [kakaoReady, setKakaoReady] = useState(false)
+
+  // ── kakao 제공자: SDK 로드·지도 생성(키 존재 시에만) ──────────────────────
   useEffect(() => {
+    if (provider !== 'kakao' || !containerRef.current || kakaoMapRef.current) return
+    if (regions === undefined) return
+    const selected = regionId ? regionsById.get(regionId) : undefined
+    const anyCentroid =
+      selected && selected.centroid_lat != null
+        ? selected
+        : (regions ?? []).find((r) => r.centroid_lat != null)
+    const center: [number, number] = anyCentroid
+      ? [anyCentroid.centroid_lat as number, anyCentroid.centroid_lng as number]
+      : [36.6, 126.66]
+    loadKakaoMaps()
+      .then((ns) => {
+        if (!containerRef.current || kakaoMapRef.current) return
+        kakaoNsRef.current = ns
+        kakaoMapRef.current = new ns.Map(containerRef.current, {
+          center: new ns.LatLng(center[0], center[1]),
+          level: 9,
+        })
+        setKakaoReady(true)
+      })
+      .catch(() => setKakaoError(true))
+  }, [provider, regions, regionId, regionsById])
+
+  // kakao 핀(CustomOverlay) 갱신
+  useEffect(() => {
+    if (provider !== 'kakao' || !kakaoReady) return
+    const ns = kakaoNsRef.current
+    const map = kakaoMapRef.current
+    if (!ns || !map) return
+    for (const o of kakaoOverlaysRef.current) o.setMap(null)
+    kakaoOverlaysRef.current = []
+    for (const pin of pins) {
+      const el = emojiMarkerEl(pin.emoji, pin.count)
+      el.addEventListener('click', () => setSheet(pin.items))
+      const ov = new ns.CustomOverlay({ position: new ns.LatLng(pin.lat, pin.lng), content: el })
+      ov.setMap(map)
+      kakaoOverlaysRef.current.push(ov)
+    }
+  }, [provider, kakaoReady, pins])
+
+  // ── osm(Leaflet) 제공자: 초기화 — regions 준비 후 정확히 1회 ─────────────
+  useEffect(() => {
+    if (provider !== 'osm') return
     if (!containerRef.current || mapRef.current || regions === undefined) return
     const selected = regionId ? regionsById.get(regionId) : undefined
     const anyCentroid =
@@ -106,57 +201,46 @@ export default function MapHome() {
     [],
   )
 
-  // 핀 갱신(데이터·필터 변경 시)
+  // osm(Leaflet) 핀 갱신
   useEffect(() => {
+    if (provider !== 'osm') return
     const layer = layerRef.current
     if (!layer) return
     layer.clearLayers()
-
-    const withCoords = filtered.filter((i) => i.latitude != null && i.longitude != null)
-    const withoutCoords = filtered.filter((i) => i.latitude == null || i.longitude == null)
-
-    for (const item of withCoords) {
-      const icon = emojiIcon(LIFE_INFO_CATEGORY_ICONS[item.category] ?? 'ℹ️')
-      L.marker([item.latitude as number, item.longitude as number], { icon })
-        .on('click', () => setSheet([item]))
+    for (const pin of pins) {
+      L.marker([pin.lat, pin.lng], { icon: emojiIcon(pin.emoji, pin.count > 1 ? pin.count : undefined) })
+        .on('click', () => setSheet(pin.items))
         .addTo(layer)
     }
-
-    const groups = new Map<string, LifeInfo[]>()
-    for (const item of withoutCoords) {
-      // P1-2: 좌표·주소가 없고 시/군(city)에 걸린 항목(전화 전용 핫라인 등)은 물리 위치가
-      // 없으므로 지도에 핀을 만들지 않는다(위치 오인 방지). 목록·라우터 ③로만 노출.
-      const region = regionsById.get(item.region_id)
-      if (!item.address && region?.level === 'city') continue
-      const arr = groups.get(item.region_id) ?? []
-      arr.push(item)
-      groups.set(item.region_id, arr)
-    }
-    for (const [rid, group] of groups) {
-      const region = regionsById.get(rid)
-      if (!region || region.centroid_lat == null || region.centroid_lng == null) continue
-      const emoji =
-        group.length === 1 ? LIFE_INFO_CATEGORY_ICONS[group[0].category] ?? 'ℹ️' : '📍'
-      L.marker([region.centroid_lat, region.centroid_lng], {
-        icon: emojiIcon(emoji, group.length),
-      })
-        .on('click', () => setSheet(group))
-        .addTo(layer)
-    }
-  }, [filtered, regionsById])
+  }, [provider, pins])
 
   const locate = async () => {
     setGeoError(false)
     setLocating(true)
     try {
       const pos = await getCurrentPosition()
-      const map = mapRef.current
-      if (map) {
-        if (userMarkerRef.current) userMarkerRef.current.remove()
-        userMarkerRef.current = L.marker([pos.lat, pos.lng], {
-          icon: emojiIcon('🧍'),
-        }).addTo(map)
-        map.setView([pos.lat, pos.lng], 12)
+      if (provider === 'kakao') {
+        const ns = kakaoNsRef.current
+        const kmap = kakaoMapRef.current
+        if (ns && kmap) {
+          kakaoUserOverlayRef.current?.setMap(null)
+          const ov = new ns.CustomOverlay({
+            position: new ns.LatLng(pos.lat, pos.lng),
+            content: emojiMarkerEl('🧍'),
+          })
+          ov.setMap(kmap)
+          kakaoUserOverlayRef.current = ov
+          kmap.setCenter(new ns.LatLng(pos.lat, pos.lng))
+        }
+      } else {
+        const map = mapRef.current
+        if (map) {
+          if (userMarkerRef.current) userMarkerRef.current.remove()
+          userMarkerRef.current = L.marker([pos.lat, pos.lng], {
+            icon: emojiIcon('🧍'),
+          }).addTo(map)
+          map.setView([pos.lat, pos.lng], 12)
+        }
       }
       const near = nearestTown(regions ?? [], pos.lat, pos.lng)
       if (near) {
@@ -227,6 +311,10 @@ export default function MapHome() {
 
       {geoError ? (
         <p className="rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">{t('map.geoError')}</p>
+      ) : null}
+
+      {kakaoError ? (
+        <p className="rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">{t('map.kakaoError')}</p>
       ) : null}
 
       {nearest ? (

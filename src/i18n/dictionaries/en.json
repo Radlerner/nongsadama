@@ -39,6 +39,7 @@
   "map.sheetTitle": "{n} places here",
   "map.unlocated": "Location pending review — shown at town center",
   "map.listView": "See as list",
+  "map.kakaoError": "Couldn't load Kakao Map. Please try again later.",
   "landing.title": "NongsaDama",
   "landing.subtitle": "Local life info and community for your area",
   "landing.enter": "Get started",

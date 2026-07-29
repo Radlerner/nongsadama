@@ -39,6 +39,7 @@
   "map.sheetTitle": "이곳의 정보 {n}건",
   "map.unlocated": "위치 검수 전 — 읍·면 중심에 표시",
   "map.listView": "목록으로 보기",
+  "map.kakaoError": "카카오맵을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.",
   "landing.title": "농사다마",
   "landing.subtitle": "우리 지역 생활정보와 게시판",
   "landing.enter": "시작하기",
