@@ -113,7 +113,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       window.localStorage.setItem(PENDING_NICKNAME_KEY, nickname)
     }
     const { data, error } = await getSupabaseClient().auth.signUp({ email, password })
-    if (error) return { error: error.message, needsEmailConfirm: false }
+    if (error) {
+      // 가입 실패 시 pending 닉네임을 남기지 않는다(같은 브라우저의 다른 계정 오염 방지, P2-1).
+      if (typeof window !== 'undefined') window.localStorage.removeItem(PENDING_NICKNAME_KEY)
+      return { error: error.message, needsEmailConfirm: false }
+    }
     // 세션이 없으면 이메일 확인이 켜진 프로젝트 → 확인 후 첫 로그인 때 ensureProfile이 처리
     return { error: null, needsEmailConfirm: !data.session }
   }, [])

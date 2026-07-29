@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { useTranslation } from '../i18n/useTranslation'
 import { getLocaleLabel } from '../config/app'
 import { regionLabel } from '../lib/regionName'
@@ -12,7 +13,10 @@ interface NeighborCardProps {
   viewerRegionId: string | null
 }
 
-/** 이웃 한 명 카드: 닉네임·읍면·근사거리·언어/작목/국적 칩. 연락처·정확 위치는 없다. */
+/**
+ * 이웃 한 명 카드: 닉네임·읍면·근사거리·언어/작목/국적 칩. 연락처·정확 위치는 없다.
+ * 카드 탭 → 그 이웃의 공개 게시글 목록(PRD v1.4 §2.1 연결 동선).
+ */
 export function NeighborCard({ neighbor, regionsById, viewerRegionId }: NeighborCardProps) {
   const { t, locale } = useTranslation()
 
@@ -32,8 +36,8 @@ export function NeighborCard({ neighbor, regionsById, viewerRegionId }: Neighbor
   if (neighbor.crop_type) chips.push(neighbor.crop_type)
   if (neighbor.country_code) chips.push(neighbor.country_code)
 
-  return (
-    <li className="rounded-md border border-gray-200 px-4 py-3">
+  const body = (
+    <>
       <div className="flex items-center justify-between gap-2">
         <p className="font-semibold text-gray-900">{neighbor.nickname}</p>
         {distanceLabel ? <span className="text-xs text-gray-500">{distanceLabel}</span> : null}
@@ -43,9 +47,9 @@ export function NeighborCard({ neighbor, regionsById, viewerRegionId }: Neighbor
       </p>
       {chips.length > 0 ? (
         <p className="mt-2 flex flex-wrap gap-1">
-          {chips.map((c) => (
+          {chips.map((c, i) => (
             <span
-              key={c}
+              key={`${i}-${c}`}
               className="rounded-full bg-green-50 px-2 py-0.5 text-[11px] font-medium text-green-800"
             >
               {c}
@@ -53,6 +57,19 @@ export function NeighborCard({ neighbor, regionsById, viewerRegionId }: Neighbor
           ))}
         </p>
       ) : null}
+      <p className="mt-2 text-[11px] text-green-700 underline">{t('neighbors.viewPosts')}</p>
+    </>
+  )
+
+  return (
+    <li className="rounded-md border border-gray-200 active:bg-gray-50">
+      {neighbor.id ? (
+        <Link to={`/board?author=${neighbor.id}`} className="block px-4 py-3">
+          {body}
+        </Link>
+      ) : (
+        <div className="px-4 py-3">{body}</div>
+      )}
     </li>
   )
 }

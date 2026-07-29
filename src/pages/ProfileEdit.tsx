@@ -84,9 +84,13 @@ export function ProfileEdit() {
     const countryCode = values.country_code.trim().toUpperCase()
     const cropType = values.crop_type.trim()
     const regionIdValue = values.region_id || null
+    // upsert(P1-3): 드문 케이스로 profiles 행이 아직 없으면(첫 로그인 시 생성 실패 등)
+    // update가 0행으로 조용히 성공하는 무음 no-op을 막고 행을 생성한다.
+    // RLS(profiles_insert_self)가 본인 id + role='user'(기본값)를 강제하므로 안전.
     const { error } = await getSupabaseClient()
       .from('profiles')
-      .update({
+      .upsert({
+        id: user.id,
         nickname: values.nickname.trim(),
         country_code: countryCode === '' ? null : countryCode,
         crop_type: cropType === '' ? null : cropType,
@@ -94,7 +98,6 @@ export function ProfileEdit() {
         region_id: regionIdValue,
         is_matching_visible: values.is_matching_visible,
       })
-      .eq('id', user.id)
     if (error) {
       setSubmitError('profileEdit.error.saveFailed')
       return

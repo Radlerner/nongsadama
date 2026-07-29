@@ -36,13 +36,19 @@ async function attachAuthors(posts: Post[]): Promise<PostWithAuthor[]> {
   }))
 }
 
-async function fetchPosts(regionIds: string[] | null): Promise<PostWithAuthor[]> {
+async function fetchPosts(
+  regionIds: string[] | null,
+  authorId: string | null,
+): Promise<PostWithAuthor[]> {
   let query = getSupabaseClient()
     .from('posts')
     .select('*')
     .eq('status', 'published')
     .order('created_at', { ascending: false })
-  if (regionIds && regionIds.length > 0) {
+  if (authorId) {
+    // 이웃 → 그 사용자의 공개 게시글 보기(PRD v1.4 §2.1). 지역 범위와 무관하게 전체 공개 글.
+    query = query.eq('author_id', authorId)
+  } else if (regionIds && regionIds.length > 0) {
     query = query.in('region_id', regionIds)
   }
   const { data, error } = await query
@@ -50,10 +56,14 @@ async function fetchPosts(regionIds: string[] | null): Promise<PostWithAuthor[]>
   return attachAuthors(data ?? [])
 }
 
-export function useBoardPosts(regionIds: string[] | null, enabled = true) {
+export function useBoardPosts(
+  regionIds: string[] | null,
+  enabled = true,
+  authorId: string | null = null,
+) {
   return useQuery({
-    queryKey: ['posts', 'list', regionIds ? [...regionIds].sort() : null],
-    queryFn: () => fetchPosts(regionIds),
+    queryKey: ['posts', 'list', authorId, regionIds ? [...regionIds].sort() : null],
+    queryFn: () => fetchPosts(regionIds, authorId),
     enabled,
   })
 }

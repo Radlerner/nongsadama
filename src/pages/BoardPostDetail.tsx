@@ -4,7 +4,9 @@ import { useTranslation } from '../i18n/useTranslation'
 import { useAuth } from '../context/AuthContext'
 import { usePost, useDeletePost, postCategoryLabelKey } from '../hooks/usePosts'
 import { useRegions } from '../hooks/useRegions'
+import { useSelectedRegion } from '../context/SelectedRegionContext'
 import { regionLabel } from '../lib/regionName'
+import { regionDistanceKm } from '../lib/matching'
 
 export function BoardPostDetail() {
   const { t, locale } = useTranslation()
@@ -13,6 +15,7 @@ export function BoardPostDetail() {
   const navigate = useNavigate()
   const { data: post, isLoading, isError, refetch, isFetching } = usePost(postId)
   const { data: regions } = useRegions()
+  const { regionId: viewerRegionId } = useSelectedRegion()
   const deletePost = useDeletePost()
   const [confirmingDelete, setConfirmingDelete] = useState(false)
 
@@ -54,6 +57,16 @@ export function BoardPostDetail() {
   }
 
   const region = (regions ?? []).find((r) => r.id === post.region_id)
+  const viewerRegion = viewerRegionId
+    ? (regions ?? []).find((r) => r.id === viewerRegionId)
+    : undefined
+  const dist = regionDistanceKm(viewerRegion, region)
+  const distanceLabel =
+    dist === null
+      ? null
+      : dist === 0
+        ? t('neighbors.sameTown')
+        : t('neighbors.aboutKm').replace('{n}', String(Math.max(1, Math.round(dist))))
   const isOwn = user?.id === post.author_id
   const createdDate = post.created_at.slice(0, 10)
 
@@ -64,6 +77,7 @@ export function BoardPostDetail() {
         <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-gray-500">
           <span>{t(postCategoryLabelKey(post.category))}</span>
           {region ? <span>{regionLabel(region.id, region.names, locale)}</span> : null}
+          {distanceLabel ? <span className="text-green-700">{distanceLabel}</span> : null}
           <span>
             {post.authorNickname ?? t('board.unknownAuthor')}
             {post.authorCountry ? ` · ${post.authorCountry}` : ''}

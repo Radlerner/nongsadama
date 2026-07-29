@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { useTranslation } from '../i18n/useTranslation'
 import { useAuth } from '../context/AuthContext'
 import { useRegions, countyRegionIds } from '../hooks/useRegions'
@@ -21,11 +21,15 @@ export function Board() {
     isFetching: regionsFetching,
   } = useRegions()
   const { regionId } = useSelectedRegion()
+  const [searchParams] = useSearchParams()
+  // 이웃 목록에서 진입한 "이 작성자의 글만 보기" 모드(PRD v1.4 §2.1)
+  const authorId = searchParams.get('author')
   const scopeIds = countyRegionIds(regions ?? [], regionId)
-  const scopeReady = !regionId || regions !== undefined
+  const scopeReady = Boolean(authorId) || !regionId || regions !== undefined
   const { data: posts, isLoading, isError, refetch, isFetching } = useBoardPosts(
     scopeIds,
     scopeReady,
+    authorId,
   )
 
   const regionsById = new Map((regions ?? []).map((r) => [r.id, r]))
@@ -48,6 +52,18 @@ export function Board() {
           {t('board.write')}
         </Link>
       </div>
+
+      {authorId ? (
+        <p className="mb-3 flex items-center justify-between rounded-md bg-green-50 px-3 py-2 text-xs text-green-800">
+          <span>
+            {t('board.authorFilter')}
+            {(posts ?? [])[0]?.authorNickname ? `: ${(posts ?? [])[0]?.authorNickname}` : ''}
+          </span>
+          <Link to="/board" className="min-h-[32px] font-semibold underline">
+            {t('board.authorFilterClear')}
+          </Link>
+        </p>
+      ) : null}
 
       {loading ? (
         <p className="rounded-md bg-gray-50 px-4 py-8 text-center text-sm text-gray-500">

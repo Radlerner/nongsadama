@@ -200,7 +200,21 @@ Supabase 프로젝트 **nongsadama**(`ikusdwursvbdrznbcjtw`, ap-northeast-2)에 
 
 - [ ] Supabase 대시보드 → Authentication → Sign In / Up → **Confirm email 끄기**
   (데모 기간 신규 가입 마찰 제거. 내장 메일은 rate limit이 낮아 확인 메일 의존 불가)
+- [ ] Supabase 대시보드 → Authentication → **Leaked Password Protection 켜기** (재검수 P2-10)
 - [ ] (선택) 데모 계정 비밀번호 변경/관리
+
+### 독립 재검수(Week3 사후, 2026-07-29) 결과 및 반영
+
+- **P0 없음**. 보안 주장(X1~X7·anon·상호성·거리) 리뷰어가 라이브 재현으로 전부 확인.
+- P1-1 이웃→공개 글 동선 부재 → ✅ 이웃 카드 탭 시 `/board?author=` 필터(+해제 칩)
+- P1-2 이웃 범위 미스코프/동의 문구 과소 고지 → ✅ 뷰 "같은 시/군" 스코프(마이그레이션
+  20260726000400, S1~S3 라이브 PASS) + 문구 "같은 시/군" 정합화
+- P1-3 프로필 무음 no-op 체인 → ✅ ProfileEdit upsert 전환
+- P2-1(pending 오염)·P2-5(상세 거리) → ✅ 반영 / P2-2(첫 로그인 캐시) → ✅ 아침 선반영(79cb76f)
+- P2-8 전체 피드 폴백 → 의도된 동작으로 확정(D-014) / P2-10 → 운영자 조치 등록
+- **백로그(Week 4)**: P2-3(onAuthStateChange 잠금 방어), P2-4(zod 메시지 키 규칙),
+  P2-6(로그인 후 returnTo), P2-7(작성자 조회 오류 표면화), P2-9(코드 스플리팅 — 번들
+  563kB/160kB gzip), P2-12(칩 key·이웃 캐시 키)
 
 ### Week 3 이월 요건 (재검수 지적)
 
