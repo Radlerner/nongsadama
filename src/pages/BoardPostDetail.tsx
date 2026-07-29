@@ -88,6 +88,19 @@ export function BoardPostDetail() {
 
       <p className="whitespace-pre-line text-sm text-gray-800">{post.body}</p>
 
+      {post.category === 'help' ? (
+        <div className="rounded-md bg-amber-50 px-4 py-3 text-xs text-amber-900">
+          {/* v1.5 §5 데모 완료 조건: 만남 안전 문구 + 신고 수단 */}
+          <p>{t('postDetail.helpSafety')}</p>
+          <a
+            href={`mailto:casualpe@gmail.com?subject=${encodeURIComponent('[농사다마 신고] 게시글 ' + post.id)}`}
+            className="mt-1 inline-block font-semibold underline"
+          >
+            {t('postDetail.report')}
+          </a>
+        </div>
+      ) : null}
+
       {isOwn ? (
         <div className="flex gap-2">
           <Link

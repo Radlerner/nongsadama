@@ -86,6 +86,8 @@
   "postDetail.delete": "Delete",
   "postDetail.deleteConfirm": "Confirm delete",
   "postDetail.deleteCancel": "Cancel",
+  "postDetail.helpSafety": "Meet neighbors in daylight, in busy public places. If something feels wrong, don't meet.",
+  "postDetail.report": "Report this post",
   "postForm.newTitle": "Write a post",
   "postForm.editTitle": "Edit post",
   "postForm.category": "Category",
