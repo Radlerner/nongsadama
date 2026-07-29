@@ -56,6 +56,8 @@
   "select.geoSet": "가까운 지역을 선택했어요. 아니면 아래에서 직접 골라 주세요.",
   "select.geoNoRegion": "좌표가 있는 서비스 지역이 아직 없어요.",
   "common.retry": "다시 시도",
+  "common.back": "뒤로",
+  "postForm.warningRequired": "먼저 아래 노란 상자를 읽고 체크해 주세요.",
   "neighbors.title": "내 이웃",
   "neighbors.loading": "이웃을 불러오는 중…",
   "neighbors.error": "이웃 목록을 불러오지 못했습니다.",

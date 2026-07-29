@@ -121,6 +121,11 @@ export function PostForm() {
 
   const onSubmit = handleSubmit(async (values) => {
     setSubmitError(null)
+    // H-3: 무언 비활성 대신, 누르면 이유를 말해 준다(저문해력 — 침묵 실패 금지)
+    if (fromTalk && !publicWarningOk) {
+      setSubmitError('postForm.warningRequired')
+      return
+    }
     try {
       if (isEdit && existing) {
         await updatePost.mutateAsync({
@@ -201,8 +206,8 @@ export function PostForm() {
 
         <button
           type="submit"
-          disabled={isSubmitting || !publicWarningOk}
-          className="min-h-[44px] rounded-md bg-green-700 px-6 py-3 text-base font-semibold text-white disabled:opacity-50"
+          disabled={isSubmitting}
+          className="min-h-[56px] rounded-md bg-green-700 px-6 py-3 text-base font-semibold text-white disabled:opacity-50"
         >
           {isSubmitting ? t('auth.loading') : t('postForm.submit')}
         </button>

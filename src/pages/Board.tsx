@@ -136,6 +136,11 @@ function PostCard({
             {post.authorNickname ?? t('board.unknownAuthor')}
             {post.authorCountry ? ` · ${post.authorCountry}` : ''}
           </span>
+          {post.source_locale !== locale ? (
+            <span className="rounded bg-gray-100 px-1 text-[10px] font-semibold uppercase text-gray-500">
+              {post.source_locale}
+            </span>
+          ) : null}
         </p>
       </Link>
     </li>

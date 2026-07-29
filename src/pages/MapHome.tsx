@@ -377,7 +377,11 @@ export default function MapHome() {
         </div>
       ) : null}
 
-      <Link to="/life-info" className="text-center text-sm text-green-700 underline">
+      <Link
+        to="/life-info"
+        className="flex min-h-[44px] items-center justify-center gap-2 rounded-full border border-green-300 bg-green-50 text-sm font-semibold text-green-800"
+      >
+        <span aria-hidden>📋</span>
         {t('map.listView')}
       </Link>
     </section>

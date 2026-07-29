@@ -8,6 +8,7 @@ import { regionLabel } from '../lib/regionName'
 import { FreshnessBadge } from '../components/FreshnessBadge'
 import { freshnessOf, STALE_AFTER_MONTHS_SUPPORT } from '../lib/freshness'
 import { SafetyBanner } from '../components/SafetyBanner'
+import { isTtsAvailable, speak } from '../lib/tts'
 
 export function LifeInfoDetail() {
   const { t, locale } = useTranslation()
@@ -59,7 +60,26 @@ export function LifeInfoDetail() {
   return (
     <article className="flex flex-col gap-4">
       <header>
-        <h1 className="text-lg font-bold text-gray-900">{name || t('lifeInfo.untitled')}</h1>
+        <div className="flex items-start justify-between gap-2">
+          <h1 className="text-lg font-bold text-gray-900">{name || t('lifeInfo.untitled')}</h1>
+          {isTtsAvailable() ? (
+            <button
+              type="button"
+              onClick={() =>
+                speak(
+                  [name, description, item.phone ? `${t('lifeInfoDetail.call')} ${item.phone}` : '']
+                    .filter(Boolean)
+                    .join('. '),
+                  locale,
+                )
+              }
+              className="flex min-h-[44px] shrink-0 items-center gap-1 rounded-full border border-gray-300 px-3 text-sm text-gray-700"
+            >
+              <span aria-hidden>🔊</span>
+              {t('talk.readAloud')}
+            </button>
+          ) : null}
+        </div>
         <p className="mt-1 flex flex-wrap items-center gap-2 text-xs text-gray-500">
           <span>
             {t(categoryLabelKey(item.category))}
@@ -90,8 +110,12 @@ export function LifeInfoDetail() {
 
       <section className="flex flex-col gap-2 text-sm">
         {item.phone ? (
-          <a href={`tel:${item.phone}`} className="text-green-700 underline">
-            {t('lifeInfoDetail.call')}: {item.phone}
+          <a
+            href={`tel:${item.phone}`}
+            className="flex min-h-[56px] items-center justify-center gap-2 rounded-md bg-green-700 px-6 text-base font-bold text-white"
+          >
+            <span aria-hidden className="text-xl">☎</span>
+            {t('lifeInfoDetail.call')} {item.phone}
           </a>
         ) : null}
         {item.address ? (

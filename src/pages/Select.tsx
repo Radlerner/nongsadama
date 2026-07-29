@@ -53,7 +53,7 @@ export function Select() {
       <div className="mt-auto pt-8">
         <Link
           to="/home"
-          className="flex min-h-[44px] items-center justify-center rounded-md bg-green-700 px-6 py-3 text-base font-semibold text-white"
+          className="flex min-h-[56px] items-center justify-center rounded-md bg-green-700 px-6 py-3 text-base font-semibold text-white"
         >
           {t('select.continue')}
         </Link>
@@ -161,6 +161,7 @@ function RegionPicker() {
               : 'border-gray-300 text-gray-700',
           ].join(' ')}
         >
+          {active ? <span aria-hidden className="mr-2">✓</span> : null}
           {regionLabel(town.id, town.names, locale)}
         </button>
       </li>
