@@ -44,6 +44,8 @@ jobs:
           VITE_SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY }}
           # 카카오맵 JavaScript 키(공개형 — 보안은 카카오 콘솔의 도메인 등록이 담당)
           VITE_KAKAO_MAP_KEY: ${{ vars.VITE_KAKAO_MAP_KEY }}
+          # GA4 측정 ID(공개값). 배포에만 주입 — 로컬 dev 트래픽은 측정하지 않음
+          VITE_GA_MEASUREMENT_ID: ${{ vars.VITE_GA_MEASUREMENT_ID }}
 
       - name: SPA fallback (딥링크 새로고침 대응)
         run: cp dist/index.html dist/404.html
