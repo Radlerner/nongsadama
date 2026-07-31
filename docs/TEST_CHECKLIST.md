@@ -244,3 +244,11 @@ Supabase 프로젝트 **nongsadama**(`ikusdwursvbdrznbcjtw`, ap-northeast-2)에 
 | 마이그레이션 멱등성 없음 | P2 | `create ... if not exists` / `create or replace` / `drop policy if exists` 적용 |
 | auth.users seed 실패 가능 | P2 | 스크립트 주석으로 조정 안내 유지(수용) |
 | (재재검수) anon 원본 profiles REVOKE 부재 | P2(N-1) | GRANT 전 `revoke all ... from anon, authenticated` 추가 → anon 테이블 권한 봉쇄, R9 결정적 통과 |
+
+## 카카오맵 활성화 검증 (2026-08-01, 라이브)
+
+- 운영자 JS 키 발급·JavaScript SDK 도메인 등록(github.io·localhost) 완료 → SDK 200 확인
+- 라이브(/home): kakao SDK 활성, 다음 타일 13, 이모지 핀 7(카테고리 아이콘), Leaflet 미사용
+- 상호작용: 핀 탭→시트(6건), 병원 필터→3핀 — OSM과 동일 UX
+- 폴백 회귀: 도메인 미등록 상태에서 OSM 자동 전환 검증됨(커밋 e40fa7e 전후)
+- §10-B(지도 제공자) 사실상 확정: kakao(기본, 키 존재 시) + OSM(폴백)
