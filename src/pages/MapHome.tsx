@@ -66,7 +66,8 @@ export default function MapHome() {
     outOfArea: boolean
   } | null>(null)
 
-  const provider = mapProvider() // 'kakao'(키 존재 시) | 'osm'
+  // 'kakao'(키 존재 시) | 'osm'. 카카오 SDK 로드 실패 시 OSM으로 자동 폴백한다(§4 폴백 원칙).
+  const [provider, setProvider] = useState(mapProvider())
   const mapRef = useRef<L.Map | null>(null)
   const layerRef = useRef<L.LayerGroup | null>(null)
   const userMarkerRef = useRef<L.Marker | null>(null)
@@ -147,7 +148,10 @@ export default function MapHome() {
         })
         setKakaoReady(true)
       })
-      .catch(() => setKakaoError(true))
+      .catch(() => {
+        setKakaoError(true)
+        setProvider('osm') // 검증된 기본 지도로 자동 폴백
+      })
   }, [provider, regions, regionId, regionsById])
 
   // kakao 핀(CustomOverlay) 갱신
@@ -188,7 +192,7 @@ export default function MapHome() {
     }).addTo(map)
     layerRef.current = L.layerGroup().addTo(map)
     mapRef.current = map
-  }, [regions, regionId, regionsById])
+  }, [provider, regions, regionId, regionsById])
 
   // 언마운트 시에만 지도 해제
   useEffect(
