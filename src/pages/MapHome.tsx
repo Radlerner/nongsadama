@@ -14,6 +14,7 @@ import {
 import { localizedContent } from '../lib/localizedContent'
 import { regionLabel } from '../lib/regionName'
 import { FreshnessBadge } from '../components/FreshnessBadge'
+import { ShareButtons } from '../components/ShareButtons'
 import { STALE_AFTER_MONTHS_SUPPORT } from '../lib/freshness'
 import { getCurrentPosition, nearestTown, OUT_OF_AREA_KM } from '../lib/geo'
 import {
@@ -388,6 +389,8 @@ export default function MapHome() {
         <span aria-hidden>📋</span>
         {t('map.listView')}
       </Link>
+
+      <ShareButtons />
     </section>
   )
 }

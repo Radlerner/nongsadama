@@ -40,6 +40,8 @@
   "map.unlocated": "Location pending review — shown at town center",
   "map.listView": "See as list",
   "map.kakaoError": "Couldn't load Kakao Map. Please try again later.",
+  "share.title": "Tell your neighbors about NongsaDama",
+  "share.more": "More ways to share",
   "landing.title": "NongsaDama",
   "landing.subtitle": "Local life info and community for your area",
   "landing.enter": "Get started",
