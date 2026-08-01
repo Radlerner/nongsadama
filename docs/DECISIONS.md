@@ -158,3 +158,10 @@ PRD_v1_3.md를 기준으로 한 기술·제품 의사결정과 이유를 남긴�
   대책: ① 신선도 배지 즉시 추가 — verified_at 기준 "N개월 전 확인"/"검수 확인일 없음",
   6개월 이상·미기재는 경고색(STALE_AFTER_MONTHS=6, src/lib/freshness.ts) ② 파일럿 전 출처·확인일
   있는 실검수 데이터로 교체(기존 체크리스트) ③ 신고 버튼·공공 API 연동은 도입하지 않고 백로그 유지.
+
+### D-016. 공식 데모 주소 확정 + Microsoft Clarity (2026-08-01, 제품 오너 결정)
+- **공식 웹서비스**: https://nongsadama.casualpe.workers.dev (Cloudflare Workers, Git 연동 자동 빌드).
+  GitHub Pages는 보조 배포로 유지. env는 양쪽(GitHub Variables / Cloudflare 빌드 변수)에 중복 관리.
+- **Microsoft Clarity(xvb0klm2wu)**: index.html에 삽입(SPA라 전 페이지 커버, 라우트 자동 추적).
+  localhost 가드로 개발 트래픽 제외. 세션 녹화·히트맵은 제3자 전송 — GA·Web Speech·카카오맵·
+  OSM 타일과 함께 개인정보 처리방침(§10-J) 고지 목록에 포함.
