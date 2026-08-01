@@ -36,10 +36,9 @@ export function ShareButtons() {
         data-a2a-title="농사다마 NongsaDama"
       >
         <a className="a2a_dd" href="https://www.addtoany.com/share" aria-label={t('share.more')} />
-        <a className="a2a_button_kakao" />
-        <a className="a2a_button_threads" />
         <a className="a2a_button_whatsapp" />
         <a className="a2a_button_telegram" />
+        <a className="a2a_button_threads" />
         <a className="a2a_button_x" />
       </div>
     </div>
