@@ -22,3 +22,6 @@ dist-ssr/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# 운영자 원본 파비콘(5.7MB, PNG 내장 SVG) — 축소본만 public/에 커밋 (PRD 11.3)
+/favicon.svg
