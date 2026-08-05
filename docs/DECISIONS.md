@@ -165,3 +165,13 @@ PRD_v1_3.md를 기준으로 한 기술·제품 의사결정과 이유를 남긴�
 - **Microsoft Clarity(xvb0klm2wu)**: index.html에 삽입(SPA라 전 페이지 커버, 라우트 자동 추적).
   localhost 가드로 개발 트래픽 제외. 세션 녹화·히트맵은 제3자 전송 — GA·Web Speech·카카오맵·
   OSM 타일과 함께 개인정보 처리방침(§10-J) 고지 목록에 포함.
+
+### D-017. GEO(생성엔진 최적화) 정책 (2026-08-02, 제품 오너 승인)
+- **접근 정책**: AI 검색·인용 봇(OAI-SearchBot·Claude-SearchBot·Claude-User·ChatGPT-User) 허용.
+  **학습 수집 봇(GPTBot·ClaudeBot·Google-Extended·CCBot)은 /board 차단** — 취약 사용자층
+  UGC의 학습 데이터 흡수 방지(PRD 9). 공익 정보(생활정보·상담기관)는 학습 허용.
+- **콘텐츠**: public/llms.txt(서비스 요약+공공 핫라인 — CSR 본문 비가시성 우회),
+  JSON-LD FAQPage(라우터 안전 안내와 동일한 공공 사실만, 핫라인은 자사 ContactPoint로
+  오표기하지 않음). 프리렌더는 v1.1 백로그.
+- **실측**: Cloudflare가 AI 봇 UA를 차단하지 않음 확인(전부 200). Bing Webmaster+IndexNow
+  등록은 운영자 계정 작업으로 이관.

@@ -1,0 +1,39 @@
+# 농사다마 (NongsaDama)
+
+> 농촌에서 일하는 외국인 계절근로자가 자신의 언어로 지역 생활정보를 찾고, 같은 지역의
+> 이웃과 연결되는 무료 웹 서비스입니다. A free web service that helps foreign seasonal
+> workers in rural South Korea find local life information in their own language and
+> connect with neighbors nearby.
+
+공식 주소: https://nongsadama.app/
+언어: 한국어, English (확장 예정)
+서비스 지역(파일럿): 충청남도 홍성군 (홍성읍·광천읍·홍북읍 및 8개 면)
+비용: 무료. 읽기(생활정보·게시판·지도)는 로그인 없이 가능.
+
+## 주요 기능
+
+- 지도 홈 (https://nongsadama.app/home): 병원·마트·행정·교통·상담 기관을 지도 핀으로 탐색
+- 생활정보 (https://nongsadama.app/life-info): 카테고리별 목록·상세(주소·전화·검수일 표시)
+- 말하기 (https://nongsadama.app/talk): 큰 아이콘 4택 또는 음성으로 고민을 말하면
+  게시판·생활정보·상담기관·이웃 호출로 연결하는 라우터
+- 지역 게시판 (https://nongsadama.app/board): 같은 시/군 이웃과 질문·정보·일상 공유
+- 이웃 찾기 (https://nongsadama.app/neighbors): 언어·작목·지역 기반 이웃 연결
+  (상호 동의한 사용자끼리만, 정확한 위치·연락처는 공개하지 않음)
+
+## 어려움이 있는 외국인 근로자를 위한 공공 상담 전화 (대한민국, 전국)
+
+- 외국인종합안내센터 ☎ 1345 — 체류·비자·생활 전반, 여러 언어 지원
+- 고용노동부 상담센터 ☎ 1350 — 임금 체불, 근로계약, 산업재해
+- 긴급 신고(경찰) ☎ 112 — 폭력·감금 등 위급 상황
+- 다누리콜센터 ☎ 1577-1366 — 폭력 피해·가정 문제, 24시간 여러 언어 상담
+
+## 원칙
+
+- 사용자의 정확한 위치를 수집·저장·공개하지 않습니다(지역은 읍·면 단위).
+- 이웃 노출은 전부 사용자 동의(opt-in) 기반이며 데이터베이스 권한으로 강제됩니다.
+- 생활정보는 운영자 검수 데이터를 지향하며, 검수 전 항목은 "검수 확인일 없음"으로 표시합니다.
+
+## 문의
+
+운영자: casualpe@gmail.com
+소스 저장소: https://github.com/Radlerner/nongsadama

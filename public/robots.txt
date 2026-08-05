@@ -1,4 +1,38 @@
+# 농사다마 크롤러 정책 (GEO 전략, D-016 공식 도메인 기준)
+
+# 일반 검색엔진 — 전체 허용
 User-agent: *
 Allow: /
+
+# AI 검색·인용 봇 — 허용 (생성엔진 검색 노출)
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: Claude-SearchBot
+Allow: /
+
+User-agent: Claude-User
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+# AI 모델 학습 수집 봇 — 사용자 게시글(/board)은 학습에서 제외
+# (취약 사용자층 UGC 보호, PRD 9. 공익 정보·정적 콘텐츠는 허용)
+User-agent: GPTBot
+Allow: /
+Disallow: /board
+
+User-agent: ClaudeBot
+Allow: /
+Disallow: /board
+
+User-agent: Google-Extended
+Allow: /
+Disallow: /board
+
+User-agent: CCBot
+Allow: /
+Disallow: /board
 
 Sitemap: https://nongsadama.app/sitemap.xml
