@@ -39,7 +39,7 @@ export function getLocaleLabel(code: Locale): string {
 export const operatorEmail = 'casualpe@gmail.com'
 
 /** 공식 서비스 주소(D-016). 공유·QR 등 외부 노출용. */
-export const officialSiteUrl = 'https://nongsadama.casualpe.workers.dev/'
+export const officialSiteUrl = 'https://nongsadama.app/'
 
 // 음성 인식(Web Speech API)용 BCP-47 태그. 설정 데이터이며 로직 분기가 아니다.
 // 언어 추가 시 여기에 태그를 더한다(없으면 locale 코드를 그대로 사용).

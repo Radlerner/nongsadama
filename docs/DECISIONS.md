@@ -160,7 +160,7 @@ PRD_v1_3.md를 기준으로 한 기술·제품 의사결정과 이유를 남긴�
   있는 실검수 데이터로 교체(기존 체크리스트) ③ 신고 버튼·공공 API 연동은 도입하지 않고 백로그 유지.
 
 ### D-016. 공식 데모 주소 확정 + Microsoft Clarity (2026-08-01, 제품 오너 결정)
-- **공식 웹서비스**: https://nongsadama.casualpe.workers.dev (Cloudflare Workers, Git 연동 자동 빌드).
+- **공식 웹서비스**: https://nongsadama.app (커스텀 도메인, 2026-08-02 승격. 구주소 workers.dev는 유지) (Cloudflare Workers, Git 연동 자동 빌드).
   GitHub Pages는 보조 배포로 유지. env는 양쪽(GitHub Variables / Cloudflare 빌드 변수)에 중복 관리.
 - **Microsoft Clarity(xvb0klm2wu)**: index.html에 삽입(SPA라 전 페이지 커버, 라우트 자동 추적).
   localhost 가드로 개발 트래픽 제외. 세션 녹화·히트맵은 제3자 전송 — GA·Web Speech·카카오맵·
