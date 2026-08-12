@@ -23,12 +23,6 @@ const schema = z.object({
   preferred_locale: z.string().min(2),
   region_id: z.string(),
   is_matching_visible: z.boolean(),
-  // 전화 비노출 메신저 링크만(오픈카카오/텔레그램). 빈 값 허용. DB CHECK와 이중 검증(v1.6 §2).
-  messenger_link: z
-    .string()
-    .regex(/^(https:\/\/(open\.kakao\.com|t\.me)\/\S+)?$/, 'profileEdit.error.messengerFormat')
-    .refine((v) => v.length <= 200, 'profileEdit.error.messengerFormat'),
-  is_contact_visible: z.boolean(),
 })
 
 type FormValues = z.infer<typeof schema>
@@ -58,8 +52,6 @@ export function ProfileEdit() {
           preferred_locale: profile.preferred_locale,
           region_id: profile.region_id ?? '',
           is_matching_visible: profile.is_matching_visible,
-          messenger_link: profile.messenger_link ?? '',
-          is_contact_visible: profile.is_contact_visible,
         }
       : undefined,
   })
@@ -92,7 +84,6 @@ export function ProfileEdit() {
     const countryCode = values.country_code.trim().toUpperCase()
     const cropType = values.crop_type.trim()
     const regionIdValue = values.region_id || null
-    const messengerLink = values.messenger_link.trim()
     // upsert(P1-3): 드문 케이스로 profiles 행이 아직 없으면(첫 로그인 시 생성 실패 등)
     // update가 0행으로 조용히 성공하는 무음 no-op을 막고 행을 생성한다.
     // RLS(profiles_insert_self)가 본인 id + role='user'(기본값)를 강제하므로 안전.
@@ -106,9 +97,6 @@ export function ProfileEdit() {
         preferred_locale: values.preferred_locale,
         region_id: regionIdValue,
         is_matching_visible: values.is_matching_visible,
-        messenger_link: messengerLink === '' ? null : messengerLink,
-        // 링크가 없으면 공개 동의도 자동 해제(빈 링크로 노출 신청 불가)
-        is_contact_visible: messengerLink === '' ? false : values.is_contact_visible,
       })
     if (error) {
       setSubmitError('profileEdit.error.saveFailed')
@@ -199,36 +187,6 @@ export function ProfileEdit() {
               <br />
               {/* 동의 범위 고지(재검수 이월 요건): 이웃 노출 + 게시글 국적의 비로그인 공개 */}
               <span className="text-xs text-gray-600">{t('profileEdit.matchingConsentDetail')}</span>
-            </span>
-          </label>
-        </div>
-
-        <label className="flex flex-col gap-1 text-sm font-semibold text-gray-700">
-          {t('profileEdit.messenger')}
-          <input
-            type="url"
-            inputMode="url"
-            placeholder="https://open.kakao.com/... , https://t.me/..."
-            className={inputClass}
-            {...register('messenger_link')}
-          />
-          <span className="font-normal text-xs text-gray-500">{t('profileEdit.messengerHelp')}</span>
-          {errors.messenger_link?.message ? (
-            <span className="font-normal text-red-700">{t(errors.messenger_link.message)}</span>
-          ) : null}
-        </label>
-
-        <div className="rounded-md border border-gray-200 px-4 py-3">
-          <label className="flex items-start gap-3 text-sm text-gray-800">
-            <input
-              type="checkbox"
-              className="mt-1 h-5 w-5 accent-green-700"
-              {...register('is_contact_visible')}
-            />
-            <span>
-              <span className="font-semibold">{t('profileEdit.contactConsent')}</span>
-              <br />
-              <span className="text-xs text-gray-600">{t('profileEdit.contactConsentDetail')}</span>
             </span>
           </label>
         </div>

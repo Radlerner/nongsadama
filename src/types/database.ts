@@ -131,9 +131,7 @@ export type Database = {
           created_at: string
           crop_type: string | null
           id: string
-          is_contact_visible: boolean
           is_matching_visible: boolean
-          messenger_link: string | null
           nickname: string
           preferred_locale: string
           region_id: string | null
@@ -145,9 +143,7 @@ export type Database = {
           created_at?: string
           crop_type?: string | null
           id: string
-          is_contact_visible?: boolean
           is_matching_visible?: boolean
-          messenger_link?: string | null
           nickname: string
           preferred_locale: string
           region_id?: string | null
@@ -159,9 +155,7 @@ export type Database = {
           created_at?: string
           crop_type?: string | null
           id?: string
-          is_contact_visible?: boolean
           is_matching_visible?: boolean
-          messenger_link?: string | null
           nickname?: string
           preferred_locale?: string
           region_id?: string | null
@@ -217,21 +211,6 @@ export type Database = {
       }
     }
     Views: {
-      contact_links: {
-        Row: {
-          id: string | null
-          messenger_link: string | null
-        }
-        Insert: {
-          id?: string | null
-          messenger_link?: string | null
-        }
-        Update: {
-          id?: string | null
-          messenger_link?: string | null
-        }
-        Relationships: []
-      }
       neighbor_profiles: {
         Row: {
           country_code: string | null
@@ -288,7 +267,6 @@ export type Database = {
     }
     Functions: {
       is_admin: { Args: never; Returns: boolean }
-      is_contact_opted_in: { Args: never; Returns: boolean }
       is_matching_opted_in: { Args: never; Returns: boolean }
       similar_posts: {
         Args: { source_id: string; match_count?: number }

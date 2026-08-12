@@ -175,15 +175,3 @@ PRD_v1_3.md를 기준으로 한 기술·제품 의사결정과 이유를 남긴�
   오표기하지 않음). 프리렌더는 v1.1 백로그.
 - **실측**: Cloudflare가 AI 봇 UA를 차단하지 않음 확인(전부 200). Bing Webmaster+IndexNow
   등록은 운영자 계정 작업으로 이관.
-
-### D-018. 안전 연락 연결 (2026-08-02, PRD v1.6 §2)
-- **결정**: 게시글 작성자 연락은 **전화 비노출 메신저 링크만**(open.kakao.com / t.me),
-  DB CHECK 정규식으로 강제(WhatsApp=전화기반 제외). **별도 opt-in**(is_contact_visible,
-  is_matching_visible과 분리 — D-012 과겸용 방지) + **상호성**(열람자도 링크 공개자여야).
-- **거부**: 원안의 연락처 직접 노출·광고 시청 게이트는 PRD 9(전화번호 금지)·v1.4 §4(연락처
-  미공개)·안전(취약층 연락처를 광고 뒤에) 위반 → 반려. 수익화는 파일럿 후 별도.
-- **구현**: contact_links 뷰(security_barrier, definer 아님 — is_contact_opted_in()로 상호성
-  게이트), authenticated SELECT만. 링크 비우면 공개 동의 자동 해제. 만남 안전 문구+신고 병기.
-  링크 렌더는 target=_blank rel="noopener noreferrer nofollow".
-- **어드바이저**: contact_links definer-view ERROR·is_contact_opted_in authenticated WARN은
-  neighbor_profiles·is_matching_opted_in과 동일한 의도된 수용(D-006/D-012 패턴).
