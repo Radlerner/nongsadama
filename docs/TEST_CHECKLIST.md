@@ -290,3 +290,12 @@ Supabase 프로젝트 **nongsadama**(`ikusdwursvbdrznbcjtw`, ap-northeast-2)에 
   검증 오류 표시 ✅. B의 글 상세에서 A가 B의 t.me 링크 버튼 확인(rel=noopener noreferrer
   nofollow, 만남 안전 문구 병기) ✅. 링크 비우면 is_contact_visible 자동 false.
 - typecheck 0 / i18n ko·en 동일 키.
+
+### 독립 재검수 결과 (8a04e47, 사후)
+- P0/P1 없음. 라이브 실증: 도메인 스푸핑 19종 전부 거부(open.kakao.com.attacker.io/x=false),
+  javascript: 스킴 거부(XSS 없음, rel=nofollow), anon 뷰 SELECT 권한 없음, 양방향 상호성 성립,
+  is_contact_opted_in() definer+search_path=public 고정 확인, i18n ko·en 누락 0, 매칭 동의 회귀 없음.
+- P2-1 반영: DB CHECK 앵커링 `^https://(open\.kakao\.com|t\.me)/[^[:space:]]+$`(마이그레이션
+  contact_link_check_anchor) — 개행/공백 주입·빈 경로 DB 레벨 차단. 재검증: 주입3종 false·정상2종 true,
+  기존 데모 링크 유효. 라이브 적용 완료.
+- P2-2(경로 내 자발적 전화번호): 리뷰어도 차단 불필요·오탐 위험 판단 → 안내 강화 수준 모니터링(미차단).

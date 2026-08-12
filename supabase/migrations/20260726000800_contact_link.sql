@@ -3,10 +3,11 @@
 
 alter table public.profiles
   add column if not exists messenger_link text
+    -- 재검수 P2-1: 클라 zod와 정합(앵커 $ + 공백 배제) — 개행/공백 후 2차 URL 주입·빈 경로 차단.
     check (
       messenger_link is null
       or (char_length(messenger_link) <= 200
-          and messenger_link ~ '^https://(open\.kakao\.com|t\.me)/')
+          and messenger_link ~ '^https://(open\.kakao\.com|t\.me)/[^[:space:]]+$')
     ),
   add column if not exists is_contact_visible boolean not null default false;
 
