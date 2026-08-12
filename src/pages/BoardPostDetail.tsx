@@ -8,6 +8,7 @@ import {
   useSimilarPosts,
   postCategoryLabelKey,
 } from '../hooks/usePosts'
+import { useContactLink } from '../hooks/useContactLink'
 import { useRegions } from '../hooks/useRegions'
 import { useSelectedRegion } from '../context/SelectedRegionContext'
 import { regionLabel } from '../lib/regionName'
@@ -94,6 +95,8 @@ export function BoardPostDetail() {
 
       <p className="whitespace-pre-line text-sm text-gray-800">{post.body}</p>
 
+      {!isOwn ? <ContactAuthor authorId={post.author_id} isLoggedIn={Boolean(user)} /> : null}
+
       {post.category === 'help' ? (
         <div className="rounded-md bg-amber-50 px-4 py-3 text-xs text-amber-900">
           {/* v1.5 §5 데모 완료 조건: 만남 안전 문구 + 신고 수단 */}
@@ -157,6 +160,39 @@ export function BoardPostDetail() {
         {t('postDetail.back')}
       </Link>
     </article>
+  )
+}
+
+/**
+ * 작성자 연락(PRD v1.6 §2). 상호성·동의는 contact_links 뷰가 강제 → 링크가 오면 그 자체가 자격 증명.
+ * 비로그인/자격 없음이면 안내만 노출(링크 없음). 만남 안전 문구 병기.
+ */
+function ContactAuthor({ authorId, isLoggedIn }: { authorId: string; isLoggedIn: boolean }) {
+  const { t } = useTranslation()
+  const { data: link } = useContactLink(authorId, isLoggedIn)
+
+  if (!isLoggedIn) {
+    return (
+      <p className="rounded-md bg-gray-50 px-4 py-3 text-xs text-gray-600">
+        {t('contact.loginHint')}
+      </p>
+    )
+  }
+  if (!link) return null
+
+  const provider = link.includes('t.me/') ? 'Telegram' : t('contact.kakaoOpen')
+  return (
+    <div className="rounded-md border border-green-200 bg-green-50 px-4 py-3">
+      <a
+        href={link}
+        target="_blank"
+        rel="noopener noreferrer nofollow"
+        className="flex min-h-[48px] items-center justify-center rounded-md bg-green-700 px-4 text-base font-semibold text-white"
+      >
+        💬 {t('contact.open').replace('{app}', provider)}
+      </a>
+      <p className="mt-2 text-xs text-green-900">{t('contact.safety')}</p>
+    </div>
   )
 }
 

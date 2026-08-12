@@ -275,3 +275,18 @@ Supabase 프로젝트 **nongsadama**(`ikusdwursvbdrznbcjtw`, ap-northeast-2)에 
   공급자 결정(①현행 유지·파일럿 재평가 / ②유료 다국어)은 오너 대기.
 - 문서 이탈 기록: PRD §1.3의 match_posts(query_embedding) 대신 similar_posts(source_id)
   구현 — 원시 임베딩 왕복 제거로 더 안전(리뷰어 "개선" 평가).
+
+## PRD v1.6 §2 안전 연락 연결 (feat/similar-posts, 2026-08-02)
+
+라이브 역할 시뮬레이션(비파괴) — 마이그레이션 20260726000800_contact_link:
+| # | 검증 | 결과 |
+|---|---|---|
+| CT1 | 전화기반 링크(wa.me) 저장 | ✅ CHECK 거부 |
+| CT2 | 오픈카카오/텔레그램 링크 저장 | ✅ 성공 |
+| CT3 | anon: contact_links 조회 | ✅ permission denied |
+| CT4 | 동의자 A가 조회(본인+B) | ✅ 2행 |
+| CT5 | A 동의 해제 후 조회(상호성) | ✅ 0행 |
+- UI(로그인 A, dev): ProfileEdit에 연락 링크+공개 동의 필드 렌더, wa.me 입력 시 클라이언트
+  검증 오류 표시 ✅. B의 글 상세에서 A가 B의 t.me 링크 버튼 확인(rel=noopener noreferrer
+  nofollow, 만남 안전 문구 병기) ✅. 링크 비우면 is_contact_visible 자동 false.
+- typecheck 0 / i18n ko·en 동일 키.
