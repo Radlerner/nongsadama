@@ -252,3 +252,14 @@ Supabase 프로젝트 **nongsadama**(`ikusdwursvbdrznbcjtw`, ap-northeast-2)에 
 - 상호작용: 핀 탭→시트(6건), 병원 필터→3핀 — OSM과 동일 UX
 - 폴백 회귀: 도메인 미등록 상태에서 OSM 자동 전환 검증됨(커밋 e40fa7e 전후)
 - §10-B(지도 제공자) 사실상 확정: kakao(기본, 키 존재 시) + OSM(폴백)
+
+## PRD v1.6 §1 비슷한 글 (feat/similar-posts, 2026-08-02)
+
+- 마이그레이션 similar_posts: pgvector+posts.embedding(384)+similar_posts RPC(invoker=RLS 적용,
+  공개 5건 미만 빈 결과). Edge Function embed-post 배포(내장 gte-small, 외부 API 0, verify_jwt).
+- 검증: 7건 임베딩 전부 384차원 성공. anon RPC 실측 — 병원쌍·축구쌍 파트너 1위 ✅,
+  **임금쌍 top-3 밖 ❌ (품질 게이트 2/3)**. 유사도 0.90~0.94 밀집 = gte-small 한국어 변별력 한계.
+  → PRD §1.5 규정대로 공급자 B(유료 다국어) 재논의 항목으로 상정(오너 결정 대기).
+- UI: 상세 하단 비슷한 글 3건(결과 없으면 섹션 숨김), 목록/상세 조회에서 embedding 컬럼 제외
+  (페이로드 보호). 작성·수정 시 비동기 임베딩(실패해도 저장 성공).
+- typecheck 0 / 빌드 성공 / dev 상세 화면 섹션 렌더 확인.

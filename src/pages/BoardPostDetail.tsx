@@ -2,7 +2,12 @@ import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useTranslation } from '../i18n/useTranslation'
 import { useAuth } from '../context/AuthContext'
-import { usePost, useDeletePost, postCategoryLabelKey } from '../hooks/usePosts'
+import {
+  usePost,
+  useDeletePost,
+  useSimilarPosts,
+  postCategoryLabelKey,
+} from '../hooks/usePosts'
 import { useRegions } from '../hooks/useRegions'
 import { useSelectedRegion } from '../context/SelectedRegionContext'
 import { regionLabel } from '../lib/regionName'
@@ -146,9 +151,34 @@ export function BoardPostDetail() {
         <p className="rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">{t('board.error')}</p>
       ) : null}
 
+      <SimilarPosts postId={post.id} />
+
       <Link to="/board" className="text-green-700 underline">
         {t('postDetail.back')}
       </Link>
     </article>
+  )
+}
+
+/** 비슷한 글(PRD v1.6 §1). 결과 없으면(데이터 5건 미만 포함) 섹션 자체를 숨긴다. */
+function SimilarPosts({ postId }: { postId: string }) {
+  const { t } = useTranslation()
+  const { data } = useSimilarPosts(postId)
+  if (!data || data.length === 0) return null
+  return (
+    <section className="rounded-md border border-gray-200 px-4 py-3">
+      <p className="mb-2 text-xs font-semibold text-gray-500">{t('postDetail.similar')}</p>
+      <ul className="flex flex-col gap-1">
+        {data.map((s) => (
+          <li key={s.id}>
+            <Link to={`/board/${s.id}`} className="block min-h-[44px] py-2 text-sm text-gray-800 active:bg-gray-50">
+              <span aria-hidden className="mr-1">💬</span>
+              {s.title}
+              <span className="ml-2 text-[11px] text-gray-400">{t(postCategoryLabelKey(s.category))}</span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </section>
   )
 }

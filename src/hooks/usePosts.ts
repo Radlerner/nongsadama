@@ -2,13 +2,17 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { getSupabaseClient } from '../lib/supabase'
 import type { Tables, TablesInsert } from '../types/database'
 
-export type Post = Tables<'posts'>
+export type Post = Omit<Tables<'posts'>, 'embedding'>
 
 /** 게시글 카테고리(고정 도메인, PRD 8.1). */
 export const POST_CATEGORIES = ['question', 'info', 'daily', 'other', 'help'] as const
 export function postCategoryLabelKey(category: string): string {
   return `board.category.${category}`
 }
+
+// embedding(384float)은 목록·상세 페이로드에서 제외(PRD v1.6 — 유사도는 RPC가 서버측 계산)
+const POST_COLUMNS =
+  'id,author_id,region_id,category,title,body,source_locale,status,created_at,updated_at'
 
 export interface PostWithAuthor extends Post {
   authorNickname: string | null
@@ -42,7 +46,7 @@ async function fetchPosts(
 ): Promise<PostWithAuthor[]> {
   let query = getSupabaseClient()
     .from('posts')
-    .select('*')
+    .select(POST_COLUMNS)
     .eq('status', 'published')
     .order('created_at', { ascending: false })
   if (authorId) {
@@ -74,7 +78,7 @@ export function usePost(id: string | undefined) {
     queryFn: async (): Promise<PostWithAuthor | null> => {
       const { data, error } = await getSupabaseClient()
         .from('posts')
-        .select('*')
+        .select(POST_COLUMNS)
         .eq('id', id as string)
         .maybeSingle()
       if (error) throw new Error(error.message)
@@ -84,6 +88,16 @@ export function usePost(id: string | undefined) {
     },
     enabled: Boolean(id),
   })
+}
+
+/**
+ * 임베딩 생성 요청(비동기 보강, PRD v1.6 §1.4). 실패해도 글 저장은 성공 —
+ * 추천만 빠질 뿐이므로 오류를 삼킨다(무언 실패 아님: 부가 기능).
+ */
+function requestEmbedding(postId: string): void {
+  void getSupabaseClient()
+    .functions.invoke('embed-post', { body: { post_id: postId } })
+    .catch(() => undefined)
 }
 
 export function useCreatePost() {
@@ -98,7 +112,10 @@ export function useCreatePost() {
       if (error) throw new Error(error.message)
       return data
     },
-    onSuccess: () => void queryClient.invalidateQueries({ queryKey: ['posts'] }),
+    onSuccess: (data) => {
+      requestEmbedding(data.id)
+      void queryClient.invalidateQueries({ queryKey: ['posts'] })
+    },
   })
 }
 
@@ -111,8 +128,36 @@ export function useUpdatePost() {
         .update({ category: input.category, title: input.title, body: input.body })
         .eq('id', input.id)
       if (error) throw new Error(error.message)
+      return input.id
     },
-    onSuccess: () => void queryClient.invalidateQueries({ queryKey: ['posts'] }),
+    onSuccess: (id) => {
+      requestEmbedding(id)
+      void queryClient.invalidateQueries({ queryKey: ['posts'] })
+    },
+  })
+}
+
+export interface SimilarPost {
+  id: string
+  title: string
+  category: string
+  region_id: string
+  created_at: string
+  similarity: number
+}
+
+/** 비슷한 글(PRD v1.6 §1). RLS invoker RPC — 공개 글 5건 미만이면 빈 배열(섹션 숨김). */
+export function useSimilarPosts(postId: string | undefined) {
+  return useQuery({
+    queryKey: ['posts', 'similar', postId],
+    queryFn: async (): Promise<SimilarPost[]> => {
+      const { data, error } = await getSupabaseClient().rpc('similar_posts', {
+        source_id: postId as string,
+      })
+      if (error) throw new Error(error.message)
+      return data ?? []
+    },
+    enabled: Boolean(postId),
   })
 }
 

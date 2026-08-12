@@ -80,6 +80,7 @@ export type Database = {
           body: string
           category: string
           created_at: string
+          embedding: string | null
           id: string
           region_id: string
           source_locale: string
@@ -92,6 +93,7 @@ export type Database = {
           body: string
           category: string
           created_at?: string
+          embedding?: string | null
           id?: string
           region_id: string
           source_locale: string
@@ -104,6 +106,7 @@ export type Database = {
           body?: string
           category?: string
           created_at?: string
+          embedding?: string | null
           id?: string
           region_id?: string
           source_locale?: string
@@ -265,6 +268,17 @@ export type Database = {
     Functions: {
       is_admin: { Args: never; Returns: boolean }
       is_matching_opted_in: { Args: never; Returns: boolean }
+      similar_posts: {
+        Args: { source_id: string; match_count?: number }
+        Returns: {
+          id: string
+          title: string
+          category: string
+          region_id: string
+          created_at: string
+          similarity: number
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
