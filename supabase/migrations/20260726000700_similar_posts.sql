@@ -31,3 +31,6 @@ $$;
 
 revoke all on function public.similar_posts(uuid, int) from public;
 grant execute on function public.similar_posts(uuid, int) to anon, authenticated;
+
+-- 재검수 P2-a: search_path 고정(D-010 표준). ''가 아닌 이유: pgvector <=> 연산자가 public 소재.
+alter function public.similar_posts(uuid, int) set search_path = public, pg_catalog;

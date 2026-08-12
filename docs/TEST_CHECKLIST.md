@@ -263,3 +263,15 @@ Supabase 프로젝트 **nongsadama**(`ikusdwursvbdrznbcjtw`, ap-northeast-2)에 
 - UI: 상세 하단 비슷한 글 3건(결과 없으면 섹션 숨김), 목록/상세 조회에서 embedding 컬럼 제외
   (페이로드 보호). 작성·수정 시 비동기 임베딩(실패해도 저장 성공).
 - typecheck 0 / 빌드 성공 / dev 상세 화면 섹션 렌더 확인.
+
+### 독립 재검수 결과 (f2be378, 사후)
+- P0/P1 없음. 라이브 재현: hidden 글 source→0행, 결과 published만, 본문 미반환,
+  5건 게이트 동작, select('*') 잔존 0, CORS 적정(verify_jwt), 회귀 없음.
+- P2-a 반영: similar_posts search_path=public,pg_catalog 고정(D-010 정합,
+  ''는 pgvector <=> 미해석이라 불가) — 라이브 적용 완료.
+- P2-b(anon embedding 컬럼 SELECT 가능 — 공개 본문 파생값이라 수용)·P2-c(임의
+  post_id 재계산 — 멱등·무누출, 레이트리밋은 선택) 인지 기록.
+- 리뷰어 재측정: 병원쌍도 역방향에선 3위 — 품질 게이트 실질 1~2/3.
+  공급자 결정(①현행 유지·파일럿 재평가 / ②유료 다국어)은 오너 대기.
+- 문서 이탈 기록: PRD §1.3의 match_posts(query_embedding) 대신 similar_posts(source_id)
+  구현 — 원시 임베딩 왕복 제거로 더 안전(리뷰어 "개선" 평가).
