@@ -200,3 +200,10 @@ PRD_v1_3.md를 기준으로 한 기술·제품 의사결정과 이유를 남긴�
   admin.deleteUser 1회로 profiles·posts FK cascade 원자 삭제. UI는 내 정보 하단
   경고+2단계 확인. 실패 시 이메일 대체 경로 안내. /privacy §4 갱신(앱 내 삭제 명시).
 - E2E: 일회용 계정 생성→글 작성→삭제 호출→auth·프로필·글 0건, 타 계정 무손상, 재로그인 불가.
+
+### D-022. in-app 신고·차단 (2026-08-27, Play 심사 준비 3순위 — UGC 정책)
+- **결정**: reports(신고 — 본인 insert만, admin만 열람, 글당 1회)·blocks(차단 — 본인 것만
+  CRUD) 테이블+RLS. 신고 사유는 코드값(spam/abuse/scam/other) 4택. 차단 필터링은
+  클라이언트(게시판 목록·이웃 목록). help 글의 mailto 신고를 in-app 신고로 대체(안전 문구 유지).
+- 차단 관리는 내 정보에서 목록·해제. 신고 검토는 운영자(admin role 승격 필요 — 운영 절차)
+  또는 Supabase 대시보드.

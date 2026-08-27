@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext'
 import { useTranslation } from '../i18n/useTranslation'
 import { useOwnProfile } from '../hooks/useOwnProfile'
 import { useNeighbors } from '../hooks/useNeighbors'
+import { useBlockedIds } from '../hooks/useModeration'
 import { useRegions } from '../hooks/useRegions'
 import { matchScore } from '../lib/matching'
 import { NeighborCard } from '../components/NeighborCard'
@@ -20,6 +21,7 @@ export function Neighbors() {
     Boolean(user) && optedIn,
   )
   const { data: regions } = useRegions()
+  const { data: blockedIds } = useBlockedIds(user?.id)
 
   if (initializing || (user && profileLoading)) {
     return (
@@ -65,7 +67,10 @@ export function Neighbors() {
   }
 
   const regionsById = new Map((regions ?? []).map((r) => [r.id, r]))
-  const others = (neighbors ?? []).filter((n) => n.id !== user.id)
+  // 차단한 이웃 숨김(D-022)
+  const others = (neighbors ?? []).filter(
+    (n) => n.id !== user.id && !(n.id && blockedIds?.has(n.id)),
+  )
   const viewer = {
     preferred_locale: profile?.preferred_locale ?? '',
     crop_type: profile?.crop_type ?? null,

@@ -1,5 +1,7 @@
 import { useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { Link, useNavigate } from 'react-router-dom'
+import { useBlockedIds, useUnblockUser } from '../hooks/useModeration'
 import { useAuth } from '../context/AuthContext'
 import { useTranslation } from '../i18n/useTranslation'
 import { useRegions } from '../hooks/useRegions'
@@ -147,9 +149,51 @@ export function Profile() {
         ) : null}
       </div>
 
+      <BlockedUsers userId={user.id} />
+
       <Link to="/privacy" className="mt-6 inline-block min-h-[44px] text-xs text-gray-500 underline">
         {t('common.privacy')}
       </Link>
     </section>
+  )
+}
+
+/** 차단 관리(D-022): 차단한 사용자 목록 + 해제. 목록이 비면 섹션 숨김. */
+function BlockedUsers({ userId }: { userId: string }) {
+  const { t } = useTranslation()
+  const { data: blockedIds } = useBlockedIds(userId)
+  const unblock = useUnblockUser(userId)
+  const ids = [...(blockedIds ?? [])]
+  const { data: names } = useQuery({
+    queryKey: ['blocks', 'names', ids.sort().join(',')],
+    queryFn: async (): Promise<Map<string, string>> => {
+      const { data } = await getSupabaseClient()
+        .from('public_profiles')
+        .select('id,nickname')
+        .in('id', ids)
+      return new Map((data ?? []).map((r) => [r.id as string, r.nickname ?? '']))
+    },
+    enabled: ids.length > 0,
+  })
+  if (ids.length === 0) return null
+  return (
+    <div className="mt-6 rounded-md border border-gray-200 px-4 py-3">
+      <p className="text-xs font-semibold text-gray-500">{t('block.listTitle')}</p>
+      <ul className="mt-2 flex flex-col gap-1">
+        {ids.map((id) => (
+          <li key={id} className="flex items-center justify-between text-sm">
+            <span>{names?.get(id) || t('board.unknownAuthor')}</span>
+            <button
+              type="button"
+              disabled={unblock.isPending}
+              onClick={() => unblock.mutate(id)}
+              className="min-h-[44px] px-2 text-xs text-green-700 underline disabled:opacity-50"
+            >
+              {t('block.unblock')}
+            </button>
+          </li>
+        ))}
+      </ul>
+    </div>
   )
 }

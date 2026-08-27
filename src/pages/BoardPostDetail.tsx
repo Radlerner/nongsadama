@@ -10,9 +10,9 @@ import {
 } from '../hooks/usePosts'
 import { useRegions } from '../hooks/useRegions'
 import { useSelectedRegion } from '../context/SelectedRegionContext'
+import { useBlockedIds, useBlockUser, useReportPost } from '../hooks/useModeration'
 import { regionLabel } from '../lib/regionName'
 import { regionDistanceKm } from '../lib/matching'
-import { operatorEmail } from '../config/app'
 
 export function BoardPostDetail() {
   const { t, locale } = useTranslation()
@@ -96,16 +96,13 @@ export function BoardPostDetail() {
 
       {post.category === 'help' ? (
         <div className="rounded-md bg-amber-50 px-4 py-3 text-xs text-amber-900">
-          {/* v1.5 §5 데모 완료 조건: 만남 안전 문구 + 신고 수단 */}
+          {/* v1.5 §5 데모 완료 조건: 만남 안전 문구 */}
           <p>{t('postDetail.helpSafety')}</p>
-          <a
-            href={`mailto:${operatorEmail}?subject=${encodeURIComponent('[농사다마 신고] 게시글 ' + post.id)}`}
-            className="mt-1 inline-block font-semibold underline"
-          >
-            {t('postDetail.report')}
-          </a>
         </div>
       ) : null}
+
+      {/* in-app 신고·차단(Play UGC 정책, D-022) — 로그인 사용자, 타인 글에만 */}
+      {user && !isOwn ? <ModerationActions postId={post.id} authorId={post.author_id} /> : null}
 
       {isOwn ? (
         <div className="flex gap-2">
@@ -157,6 +154,108 @@ export function BoardPostDetail() {
         {t('postDetail.back')}
       </Link>
     </article>
+  )
+}
+
+/** 신고 사유 값 집합(신고 데이터로 저장 — 특정 언어 하드코딩이 아닌 코드값). */
+const REPORT_REASONS = ['spam', 'abuse', 'scam', 'other'] as const
+
+/**
+ * in-app 신고·차단(Play UGC 정책, D-022).
+ * 신고: 사유 4택 → reports insert(중복은 "이미 접수됨"). 차단: 확인 후 blocks insert → 게시판으로.
+ */
+function ModerationActions({ postId, authorId }: { postId: string; authorId: string }) {
+  const { t } = useTranslation()
+  const { user } = useAuth()
+  const navigate = useNavigate()
+  const [reporting, setReporting] = useState(false)
+  const [reported, setReported] = useState<null | 'ok' | 'dup'>(null)
+  const [confirmingBlock, setConfirmingBlock] = useState(false)
+  const report = useReportPost(user?.id)
+  const block = useBlockUser(user?.id)
+  const { data: blockedIds } = useBlockedIds(user?.id)
+  const alreadyBlocked = blockedIds?.has(authorId) ?? false
+
+  return (
+    <div className="flex flex-col gap-2 rounded-md border border-gray-200 px-4 py-3 text-xs">
+      {reported ? (
+        <p className="text-green-800">
+          {reported === 'dup' ? t('report.duplicated') : t('report.done')}
+        </p>
+      ) : reporting ? (
+        <div>
+          <p className="mb-2 font-semibold text-gray-700">{t('report.pickReason')}</p>
+          <div className="flex flex-wrap gap-2">
+            {REPORT_REASONS.map((r) => (
+              <button
+                key={r}
+                type="button"
+                disabled={report.isPending}
+                onClick={() =>
+                  report.mutate(
+                    { postId, reason: r },
+                    { onSuccess: (res) => setReported(res.duplicated ? 'dup' : 'ok') },
+                  )
+                }
+                className="min-h-[44px] rounded-md border border-gray-300 px-3 text-gray-700 disabled:opacity-50"
+              >
+                {t(`report.reason.${r}`)}
+              </button>
+            ))}
+            <button
+              type="button"
+              onClick={() => setReporting(false)}
+              className="min-h-[44px] px-3 text-gray-500 underline"
+            >
+              {t('postDetail.deleteCancel')}
+            </button>
+          </div>
+          {report.isError ? <p className="mt-2 text-red-700">{t('report.error')}</p> : null}
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setReporting(true)}
+          className="min-h-[44px] self-start font-semibold text-gray-600 underline"
+        >
+          🚩 {t('postDetail.report')}
+        </button>
+      )}
+
+      {/* 차단 영역 — 신고 상태와 무관하게 항상 표시(신고 후에도 차단 가능) */}
+      <div className="flex flex-wrap items-center gap-3">
+        {alreadyBlocked ? (
+          <span className="text-gray-400">{t('block.already')}</span>
+        ) : confirmingBlock ? (
+          <>
+            <button
+              type="button"
+              disabled={block.isPending}
+              onClick={() => block.mutate(authorId, { onSuccess: () => navigate('/board') })}
+              className="min-h-[44px] rounded-md bg-red-600 px-3 font-semibold text-white disabled:opacity-50"
+            >
+              {t('block.confirm')}
+            </button>
+            <button
+              type="button"
+              onClick={() => setConfirmingBlock(false)}
+              className="min-h-[44px] px-2 text-gray-500 underline"
+            >
+              {t('postDetail.deleteCancel')}
+            </button>
+          </>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setConfirmingBlock(true)}
+            className="min-h-[44px] font-semibold text-red-600 underline"
+          >
+            🚫 {t('block.action')}
+          </button>
+        )}
+        {block.isError ? <p className="text-red-700">{t('report.error')}</p> : null}
+      </div>
+    </div>
   )
 }
 

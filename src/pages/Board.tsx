@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import { useRegions, countyRegionIds } from '../hooks/useRegions'
 import { useSelectedRegion } from '../context/SelectedRegionContext'
 import { useBoardPosts, postCategoryLabelKey, type PostWithAuthor } from '../hooks/usePosts'
+import { useBlockedIds } from '../hooks/useModeration'
 import { regionLabel } from '../lib/regionName'
 import { regionDistanceKm } from '../lib/matching'
 import type { Tables } from '../types/database'
@@ -26,11 +27,16 @@ export function Board() {
   const authorId = searchParams.get('author')
   const scopeIds = countyRegionIds(regions ?? [], regionId)
   const scopeReady = Boolean(authorId) || !regionId || regions !== undefined
-  const { data: posts, isLoading, isError, refetch, isFetching } = useBoardPosts(
+  const { data: rawPosts, isLoading, isError, refetch, isFetching } = useBoardPosts(
     scopeIds,
     scopeReady,
     authorId,
   )
+  // 차단한 사용자의 글 숨김(Play UGC 정책, D-022) — 차단 목록은 본인 것만 RLS로 조회됨
+  const { data: blockedIds } = useBlockedIds(user?.id)
+  const posts = blockedIds
+    ? (rawPosts ?? []).filter((p) => !blockedIds.has(p.author_id))
+    : rawPosts
 
   const regionsById = new Map((regions ?? []).map((r) => [r.id, r]))
   const showError = (Boolean(regionId) && regionsError) || isError
