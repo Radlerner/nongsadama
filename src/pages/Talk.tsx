@@ -78,7 +78,7 @@ export function Talk() {
             type="button"
             onClick={() => (noticeAccepted ? void startListening() : setShowMicNotice(true))}
             disabled={listening}
-            className="flex min-h-[64px] w-full items-center justify-center gap-3 rounded-md bg-green-700 text-lg font-bold text-white disabled:opacity-60"
+            className="flex min-h-[64px] w-full items-center justify-center gap-3 rounded-md bg-brand-greenDark text-lg font-bold text-white disabled:opacity-60"
           >
             <span aria-hidden className="text-2xl">🎤</span>
             {listening ? t('talk.listening') : t('talk.micButton')}
@@ -91,7 +91,7 @@ export function Talk() {
                 <button
                   type="button"
                   onClick={() => void startListening()}
-                  className="min-h-[44px] flex-1 rounded-md bg-green-700 font-semibold text-white"
+                  className="min-h-[44px] flex-1 rounded-md bg-brand-greenDark font-semibold text-white"
                 >
                   {t('talk.micAgree')}
                 </button>

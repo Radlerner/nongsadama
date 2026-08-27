@@ -53,7 +53,7 @@ export function Board() {
         <h1 className="text-lg font-bold">{t('board.title')}</h1>
         <Link
           to={user ? '/board/new' : '/login'}
-          className="inline-flex min-h-[44px] items-center rounded-md bg-green-700 px-4 text-sm font-semibold text-white"
+          className="inline-flex min-h-[44px] items-center rounded-md bg-brand-greenDark px-4 text-sm font-semibold text-white"
         >
           {t('board.write')}
         </Link>

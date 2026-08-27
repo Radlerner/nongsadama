@@ -207,7 +207,7 @@ export function PostForm() {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="min-h-[56px] rounded-md bg-green-700 px-6 py-3 text-base font-semibold text-white disabled:opacity-50"
+          className="min-h-[56px] rounded-md bg-brand-greenDark px-6 py-3 text-base font-semibold text-white disabled:opacity-50"
         >
           {isSubmitting ? t('auth.loading') : t('postForm.submit')}
         </button>

@@ -112,7 +112,7 @@ export function LifeInfoDetail() {
         {item.phone ? (
           <a
             href={`tel:${item.phone}`}
-            className="flex min-h-[56px] items-center justify-center gap-2 rounded-md bg-green-700 px-6 text-base font-bold text-white"
+            className="flex min-h-[56px] items-center justify-center gap-2 rounded-md bg-brand-greenDark px-6 text-base font-bold text-white"
           >
             <span aria-hidden className="text-xl">☎</span>
             {t('lifeInfoDetail.call')} {item.phone}

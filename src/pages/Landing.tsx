@@ -45,7 +45,7 @@ export function Landing() {
         </div>
         <Link
           to="/select"
-          className="inline-flex min-h-[56px] w-full max-w-xs items-center justify-center rounded-card bg-green-700 px-6 py-3 text-base font-semibold text-white shadow-card"
+          className="inline-flex min-h-[56px] w-full max-w-xs items-center justify-center rounded-card bg-brand-greenDark px-6 py-3 text-base font-semibold text-white shadow-card"
         >
           {t('landing.enter')}
         </Link>

@@ -40,7 +40,7 @@ export function Neighbors() {
         </p>
         <Link
           to="/login"
-          className="flex min-h-[44px] items-center justify-center rounded-md bg-green-700 px-6 py-3 text-base font-semibold text-white"
+          className="flex min-h-[44px] items-center justify-center rounded-md bg-brand-greenDark px-6 py-3 text-base font-semibold text-white"
         >
           {t('profile.loginCta')}
         </Link>
@@ -57,7 +57,7 @@ export function Neighbors() {
           <p className="mt-2 text-xs text-gray-500">{t('neighbors.consentWhy')}</p>
           <Link
             to="/profile/edit"
-            className="mt-4 inline-flex min-h-[44px] items-center justify-center rounded-md bg-green-700 px-6 py-3 text-base font-semibold text-white"
+            className="mt-4 inline-flex min-h-[44px] items-center justify-center rounded-md bg-brand-greenDark px-6 py-3 text-base font-semibold text-white"
           >
             {t('neighbors.consentCta')}
           </Link>

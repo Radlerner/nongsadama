@@ -40,7 +40,7 @@ export class ErrorBoundary extends Component<Props, State> {
         <button
           type="button"
           onClick={() => window.location.reload()}
-          className="min-h-[56px] rounded-md bg-green-700 px-8 py-3 text-base font-semibold text-white"
+          className="min-h-[56px] rounded-md bg-brand-greenDark px-8 py-3 text-base font-semibold text-white"
         >
           다시 불러오기 / Reload
         </button>

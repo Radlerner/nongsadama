@@ -36,7 +36,7 @@ export function BottomNav() {
                       aria-hidden
                       className={[
                         '-mt-5 flex h-14 w-14 items-center justify-center rounded-full text-2xl shadow-md',
-                        isActive ? 'bg-green-700' : 'bg-green-600',
+                        isActive ? 'bg-brand-greenDark' : 'bg-green-600',
                       ].join(' ')}
                     >
                       🎤

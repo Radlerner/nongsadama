@@ -77,7 +77,7 @@ export function LifeInfo() {
               className={[
                 'inline-flex min-h-[44px] items-center rounded-full border px-4 text-sm',
                 active
-                  ? 'border-green-700 bg-green-700 font-semibold text-white'
+                  ? 'border-green-700 bg-brand-greenDark font-semibold text-white'
                   : 'border-gray-300 text-gray-700',
               ].join(' ')}
             >

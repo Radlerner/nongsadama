@@ -51,7 +51,7 @@ export function Profile() {
         </p>
         <Link
           to="/login"
-          className="flex min-h-[44px] items-center justify-center rounded-md bg-green-700 px-6 py-3 text-base font-semibold text-white"
+          className="flex min-h-[44px] items-center justify-center rounded-md bg-brand-greenDark px-6 py-3 text-base font-semibold text-white"
         >
           {t('profile.loginCta')}
         </Link>
@@ -98,7 +98,7 @@ export function Profile() {
 
       <Link
         to="/profile/edit"
-        className="mt-4 flex min-h-[44px] items-center justify-center rounded-md bg-green-700 px-6 py-3 text-base font-semibold text-white"
+        className="mt-4 flex min-h-[44px] items-center justify-center rounded-md bg-brand-greenDark px-6 py-3 text-base font-semibold text-white"
       >
         {t('profile.editCta')}
       </Link>
