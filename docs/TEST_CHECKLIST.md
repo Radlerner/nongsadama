@@ -353,3 +353,9 @@ Supabase 프로젝트 **nongsadama**(`ikusdwursvbdrznbcjtw`, ap-northeast-2)에 
 #### 아침 목록 추가
 5. 운영자 계정 admin 승격(가입 후 대시보드 SQL: update profiles set role='admin' where id='<운영자uid>')
    + 신고 주기 점검 루틴 확정 — Play UGC "검토·조치" 요건
+
+## Play 심사 준비 4순위: PWA (2026-08-27)
+- manifest·sw.js·아이콘 192/512 라이브 content-type 검증(초기 200이 SPA 폴백인 함정 확인 후
+  재빌드 대기→ application/manifest+json·text/javascript·image/png 확인) ✅
+- BASE_PATH(/nongsadama/) 빌드에서 %BASE_URL% 치환 검증 ✅. SW는 PROD 전용 등록,
+  내비게이션 network-first(배포 전파 보장). 설치 프롬프트·TWA 패키징은 아침/후속.
