@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
+import { useSearchParams } from 'react-router-dom'
 import { useTranslation } from '../i18n/useTranslation'
 import { useRegions, countyRegionIds } from '../hooks/useRegions'
 import { useSelectedRegion } from '../context/SelectedRegionContext'
@@ -14,6 +14,8 @@ import { regionLabel } from '../lib/regionName'
 import { FreshnessBadge } from '../components/FreshnessBadge'
 import { SafetyBanner } from '../components/SafetyBanner'
 import { STALE_AFTER_MONTHS_SUPPORT } from '../lib/freshness'
+import { CardLink } from '../components/ui/Card'
+import { EmptyBox, ErrorBox, LoadingBox } from '../components/ui/StateBoxes'
 
 const FILTERS = ['all', ...LIFE_INFO_CATEGORIES] as const
 
@@ -99,25 +101,16 @@ export function LifeInfo() {
       ) : null}
 
       {loading ? (
-        <p className="rounded-md bg-gray-50 px-4 py-8 text-center text-sm text-gray-500">
-          {t('lifeInfo.loading')}
-        </p>
+        <LoadingBox text={t('lifeInfo.loading')} />
       ) : showError ? (
-        <div className="rounded-md bg-red-50 px-4 py-8 text-center text-sm text-red-700">
-          <p className="mb-3">{t('lifeInfo.error')}</p>
-          <button
-            type="button"
-            onClick={retry}
-            disabled={retrying}
-            className="min-h-[44px] rounded-md border border-red-300 px-4 text-red-700 disabled:opacity-50"
-          >
-            {t('common.retry')}
-          </button>
-        </div>
+        <ErrorBox
+          text={t('lifeInfo.error')}
+          retryLabel={t('common.retry')}
+          onRetry={retry}
+          retrying={retrying}
+        />
       ) : filtered.length === 0 ? (
-        <p className="rounded-md bg-gray-50 px-4 py-8 text-center text-sm text-gray-500">
-          {(items ?? []).length > 0 ? t('lifeInfo.emptyFiltered') : t('lifeInfo.empty')}
-        </p>
+        <EmptyBox text={(items ?? []).length > 0 ? t('lifeInfo.emptyFiltered') : t('lifeInfo.empty')} />
       ) : (
         <ul className="flex flex-col gap-2">
           {filtered.map((item) => (
@@ -138,10 +131,7 @@ function LifeInfoCard({ item, regionName }: { item: LifeInfoRow; regionName: str
   const { name } = localizedContent(item.localized_content, locale)
   return (
     <li>
-      <Link
-        to={`/life-info/${item.id}`}
-        className="block rounded-card border border-gray-100 bg-white shadow-card px-4 py-3 active:bg-gray-50"
-      >
+      <CardLink to={`/life-info/${item.id}`} className="px-4 py-3">
         <p className="font-semibold text-gray-900">{name || t('lifeInfo.untitled')}</p>
         <p className="mt-1 flex flex-wrap items-center gap-2 text-xs text-gray-500">
           <span>
@@ -153,7 +143,7 @@ function LifeInfoCard({ item, regionName }: { item: LifeInfoRow; regionName: str
             staleAfterMonths={item.category === 'support' ? STALE_AFTER_MONTHS_SUPPORT : undefined}
           />
         </p>
-      </Link>
+      </CardLink>
     </li>
   )
 }
