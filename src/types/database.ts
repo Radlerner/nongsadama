@@ -18,6 +18,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      farm_tips: {
+        Row: {
+          created_at: string
+          crop_type: string | null
+          id: string
+          is_published: boolean
+          localized_content: Json
+          source_url: string | null
+          verified_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          crop_type?: string | null
+          id?: string
+          is_published?: boolean
+          localized_content: Json
+          source_url?: string | null
+          verified_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          crop_type?: string | null
+          id?: string
+          is_published?: boolean
+          localized_content?: Json
+          source_url?: string | null
+          verified_at?: string | null
+        }
+        Relationships: []
+      }
       blocks: {
         Row: {
           blocked_id: string

@@ -390,6 +390,23 @@ export default function MapHome() {
         {t('map.listView')}
       </Link>
 
+      {/* 🌾 농사 도움 진입(PRD v1.7 §1) — 홈에서 한 번의 탭, 비로그인 가용 */}
+      <Link
+        to="/farm"
+        className="flex min-h-[56px] items-center gap-3 rounded-card border border-gray-100 bg-white px-4 shadow-card active:bg-gray-50"
+      >
+        <span aria-hidden className="text-2xl">
+          🌾
+        </span>
+        <span className="flex-1">
+          <span className="block text-sm font-semibold text-gray-900">{t('farm.homeEntry')}</span>
+          <span className="block text-xs text-gray-500">{t('farm.homeEntryDesc')}</span>
+        </span>
+        <span aria-hidden className="text-gray-400">
+          ›
+        </span>
+      </Link>
+
       <ShareButtons />
     </section>
   )

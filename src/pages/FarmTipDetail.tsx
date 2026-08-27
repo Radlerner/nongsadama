@@ -1,0 +1,75 @@
+import { Link, useParams } from 'react-router-dom'
+import { useTranslation } from '../i18n/useTranslation'
+import { useFarmTip } from '../hooks/useFarmTips'
+import { localizedContent } from '../lib/localizedContent'
+import { isTtsAvailable, speak } from '../lib/tts'
+
+/** 🌾 농사 도움 상세 — 비로그인·TTS 읽어주기(저문해력, PRD v1.5 §1 원칙 재사용). */
+export function FarmTipDetail() {
+  const { t, locale } = useTranslation()
+  const { tipId } = useParams()
+  const { data: tip, isLoading } = useFarmTip(tipId)
+
+  if (isLoading) {
+    return (
+      <p className="rounded-md bg-gray-50 px-4 py-8 text-center text-sm text-gray-500">
+        {t('farm.loading')}
+      </p>
+    )
+  }
+  if (!tip) {
+    return (
+      <div className="text-center">
+        <p className="rounded-md bg-gray-50 px-4 py-8 text-sm text-gray-500">{t('farm.empty')}</p>
+        <Link to="/farm" className="mt-4 inline-block text-green-700 underline">
+          {t('farm.back')}
+        </Link>
+      </div>
+    )
+  }
+
+  const c = localizedContent(tip.localized_content, locale)
+
+  return (
+    <article className="flex flex-col gap-4">
+      <header>
+        <h1 className="text-lg font-bold text-gray-900">{c.name}</h1>
+        {tip.crop_type ? (
+          <span className="mt-1 inline-block rounded-full bg-green-50 px-2 py-0.5 text-[11px] font-medium text-green-800">
+            {tip.crop_type}
+          </span>
+        ) : null}
+      </header>
+
+      <p className="whitespace-pre-line text-base leading-relaxed text-gray-800">{c.description}</p>
+
+      {isTtsAvailable() ? (
+        <button
+          type="button"
+          onClick={() => speak(`${c.name}. ${c.description}`, locale)}
+          className="min-h-[56px] rounded-card border border-gray-100 bg-white text-base font-semibold text-gray-800 shadow-card"
+        >
+          🔊 {t('talk.readAloud')}
+        </button>
+      ) : null}
+
+      <div className="rounded-card border border-gray-100 bg-white px-4 py-3 text-xs text-gray-600 shadow-card">
+        <p>{t('farm.sourceNotice')}</p>
+        {tip.source_url ? (
+          <a
+            href={tip.source_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-1 inline-block min-h-[44px] font-semibold text-green-700 underline"
+          >
+            {t('farm.source')}
+          </a>
+        ) : null}
+      </div>
+
+      <Link to="/farm" className="text-green-700 underline">
+        {t('farm.back')}
+      </Link>
+    </article>
+  )
+}

@@ -376,3 +376,8 @@ Supabase 프로젝트 **nongsadama**(`ikusdwursvbdrznbcjtw`, ap-northeast-2)에 
   transport 3·support 5). dev UI 확인: 목록 표시·상세 전화 tel: 버튼·주소·
   "검수 확인일 없음" 배지 전부 정상, [샘플] 잔존 0.
 - 전 항목 공식 source_url 보유, verified_at=null(운영자 검수 대기 — D-026 절차).
+
+## PRD v1.7 §1: 농사 도움 (feat/farm-tips, 2026-08-28)
+- FT1 anon 읽기 8건 ✅ / FT2 anon 쓰기 거부 ✅ (롤백 시뮬레이션)
+- UI(dev): 홈 진입 카드·목록 8건·작목 칩(딸기)·상세 TTS·출처 링크·관리자 확인 문구 ✅
+- typecheck 0·i18n 패리티 0·빌드 성공

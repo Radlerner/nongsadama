@@ -12,6 +12,8 @@ import { BoardPostDetail } from './pages/BoardPostDetail'
 import { PostForm } from './pages/PostForm'
 import { LifeInfo } from './pages/LifeInfo'
 import { LifeInfoDetail } from './pages/LifeInfoDetail'
+import { FarmTips } from './pages/FarmTips'
+import { FarmTipDetail } from './pages/FarmTipDetail'
 import { Profile } from './pages/Profile'
 import { ProfileEdit } from './pages/ProfileEdit'
 import { Neighbors } from './pages/Neighbors'
@@ -47,6 +49,8 @@ export function App() {
         <Route path="/board/:postId/edit" element={<PostForm />} />
         <Route path="/life-info" element={<LifeInfo />} />
         <Route path="/life-info/:infoId" element={<LifeInfoDetail />} />
+        <Route path="/farm" element={<FarmTips />} />
+        <Route path="/farm/:tipId" element={<FarmTipDetail />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/profile/edit" element={<ProfileEdit />} />
         <Route path="/neighbors" element={<Neighbors />} />
