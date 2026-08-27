@@ -404,3 +404,11 @@ Supabase 프로젝트 **nongsadama**(`ikusdwursvbdrznbcjtw`, ap-northeast-2)에 
 - P0 없음, 코드·시각 회귀 0(클래스 집합 전수 대조·tsc 0·maskable 픽셀 실측 — 콘텐츠 반경
   191px < 안전영역 205px). 반영: 채택표 LifeInfo ✅ 갱신·키릴 동형문자 정정·잔여 컴포넌트
   ⬜ 등재. 후속: maskable 흰 카드 모서리 미감 판단, nongsaro 스킬 문구 보강(키 발급 시점).
+
+## v1.7 항목1·2·3 실데이터 연동 (2026-08-28 밤샘)
+| 검증 | 결과 |
+|---|---|
+| rural-programs: 캐시 구축 18s(3,058건)→적중 0.4s, 홍성 필터 34건 | ✅ 라이브 |
+| weather: MCP 왕복 5.4s→캐시 0.6s, 홍성 25.6°C·서울 25.8°C(전국) | ✅ 라이브 |
+| 키 잠금: api_keys/api_cache RLS 정책0+revoke | ✅ |
+| UI(dev): 날씨 카드 실온도·사업 34건·내위치 버튼·팁 공존, typecheck 0·패리티 0 | ✅ |

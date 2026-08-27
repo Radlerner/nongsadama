@@ -256,3 +256,17 @@ PRD_v1_3.md를 기준으로 한 기술·제품 의사결정과 이유를 남긴�
 - **시드 8건**: 폭염·농약·농기계·하우스 환기·근골격 안전(공통 5) + 딸기·사과(작목 2) +
   주간농사정보 안내 1. 전부 일반적 공공 안전 지식 수준 + 농사로/농약안전정보시스템 출처.
 - **농사로 OpenAPI 실연동은 키 발급 후**(Edge Function 프록시 — PRD v1.7 §7-B 오너 액션).
+
+### D-028. 외부 실데이터 연동 3종 (2026-08-28 밤샘, PRD v1.7 항목1·2·3)
+- **키 보관**: 대시보드 secret 대신 public.api_keys(RLS 정책0+grant 회수=service_role 전용)
+  — private 스키마는 PostgREST 미노출로 Edge Function 접근 불가(실측 후 전환). 키는
+  저장소·클라이언트 미노출, api_cache로 상류 보호.
+- **rural-programs**(농진청 농촌지도사업정보): 실검증 스펙(getExtensionList, pageSize≤100,
+  31p, JSON) → 연도 전체 24h 캐시 → sido/center 부분일치 필터. 홍성 34건 0.4s.
+- **weather**(koreaConnect 날씨 MCP): SSE→JSON-RPC(initialize→tools/call current_weather)
+  왕복을 서버측 고정, 좌표 0.1° 반올림 30분 캐시(위치 정밀도 미저장). verify_jwt=false
+  2종 = 공개 데이터·비로그인 원칙(무료 티어 invocation 소모는 캐시로 완화, 수용).
+- **위치기반(항목1)**: 기본=선택 지역 중심좌표(파일럿), "내 위치"=geolocation→카카오
+  지오코더(coord2RegionCode, libraries=services)→실제 시도·시군 → 전국 테스터가 자기
+  지역 날씨·사업을 봄. 좌표는 조회에만 사용(v1.3 §4.1). UI는 FarmTips 상단 2카드.
+- 커뮤니티(게시판·이웃)는 파일럿 지역 유지 — 정보성 콘텐츠만 전국화(단계적 확장).

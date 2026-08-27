@@ -23,11 +23,26 @@ export interface KakaoMap {
   setLevel(level: number): void
 }
 export interface KakaoOverlay { setMap(map: KakaoMap | null): void }
+export interface KakaoRegionCode {
+  region_type: string
+  region_1depth_name: string
+  region_2depth_name: string
+}
 export interface KakaoMapsNs {
   load(cb: () => void): void
   LatLng: new (lat: number, lng: number) => KakaoLatLng
   Map: new (el: HTMLElement, opts: { center: KakaoLatLng; level: number }) => KakaoMap
   CustomOverlay: new (opts: { position: KakaoLatLng; content: HTMLElement; yAnchor?: number }) => KakaoOverlay
+  services?: {
+    Geocoder: new () => {
+      coord2RegionCode(
+        lng: number,
+        lat: number,
+        cb: (result: KakaoRegionCode[], status: string) => void,
+      ): void
+    }
+    Status: { OK: string }
+  }
 }
 
 declare global {
@@ -46,7 +61,8 @@ export function loadKakaoMaps(): Promise<KakaoMapsNs> {
       return
     }
     const script = document.createElement('script')
-    script.src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${encodeURIComponent(kakaoMapKey)}&autoload=false`
+    // services: 좌표→행정구역 지오코더(위치 기반 정보, PRD v1.7 항목1)
+    script.src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${encodeURIComponent(kakaoMapKey)}&autoload=false&libraries=services`
     script.async = true
     script.onload = () => {
       if (!window.kakao?.maps) {
@@ -59,6 +75,31 @@ export function loadKakaoMaps(): Promise<KakaoMapsNs> {
     document.head.appendChild(script)
   })
   return loadPromise
+}
+
+/**
+ * 좌표 → {시도, 시군구}(행정동 기준). 카카오 키 없거나 실패 시 null(부가 기능 — 조용한 폴백).
+ * 좌표는 변환에만 쓰이고 저장·전송되지 않는다(PRD v1.3 §4.1 위치 원칙).
+ */
+export async function coordToRegion(
+  lat: number,
+  lng: number,
+): Promise<{ sido: string; sigungu: string } | null> {
+  try {
+    const ns = await loadKakaoMaps()
+    if (!ns.services) return null
+    const geocoder = new ns.services.Geocoder()
+    return await new Promise((resolve) => {
+      geocoder.coord2RegionCode(lng, lat, (result, status) => {
+        if (status !== ns.services!.Status.OK) return resolve(null)
+        const r = result.find((x) => x.region_type === 'H') ?? result[0]
+        if (!r) return resolve(null)
+        resolve({ sido: r.region_1depth_name, sigungu: r.region_2depth_name })
+      })
+    })
+  } catch {
+    return null
+  }
 }
 
 /** 이모지 마커 DOM(리플릿 divIcon과 동일한 시각 언어). onClick은 호출측에서 바인딩. */
