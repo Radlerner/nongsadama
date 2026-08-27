@@ -370,3 +370,9 @@ Supabase 프로젝트 **nongsadama**(`ikusdwursvbdrznbcjtw`, ap-northeast-2)에 
 - P2-4 반영: 로그인 로고 icon-192로 교체(DPR 2~3 선명).
 - 후속(v1): P2-1 brand 토큰 실사용 확대·greenDark/green-700 정리, P2-3 플랫 컨테이너 규칙,
   maskable 아이콘 안전영역 패딩(icon-512=og-image 동일 파일 지적 — PWA 소관 추적).
+
+## Play 심사 준비 5순위: 실데이터 시딩 (2026-08-27)
+- 샘플 16건 제거 → 실데이터 9건 시딩(카테고리: hospital 2·market 2·government 1·
+  transport 3·support 5). dev UI 확인: 목록 표시·상세 전화 tel: 버튼·주소·
+  "검수 확인일 없음" 배지 전부 정상, [샘플] 잔존 0.
+- 전 항목 공식 source_url 보유, verified_at=null(운영자 검수 대기 — D-026 절차).
