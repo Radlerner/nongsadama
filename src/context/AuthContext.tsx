@@ -11,6 +11,7 @@ import {
 import type { Session, User } from '@supabase/supabase-js'
 import { useQueryClient } from '@tanstack/react-query'
 import { getSupabaseClient } from '../lib/supabase'
+import type { OAuthProvider } from '../config/app'
 import { useTranslation } from '../i18n/useTranslation'
 import { useSelectedRegion } from '../context/SelectedRegionContext'
 
@@ -30,6 +31,11 @@ interface AuthContextValue {
   signIn: (email: string, password: string) => Promise<{ error: string | null }>
   /** 가입. 이메일 확인이 켜져 있으면 needsEmailConfirm=true 로 반환된다. */
   signUp: (args: SignUpArgs) => Promise<{ error: string | null; needsEmailConfirm: boolean }>
+  /**
+   * 간편(소셜) 로그인 — Supabase OAuth 리다이렉트(PRD v1.6 후속, kakao-login 스킬).
+   * 성공 시 카카오 등 제공자 페이지로 이동하므로 반환은 "시작 실패" 오류만 의미 있다.
+   */
+  signInWithOAuth: (provider: OAuthProvider) => Promise<{ error: string | null }>
   signOut: () => Promise<void>
 }
 
@@ -64,13 +70,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (error || data) return
     const pending =
       typeof window !== 'undefined' ? window.localStorage.getItem(PENDING_NICKNAME_KEY) : null
-    const fallback = (u.email ?? 'user').split('@')[0].slice(0, 40) || 'user'
+    // 소셜(카카오 등) 로그인: 제공자 프로필 닉네임을 기본값으로 쓴다(kakao-login 스킬 §2.2).
+    const meta = u.user_metadata as Record<string, unknown>
+    const socialNickname =
+      (typeof meta.name === 'string' && meta.name) ||
+      (typeof meta.preferred_username === 'string' && meta.preferred_username) ||
+      null
+    const fallback =
+      socialNickname ?? ((u.email ?? 'user').split('@')[0].slice(0, 40) || 'user')
     const { error: insertError } = await supabase.from('profiles').insert({
       id: u.id,
       nickname: (pending ?? fallback).slice(0, 40),
       preferred_locale: localeRef.current,
       region_id: regionRef.current,
-      auth_provider: 'email',
+      auth_provider: u.app_metadata?.provider ?? 'email',
     })
     if (!insertError) {
       if (typeof window !== 'undefined') {
@@ -122,13 +135,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error: null, needsEmailConfirm: !data.session }
   }, [])
 
+  const signInWithOAuth = useCallback(async (provider: OAuthProvider) => {
+    // BASE_URL 포함 필수 — GitHub Pages는 /nongsadama/ 프리픽스라 origin만 쓰면 404
+    // (kakao-login 스킬 §2.1). 성공 시 이 페이지를 떠나 제공자 동의 화면으로 이동한다.
+    const { error } = await getSupabaseClient().auth.signInWithOAuth({
+      provider,
+      options: { redirectTo: `${window.location.origin}${import.meta.env.BASE_URL}` },
+    })
+    return { error: error ? error.message : null }
+  }, [])
+
   const signOut = useCallback(async () => {
     await getSupabaseClient().auth.signOut()
   }, [])
 
   const value = useMemo<AuthContextValue>(
-    () => ({ session, user: session?.user ?? null, initializing, signIn, signUp, signOut }),
-    [session, initializing, signIn, signUp, signOut],
+    () => ({
+      session,
+      user: session?.user ?? null,
+      initializing,
+      signIn,
+      signUp,
+      signInWithOAuth,
+      signOut,
+    }),
+    [session, initializing, signIn, signUp, signInWithOAuth, signOut],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

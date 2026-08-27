@@ -275,3 +275,16 @@ Supabase 프로젝트 **nongsadama**(`ikusdwursvbdrznbcjtw`, ap-northeast-2)에 
   공급자 결정(①현행 유지·파일럿 재평가 / ②유료 다국어)은 오너 대기.
 - 문서 이탈 기록: PRD §1.3의 match_posts(query_embedding) 대신 similar_posts(source_id)
   구현 — 원시 임베딩 왕복 제거로 더 안전(리뷰어 "개선" 평가).
+
+## 카카오 간편로그인 (feat/kakao-login, 2026-08-27 야간, kakao-login 스킬 준수)
+
+| # | 검증 | 결과 |
+|---|---|---|
+| K1 | /login 개편: 카카오 버튼(#FEE500, 56px) 렌더 | ✅ dev 실측 rgb(254,229,0)/56px |
+| K2 | 이메일 폼 기본 접힘 + "이메일로 계속하기" 펼침 시 기존 폼 온전(간편로그인 방식 — 대체 아님) | ✅ |
+| K3 | Supabase authorize?provider=kakao → 302 kauth.kakao.com(client_id·callback 정상) | ✅ |
+| K4 | 카카오가 요청 수용 — KOE 오류 0, 실제 로그인 페이지 반환(scope: nickname·email·image) | ✅ |
+| K5 | typecheck 0 / i18n 패리티 0 / 빌드 성공 | ✅ |
+| K6 | 실계정 동의 완료→복귀→profiles(auth_provider='kakao') 생성 | ⬜ **아침 실사용 테스트**(운영자 카카오 계정 필요) |
+- ensureProfile: 소셜 닉네임(user_metadata.name) 기본값 + app_metadata.provider 기록,
+  캐시 무효화 유지(79cb76f 회귀 방지). redirectTo에 BASE_URL 포함(Pages 프리픽스 대응).

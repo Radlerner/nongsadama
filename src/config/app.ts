@@ -35,6 +35,12 @@ export function getLocaleLabel(code: Locale): string {
   return localeLabels[code] ?? code.toUpperCase()
 }
 
+// 간편(소셜) 로그인 제공자 목록 — 설정 데이터(하드코딩 금지 원칙).
+// Supabase 대시보드(Authentication→Providers)에서 활성화된 것만 넣는다.
+// 추가 시 i18n에 `auth.<provider>Start` 키와 Login.tsx의 브랜드 스타일만 더하면 된다.
+export const oauthProviders = ['kakao'] as const
+export type OAuthProvider = (typeof oauthProviders)[number]
+
 /** 신고 접수용 운영자 연락처(설정값 — 코드 하드코딩 금지). */
 export const operatorEmail = 'casualpe@gmail.com'
 
