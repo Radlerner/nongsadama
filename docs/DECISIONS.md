@@ -207,3 +207,11 @@ PRD_v1_3.md를 기준으로 한 기술·제품 의사결정과 이유를 남긴�
   클라이언트(게시판 목록·이웃 목록). help 글의 mailto 신고를 in-app 신고로 대체(안전 문구 유지).
 - 차단 관리는 내 정보에서 목록·해제. 신고 검토는 운영자(admin role 승격 필요 — 운영 절차)
   또는 Supabase 대시보드.
+
+### D-023. PWA 도입 (2026-08-27, Play 심사 준비 4순위 — TWA 전제)
+- **결정**: manifest.webmanifest(standalone·ko·아이콘 192/512 any+maskable — 크림 여백이
+  안전영역 역할)+최소 서비스워커. SW 전략은 보수적: 내비게이션 network-first(배포 전파 보장,
+  오프라인 시 셸 폴백)·해시 자산만 cache-first·교차 출처 불관여. 등록은 PROD 전용,
+  scope=BASE_URL(GH Pages /nongsadama/ 대응 — %BASE_URL% 치환 검증).
+- 이로써 Bubblewrap TWA 패키징 가능 상태. 스토어 등록 시 assetlinks.json(디지털 자산 링크)은
+  패키징 단계에서 추가 필요(후속 — play-submission 스킬 후보).
