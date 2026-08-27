@@ -1,10 +1,11 @@
-import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useTranslation } from '../i18n/useTranslation'
 import { useOwnProfile } from '../hooks/useOwnProfile'
 import { useFarmTips } from '../hooks/useFarmTips'
 import { localizedContent } from '../lib/localizedContent'
 import { norm } from '../lib/matching'
+import { CardLink } from '../components/ui/Card'
+import { EmptyBox, ErrorBox, LoadingBox } from '../components/ui/StateBoxes'
 
 /**
  * 🌾 농사 도움 목록(PRD v1.7 §1·§2) — 비로그인 열람.
@@ -23,25 +24,16 @@ export function FarmTips() {
       <p className="mb-4 text-xs text-gray-500">{t('farm.subtitle')}</p>
 
       {isLoading ? (
-        <p className="rounded-md bg-gray-50 px-4 py-8 text-center text-sm text-gray-500">
-          {t('farm.loading')}
-        </p>
+        <LoadingBox text={t('farm.loading')} />
       ) : isError ? (
-        <div className="rounded-md bg-red-50 px-4 py-8 text-center text-sm text-red-700">
-          <p className="mb-3">{t('farm.error')}</p>
-          <button
-            type="button"
-            onClick={() => void refetch()}
-            disabled={isFetching}
-            className="min-h-[44px] rounded-md border border-red-300 px-4 text-red-700 disabled:opacity-50"
-          >
-            {t('common.retry')}
-          </button>
-        </div>
+        <ErrorBox
+          text={t('farm.error')}
+          retryLabel={t('common.retry')}
+          onRetry={() => void refetch()}
+          retrying={isFetching}
+        />
       ) : (tips ?? []).length === 0 ? (
-        <p className="rounded-md bg-gray-50 px-4 py-8 text-center text-sm text-gray-500">
-          {t('farm.empty')}
-        </p>
+        <EmptyBox text={t('farm.empty')} />
       ) : (
         <ul className="flex flex-col gap-2">
           {(tips ?? []).map((tip) => {
@@ -51,10 +43,7 @@ export function FarmTips() {
             )
             return (
               <li key={tip.id}>
-                <Link
-                  to={`/farm/${tip.id}`}
-                  className="block rounded-card border border-gray-100 bg-white px-4 py-3 shadow-card active:bg-gray-50"
-                >
+                <CardLink to={`/farm/${tip.id}`} className="px-4 py-3">
                   <p className="flex items-center gap-2 font-semibold text-gray-900">
                     <span className="flex-1">{c.name}</span>
                     {isMine ? (
@@ -68,7 +57,7 @@ export function FarmTips() {
                     ) : null}
                   </p>
                   <p className="mt-1 line-clamp-2 text-xs text-gray-500">{c.description}</p>
-                </Link>
+                </CardLink>
               </li>
             )
           })}

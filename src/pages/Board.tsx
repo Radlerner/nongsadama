@@ -5,6 +5,8 @@ import { useRegions, countyRegionIds } from '../hooks/useRegions'
 import { useSelectedRegion } from '../context/SelectedRegionContext'
 import { useBoardPosts, postCategoryLabelKey, type PostWithAuthor } from '../hooks/usePosts'
 import { useBlockedIds } from '../hooks/useModeration'
+import { CardLink } from '../components/ui/Card'
+import { EmptyBox, ErrorBox, LoadingBox } from '../components/ui/StateBoxes'
 import { regionLabel } from '../lib/regionName'
 import { regionDistanceKm } from '../lib/matching'
 import type { Tables } from '../types/database'
@@ -72,25 +74,16 @@ export function Board() {
       ) : null}
 
       {loading ? (
-        <p className="rounded-md bg-gray-50 px-4 py-8 text-center text-sm text-gray-500">
-          {t('board.loading')}
-        </p>
+        <LoadingBox text={t('board.loading')} />
       ) : showError ? (
-        <div className="rounded-md bg-red-50 px-4 py-8 text-center text-sm text-red-700">
-          <p className="mb-3">{t('board.error')}</p>
-          <button
-            type="button"
-            onClick={retry}
-            disabled={retrying}
-            className="min-h-[44px] rounded-md border border-red-300 px-4 text-red-700 disabled:opacity-50"
-          >
-            {t('common.retry')}
-          </button>
-        </div>
+        <ErrorBox
+          text={t('board.error')}
+          retryLabel={t('common.retry')}
+          onRetry={retry}
+          retrying={retrying}
+        />
       ) : (posts ?? []).length === 0 ? (
-        <p className="rounded-md bg-gray-50 px-4 py-8 text-center text-sm text-gray-500">
-          {t('board.empty')}
-        </p>
+        <EmptyBox text={t('board.empty')} />
       ) : (
         <ul className="flex flex-col gap-2">
           {(posts ?? []).map((post) => (
@@ -129,10 +122,7 @@ function PostCard({
 
   return (
     <li>
-      <Link
-        to={`/board/${post.id}`}
-        className="block rounded-card border border-gray-100 bg-white shadow-card px-4 py-3 active:bg-gray-50"
-      >
+      <CardLink to={`/board/${post.id}`} className="px-4 py-3">
         <p className="font-semibold text-gray-900">{post.title}</p>
         <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-gray-500">
           <span>{t(postCategoryLabelKey(post.category))}</span>
@@ -148,7 +138,7 @@ function PostCard({
             </span>
           ) : null}
         </p>
-      </Link>
+      </CardLink>
     </li>
   )
 }

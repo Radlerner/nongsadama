@@ -7,6 +7,7 @@ import { useBlockedIds } from '../hooks/useModeration'
 import { useRegions } from '../hooks/useRegions'
 import { matchScore } from '../lib/matching'
 import { NeighborCard } from '../components/NeighborCard'
+import { EmptyBox, ErrorBox, LoadingBox } from '../components/ui/StateBoxes'
 
 /**
  * 이웃 목록(PRD v1.4 §2.1). 로그인 + 본인 매칭 동의(상호성)가 전제이며,
@@ -86,25 +87,16 @@ export function Neighbors() {
       <h1 className="mb-4 text-lg font-bold">{t('neighbors.title')}</h1>
 
       {isLoading ? (
-        <p className="rounded-md bg-gray-50 px-4 py-8 text-center text-sm text-gray-500">
-          {t('neighbors.loading')}
-        </p>
+        <LoadingBox text={t('neighbors.loading')} />
       ) : isError ? (
-        <div className="rounded-md bg-red-50 px-4 py-8 text-center text-sm text-red-700">
-          <p className="mb-3">{t('neighbors.error')}</p>
-          <button
-            type="button"
-            onClick={() => void refetch()}
-            disabled={isFetching}
-            className="min-h-[44px] rounded-md border border-red-300 px-4 text-red-700 disabled:opacity-50"
-          >
-            {t('common.retry')}
-          </button>
-        </div>
+        <ErrorBox
+          text={t('neighbors.error')}
+          retryLabel={t('common.retry')}
+          onRetry={() => void refetch()}
+          retrying={isFetching}
+        />
       ) : ranked.length === 0 ? (
-        <p className="rounded-md bg-gray-50 px-4 py-8 text-center text-sm text-gray-500">
-          {t('neighbors.empty')}
-        </p>
+        <EmptyBox text={t('neighbors.empty')} />
       ) : (
         <ul className="flex flex-col gap-2">
           {ranked.map(({ n }) => (

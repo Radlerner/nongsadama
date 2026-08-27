@@ -393,3 +393,9 @@ Supabase 프로젝트 **nongsadama**(`ikusdwursvbdrznbcjtw`, ap-northeast-2)에 
 - **P2 반영**: 작목 매칭 norm() 통일(P2-3), 출처 라벨 "(농사로)" 하드코딩 제거(P2-4),
   상세 "검수 확인일 없음" 표시(P2-5), 마이그레이션 주석 키 정정(P2-7).
 - 후속: rls_check.sql farm_tips 케이스(P2-6), 영문 작목 태그 확충(자유 텍스트 한계 — D-027 기록).
+
+## PRD v1.7 §3: 컴포넌트 체계 (2026-08-28 야간)
+- src/components/ui/ 신설: Card·CardLink, LoadingBox·ErrorBox(재시도 필수)·EmptyBox.
+- 적용: FarmTips(전체)·Board(상태 3종+PostCard)·Neighbors(상태 3종) — 시각 동일성 실측
+  (radius 12px·bg white 유지). 나머지 화면은 docs/DESIGN_TOKENS.md §3 채택 현황표로 추적.
+- docs/DESIGN_TOKENS.md 신설: 토큰·컴포넌트 인벤토리·화면 프레임 목록·피그마 프롬프트 템플릿.
