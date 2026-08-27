@@ -28,7 +28,7 @@ export function ShareButtons() {
   }, [])
 
   return (
-    <div className="rounded-card border border-gray-100 shadow-card px-4 py-3">
+    <div className="rounded-card border border-gray-100 bg-white shadow-card px-4 py-3">
       <p className="mb-2 text-xs font-semibold text-gray-500">{t('share.title')}</p>
       <div
         className="a2a_kit a2a_kit_size_32 a2a_default_style"

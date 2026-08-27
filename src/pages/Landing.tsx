@@ -49,16 +49,19 @@ export function Landing() {
         >
           {t('landing.enter')}
         </Link>
+        {/* 기능 3칩은 탭 가능(재검수 P1-2) — 오인 클릭이 정답 동작(/select)이 되게 Link 승격 */}
         <ul className="flex gap-3">
           {previews.map((p) => (
-            <li
-              key={p.key}
-              className="flex min-w-[88px] flex-col items-center gap-1 rounded-card bg-white px-4 py-3 shadow-card"
-            >
-              <span aria-hidden className="text-2xl">
-                {p.icon}
-              </span>
-              <span className="text-xs font-semibold text-gray-700">{t(p.key)}</span>
+            <li key={p.key}>
+              <Link
+                to="/select"
+                className="flex min-h-[44px] min-w-[88px] flex-col items-center gap-1 rounded-card bg-white px-4 py-3 shadow-card active:bg-gray-50"
+              >
+                <span aria-hidden className="text-2xl">
+                  {p.icon}
+                </span>
+                <span className="text-xs font-semibold text-gray-700">{t(p.key)}</span>
+              </Link>
             </li>
           ))}
         </ul>

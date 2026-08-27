@@ -73,7 +73,7 @@ export function Talk() {
       <p className="text-sm text-gray-600">{t('talk.subtitle')}</p>
 
       {isSpeechAvailable() ? (
-        <div className="rounded-card border border-gray-100 shadow-card px-4 py-3">
+        <div className="rounded-card border border-gray-100 bg-white shadow-card px-4 py-3">
           <button
             type="button"
             onClick={() => (noticeAccepted ? void startListening() : setShowMicNotice(true))}

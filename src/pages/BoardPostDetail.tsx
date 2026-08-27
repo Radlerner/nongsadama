@@ -207,7 +207,7 @@ function ModerationActions({ postId, authorId }: { postId: string; authorId: str
   const alreadyBlocked = blockedIds?.has(authorId) ?? false
 
   return (
-    <div className="flex flex-col gap-2 rounded-card border border-gray-100 shadow-card px-4 py-3 text-xs">
+    <div className="flex flex-col gap-2 rounded-card border border-gray-100 bg-white shadow-card px-4 py-3 text-xs">
       {reported ? (
         <p className="text-green-800">
           {reported === 'dup' ? t('report.duplicated') : t('report.done')}
@@ -301,7 +301,7 @@ function SimilarPosts({ postId }: { postId: string }) {
   const data = (raw ?? []).filter((s) => !blockedIds?.has(s.author_id))
   if (data.length === 0) return null
   return (
-    <section className="rounded-card border border-gray-100 shadow-card px-4 py-3">
+    <section className="rounded-card border border-gray-100 bg-white shadow-card px-4 py-3">
       <p className="mb-2 text-xs font-semibold text-gray-500">{t('postDetail.similar')}</p>
       <ul className="flex flex-col gap-1">
         {data.map((s) => (

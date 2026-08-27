@@ -359,3 +359,14 @@ Supabase 프로젝트 **nongsadama**(`ikusdwursvbdrznbcjtw`, ap-northeast-2)에 
   재빌드 대기→ application/manifest+json·text/javascript·image/png 확인) ✅
 - BASE_PATH(/nongsadama/) 빌드에서 %BASE_URL% 치환 검증 ✅. SW는 PROD 전용 등록,
   내비게이션 network-first(배포 전파 보장). 설치 프롬프트·TWA 패키징은 아침/후속.
+
+## 디자인 v0 (feat/design-v0 → main 166482c + 재검수 반영, 2026-08-27 야간)
+- 토큰(brand-*·rounded-card 12px·shadow-card) 적용 실측, 카드 13개소 통일(잔여 불일치 0 grep).
+- 랜딩(로고+크림+기능 3칩)·로그인(로고+카드 패널) 개편, i18n 신규 키 0(기존 키 재사용).
+### 독립 재검수(P0 없음) + 반영
+- P1-1 반영: 페이지 배경 gray-50 + 카드 bg-white 명시(13개소) — 야외·저가 단말 카드 경계 확보.
+- P1-2 반영: 랜딩 기능 3칩을 /select Link로 승격(오인 클릭 = 정답 동작).
+- P2-2 반영: 지도 컨테이너 overflow-hidden 명시(SDK 내부 동작 비의존).
+- P2-4 반영: 로그인 로고 icon-192로 교체(DPR 2~3 선명).
+- 후속(v1): P2-1 brand 토큰 실사용 확대·greenDark/green-700 정리, P2-3 플랫 컨테이너 규칙,
+  maskable 아이콘 안전영역 패딩(icon-512=og-image 동일 파일 지적 — PWA 소관 추적).

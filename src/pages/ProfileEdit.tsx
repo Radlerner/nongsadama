@@ -175,7 +175,7 @@ export function ProfileEdit() {
           </select>
         </label>
 
-        <div className="rounded-card border border-gray-100 shadow-card px-4 py-3">
+        <div className="rounded-card border border-gray-100 bg-white shadow-card px-4 py-3">
           <label className="flex items-start gap-3 text-sm text-gray-800">
             <input
               type="checkbox"

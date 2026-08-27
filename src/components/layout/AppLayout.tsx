@@ -12,7 +12,8 @@ export function AppLayout() {
   const showBack = location.pathname !== '/home'
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-screen-sm flex-col bg-white text-gray-900">
+    // 배경 분리(재검수 P1-1): 페이지 gray-50 + 카드 white — 야외·저가 단말에서 카드 경계 확보
+    <div className="mx-auto flex min-h-screen max-w-screen-sm flex-col bg-gray-50 text-gray-900">
       <header className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-200 bg-white px-2 py-2">
         <div className="flex items-center gap-1">
           {showBack ? (

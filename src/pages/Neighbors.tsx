@@ -52,7 +52,7 @@ export function Neighbors() {
     return (
       <section>
         <h1 className="mb-4 text-lg font-bold">{t('neighbors.title')}</h1>
-        <div className="rounded-card border border-gray-100 shadow-card px-4 py-6 text-center">
+        <div className="rounded-card border border-gray-100 bg-white shadow-card px-4 py-6 text-center">
           <p className="text-sm text-gray-700">{t('neighbors.consentRequired')}</p>
           <p className="mt-2 text-xs text-gray-500">{t('neighbors.consentWhy')}</p>
           <Link

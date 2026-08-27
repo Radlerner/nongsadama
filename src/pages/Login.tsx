@@ -116,7 +116,7 @@ export function Login() {
     <div className="mx-auto flex min-h-screen max-w-screen-sm flex-col bg-brand-cream px-6 py-6 text-gray-900">
       <div className="flex items-center gap-3">
         <img
-          src={`${import.meta.env.BASE_URL}favicon.png`}
+          src={`${import.meta.env.BASE_URL}icons/icon-192.png`}
           alt=""
           aria-hidden
           className="h-10 w-10 rounded-md"
