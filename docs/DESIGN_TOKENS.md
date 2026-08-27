@@ -3,18 +3,20 @@
 PRD v1.7 §3 산출물. **피그마 프레임 명세·디자인 프롬프트에 그대로 붙여 쓸 수 있는 단일 기준.**
 코드 원본: `tailwind.config.js`(토큰), `src/components/ui/`(공통 컴포넌트).
 
-## 1. 색 토큰 (로고 퍼즐 팔레트)
+## 1. 색 토큰 (리브랜딩 v0 D-030 — Deep Forest Green / Warm Apricot / Warm Gray)
 
 | 토큰 | 값 | 용도 |
 |---|---|---|
-| `brand-green` | `#6b8f4e` | 로고 상단 퍼즐(장식·일러스트) |
-| `brand-greenDark` | `#15803d` | **주 CTA 배경**(= Tailwind green-700와 동일값 유지) |
-| `brand-purple` | `#7b7fc7` | 로고 좌하 퍼즐(장식, 미사용 예약) |
-| `brand-orange` | `#c9812e` | 로고 우하 퍼즐(장식, 미사용 예약) |
-| `brand-cream` | `#f5f1e8` | **랜딩·로그인 배경** |
-| `brand-ink` | `#2b2b2b` | 예약 |
-| gray-50 `#f9fafb` | — | **앱 내부 페이지 배경**(카드 white와 분리) |
+| `brand-greenDark` / `green-700` | `#1B4D3E` | **Primary — 주 CTA 배경**, 지도 실좌표 핀 링 |
+| `green-50`~`900` | `#EAF4F0`~`#0E2921` | Primary 스케일(배지·강조 배경·텍스트) |
+| `amber-500` | `#E87A40` | Secondary(Warm Apricot) — 경고·강조 배지 |
+| `amber-50`~`900` | `#FDF1E9`~`#542712` | Secondary 스케일 |
+| `brand-purple` | `#6C5CE7` | Accent(Soft Violet) — 지도 읍·면 묶음 핀 링(좌표 미검수) |
+| gray-50 `#F8F9FA` | — | **앱 전체 배경**(랜딩·로그인 포함, 카드 white와 분리) |
+| gray-900 `#1F2937` | — | 본문 진한 텍스트(Dark Slate Gray) |
 | 카카오 `#FEE500`/`#191919` | — | 카카오 버튼 전용(브랜드 가이드) |
+
+폰트: Pretendard(CDN, `index.html`) — `font-sans` 기본값.
 
 ## 2. 형태 토큰
 
@@ -45,9 +47,9 @@ PRD v1.7 §3 산출물. **피그마 프레임 명세·디자인 프롬프트에 
 
 ## 5. 피그마 디자인 프롬프트 템플릿 (예시)
 
-> "모바일 375px, 농촌 외국인 근로자용 앱. 배경 gray-50(#f9fafb), 카드 white·radius 12·
-> 그림자(0 1 3, 6%). 주 CTA #15803d·높이 56·radius 12. 랜딩/로그인만 크림(#f5f1e8) 배경.
-> 터치 최소 44px, 이모지 아이콘(🗺️💬🎤👥👤🌾), 화면당 1과업, 텍스트 최소화.
+> "모바일 375px, 농촌 외국인 근로자용 앱. 배경 gray-50(#F8F9FA, 앱 전체 공통), 카드 white·radius 12·
+> 그림자(0 1 3, 6%). 주 CTA #1B4D3E(Deep Forest Green)·높이 56·radius 12. 강조는 Warm Apricot(#E87A40).
+> 터치 최소 44px, 이모지 아이콘(🗺️💬🎤👥👤🌾), 화면당 1과업, 텍스트 최소화, 폰트 Pretendard.
 > [화면명]을 위 토큰으로 그려줘: (§4에서 프레임 선택 + 해당 화면 구성요소 나열)"
 
 ## 6. 규칙

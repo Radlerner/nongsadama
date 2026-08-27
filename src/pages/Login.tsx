@@ -113,7 +113,7 @@ export function Login() {
     'w-full min-h-[44px] rounded-md border border-gray-300 px-3 py-2 text-base text-gray-900'
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-screen-sm flex-col bg-brand-cream px-6 py-6 text-gray-900">
+    <div className="mx-auto flex min-h-screen max-w-screen-sm flex-col bg-gray-50 px-6 py-6 text-gray-900">
       <div className="flex items-center gap-3">
         <img
           src={`${import.meta.env.BASE_URL}icons/icon-192.png`}

@@ -9,4 +9,11 @@
 body {
   margin: 0;
   -webkit-font-smoothing: antialiased;
+  font-family:
+    'Pretendard Variable',
+    Pretendard,
+    -apple-system,
+    BlinkMacSystemFont,
+    system-ui,
+    sans-serif;
 }

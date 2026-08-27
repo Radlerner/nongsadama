@@ -28,7 +28,7 @@ export function Landing() {
   ] as const
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-screen-sm flex-col bg-brand-cream px-6 text-gray-900">
+    <div className="mx-auto flex min-h-screen max-w-screen-sm flex-col bg-gray-50 px-6 text-gray-900">
       <div className="flex justify-end py-3">
         <LanguageSwitcher />
       </div>

@@ -24,6 +24,7 @@ import {
   type KakaoMap,
   type KakaoMapsNs,
   type KakaoOverlay,
+  type MarkerKind,
 } from '../lib/kakaoMap'
 import type { Tables } from '../types/database'
 
@@ -31,14 +32,21 @@ type Region = Tables<'regions'>
 
 const FILTERS = ['all', ...LIFE_INFO_CATEGORIES] as const
 
-function emojiIcon(emoji: string, count?: number): L.DivIcon {
+// 마커 종류: 실좌표 개별 핀(point, Primary Green) | 읍·면 묶음 핀(region, Accent Violet)
+const MARKER_RING_COLOR: Record<MarkerKind, string> = {
+  point: '#1B4D3E',
+  region: '#6C5CE7',
+}
+
+function emojiIcon(emoji: string, count?: number, kind: MarkerKind = 'point'): L.DivIcon {
+  const ring = MARKER_RING_COLOR[kind]
   const badge =
     count && count > 1
-      ? `<span style="position:absolute;top:-6px;right:-6px;background:#15803d;color:#fff;border-radius:9999px;font-size:11px;font-weight:700;min-width:18px;height:18px;line-height:18px;text-align:center;padding:0 3px;">${count}</span>`
+      ? `<span style="position:absolute;top:-6px;right:-6px;background:${ring};color:#fff;border-radius:9999px;font-size:11px;font-weight:700;min-width:18px;height:18px;line-height:18px;text-align:center;padding:0 3px;">${count}</span>`
       : ''
   return L.divIcon({
     className: '',
-    html: `<div style="position:relative;width:38px;height:38px;background:#fff;border:2px solid #15803d;border-radius:9999px;display:flex;align-items:center;justify-content:center;font-size:19px;box-shadow:0 1px 3px rgba(0,0,0,.3);">${emoji}${badge}</div>`,
+    html: `<div style="position:relative;width:38px;height:38px;background:#fff;border:2px solid ${ring};border-radius:9999px;display:flex;align-items:center;justify-content:center;font-size:19px;box-shadow:0 1px 3px rgba(0,0,0,.3);">${emoji}${badge}</div>`,
     iconSize: [38, 38],
     iconAnchor: [19, 19],
   })
@@ -91,7 +99,14 @@ export default function MapHome() {
 
   // 제공자 공용 핀 데이터(실좌표 개별 + 읍·면 묶음, 전화 전용 시/군 항목 제외)
   const pins = useMemo(() => {
-    const out: { lat: number; lng: number; emoji: string; count: number; items: LifeInfo[] }[] = []
+    const out: {
+      lat: number
+      lng: number
+      emoji: string
+      count: number
+      items: LifeInfo[]
+      kind: MarkerKind
+    }[] = []
     const withCoords = filtered.filter((i) => i.latitude != null && i.longitude != null)
     const withoutCoords = filtered.filter((i) => i.latitude == null || i.longitude == null)
     for (const item of withCoords) {
@@ -101,6 +116,7 @@ export default function MapHome() {
         emoji: LIFE_INFO_CATEGORY_ICONS[item.category] ?? 'ℹ️',
         count: 1,
         items: [item],
+        kind: 'point',
       })
     }
     const groups = new Map<string, LifeInfo[]>()
@@ -120,6 +136,7 @@ export default function MapHome() {
         emoji: group.length === 1 ? LIFE_INFO_CATEGORY_ICONS[group[0].category] ?? 'ℹ️' : '📍',
         count: group.length,
         items: group,
+        kind: 'region', // 좌표 미검수 — 읍·면 중심 묶음 핀(Accent Violet)
       })
     }
     return out
@@ -164,7 +181,7 @@ export default function MapHome() {
     for (const o of kakaoOverlaysRef.current) o.setMap(null)
     kakaoOverlaysRef.current = []
     for (const pin of pins) {
-      const el = emojiMarkerEl(pin.emoji, pin.count)
+      const el = emojiMarkerEl(pin.emoji, pin.count, pin.kind)
       el.addEventListener('click', () => setSheet(pin.items))
       const ov = new ns.CustomOverlay({ position: new ns.LatLng(pin.lat, pin.lng), content: el })
       ov.setMap(map)
@@ -213,7 +230,9 @@ export default function MapHome() {
     if (!layer) return
     layer.clearLayers()
     for (const pin of pins) {
-      L.marker([pin.lat, pin.lng], { icon: emojiIcon(pin.emoji, pin.count > 1 ? pin.count : undefined) })
+      L.marker([pin.lat, pin.lng], {
+        icon: emojiIcon(pin.emoji, pin.count > 1 ? pin.count : undefined, pin.kind),
+      })
         .on('click', () => setSheet(pin.items))
         .addTo(layer)
     }
@@ -260,43 +279,45 @@ export default function MapHome() {
 
   return (
     <section className="flex flex-col gap-3">
-      <div className="flex gap-2 overflow-x-auto pb-1">
-        {FILTERS.map((c) => {
-          const active = category === c
-          return (
-            <button
-              key={c}
-              type="button"
-              onClick={() => {
-                setCategory(c)
-                setSheet(null)
-              }}
-              aria-pressed={active}
-              className={[
-                'inline-flex min-h-[44px] shrink-0 items-center rounded-full border px-3 text-sm',
-                active
-                  ? 'border-green-700 bg-brand-greenDark font-semibold text-white'
-                  : 'border-gray-300 text-gray-700',
-              ].join(' ')}
-            >
-              {c === 'all' ? (
-                t('lifeInfo.category.all')
-              ) : (
-                <>
-                  <span aria-hidden className="mr-1">{LIFE_INFO_CATEGORY_ICONS[c]}</span>
-                  {t(categoryLabelKey(c))}
-                </>
-              )}
-            </button>
-          )
-        })}
-      </div>
-
       <div className="relative">
         <div
           ref={containerRef}
           className="z-0 h-[52dvh] min-h-[300px] w-full overflow-hidden rounded-card border border-gray-100 bg-white shadow-card"
         />
+
+        {/* 카테고리 필터: 지도 위 플로팅 Pill(리브랜딩 D-030) — 내 위치 버튼과 겹치지 않게 우측 여백 확보 */}
+        <div className="absolute left-2 right-16 top-2 z-[500] flex gap-2 overflow-x-auto rounded-full bg-white/90 p-1.5 shadow-md backdrop-blur-sm">
+          {FILTERS.map((c) => {
+            const active = category === c
+            return (
+              <button
+                key={c}
+                type="button"
+                onClick={() => {
+                  setCategory(c)
+                  setSheet(null)
+                }}
+                aria-pressed={active}
+                className={[
+                  'inline-flex min-h-[36px] shrink-0 items-center rounded-full px-3 text-sm transition-colors',
+                  active
+                    ? 'bg-brand-greenDark font-semibold text-white'
+                    : 'bg-transparent text-gray-700',
+                ].join(' ')}
+              >
+                {c === 'all' ? (
+                  t('lifeInfo.category.all')
+                ) : (
+                  <>
+                    <span aria-hidden className="mr-1">{LIFE_INFO_CATEGORY_ICONS[c]}</span>
+                    {t(categoryLabelKey(c))}
+                  </>
+                )}
+              </button>
+            )
+          })}
+        </div>
+
         <button
           type="button"
           onClick={() => void locate()}

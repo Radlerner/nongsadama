@@ -83,12 +83,15 @@
       }
     </script>
 
+    <!-- 리브랜딩(D-030): Pretendard 웹폰트(CDN) — 별도 패키지 설치 없이 전체 화면에 적용 -->
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
+
     <!-- 파비콘: 운영자 원본(favicon.svg, PNG 내장 5.7MB)에서 축소 생성 — 원본은 커밋하지 않음(PRD 11.3) -->
     <link rel="icon" type="image/png" href="/favicon.png" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <!-- PWA(D-023): %BASE_URL%은 Vite가 배포 base로 치환(GH Pages /nongsadama/ 대응) -->
     <link rel="manifest" href="%BASE_URL%manifest.webmanifest" />
-    <meta name="theme-color" content="#15803d" />
+    <meta name="theme-color" content="#1B4D3E" />
     <script type="text/javascript">
       // Microsoft Clarity (세션 분석) — 로컬 개발(localhost)은 제외해 통계 오염 방지.
       // SPA이므로 이 한 곳으로 모든 페이지가 측정된다(Clarity가 라우트 변경 자동 추적).
