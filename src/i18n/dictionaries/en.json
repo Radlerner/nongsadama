@@ -135,6 +135,7 @@
   "farm.source": "Read more at the source",
   "farm.sourceNotice": "These are general tips. Conditions differ by farm and crop — check the source and ask your farm manager.",
   "farm.useMyLocation": "Use my location",
+  "farm.regionUnknown": "Couldn't identify your district, so only weather is shown.",
   "farm.weatherTitle": "Today's weather",
   "farm.weatherFeels": "Feels like",
   "farm.weatherHumidity": "Humidity",

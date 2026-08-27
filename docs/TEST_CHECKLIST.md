@@ -412,3 +412,9 @@ Supabase 프로젝트 **nongsadama**(`ikusdwursvbdrznbcjtw`, ap-northeast-2)에 
 | weather: MCP 왕복 5.4s→캐시 0.6s, 홍성 25.6°C·서울 25.8°C(전국) | ✅ 라이브 |
 | 키 잠금: api_keys/api_cache RLS 정책0+revoke | ✅ |
 | UI(dev): 날씨 카드 실온도·사업 34건·내위치 버튼·팁 공존, typecheck 0·패리티 0 | ✅ |
+
+### 외부 연동 3종 재검수 + 반영 (v4/v2 재배포)
+- 키 잠금 3중 실측 통과(REST 401·스키마 미노출·payload 무키). P0 없음.
+- 반영 후 라이브: 해외 좌표 400 out_of_service_area ✅ / 정밀 좌표 입력→반올림 응답 ✅ /
+  연도 기본 2026(34건)·1999→2015 클램프(39건)·명시 2026(34건) ✅ — v3의 연도 기본값
+  회귀(Number(null)=0)를 실측으로 발견·수정한 결과 포함.

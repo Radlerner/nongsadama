@@ -135,6 +135,7 @@
   "farm.source": "출처에서 자세히 보기",
   "farm.sourceNotice": "이 팁은 일반적인 안내입니다. 농장·작목마다 다를 수 있으니 자세한 내용은 출처와 농장 관리자에게 확인하세요.",
   "farm.useMyLocation": "내 위치 정보 보기",
+  "farm.regionUnknown": "지역 이름을 확인하지 못해 날씨만 보여드려요.",
   "farm.weatherTitle": "오늘 날씨",
   "farm.weatherFeels": "체감",
   "farm.weatherHumidity": "습도",

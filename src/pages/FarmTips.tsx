@@ -36,6 +36,10 @@ function RegionalInfo() {
         📍 {locating ? t('select.geoLocating') : t('farm.useMyLocation')}
       </button>
       {geoError ? <p className="text-xs text-red-700">{t('map.geoError')}</p> : null}
+      {/* 지오코더 실패로 시군을 못 얻으면 사업 카드가 사라지는 이유를 알려준다(재검수 P2-3) */}
+      {area?.source === 'geo' && !area.sigungu ? (
+        <p className="text-xs text-gray-500">{t('farm.regionUnknown')}</p>
+      ) : null}
 
       {weather && area ? (
         <Card className="px-4 py-3">

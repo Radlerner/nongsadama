@@ -4,6 +4,9 @@
 //   current_weather{lat,lon} → OpenWeather 형식 JSON(temp는 켈빈).
 // 키는 public.api_keys(RLS 잠금·service_role 전용). 좌표 0.1° 반올림 30분 캐시.
 // verify_jwt=false(공개 정보·비로그인 원칙 §2).
+// 재검수 반영(P1-2·P1-3): 좌표는 상류 전달 전에도 0.1°로 반올림(정밀 위치 미전송),
+// 한국 서비스 영역 bbox(위도 33~39, 경도 124~132) 밖은 거부 — 캐시 키 공간 ≈5천 셀 상한.
+// 배포: MCP deploy_edge_function(verify_jwt=false) — 이 파일과 배포본 동기화 유지(P1-1).
 import { createClient } from 'jsr:@supabase/supabase-js@2'
 
 const cors = {
@@ -113,16 +116,17 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors })
   try {
     const url = new URL(req.url)
-    const lat = Number(url.searchParams.get('lat'))
-    const lon = Number(url.searchParams.get('lon'))
-    if (!Number.isFinite(lat) || !Number.isFinite(lon) || Math.abs(lat) > 90 || Math.abs(lon) > 180) {
-      return json({ error: 'bad_coords' }, 400)
+    // 0.1°(≈11km) 반올림을 입구에서 적용 — 상류(MCP/날씨 제공자)에도 정밀 좌표를 보내지 않는다.
+    const lat = Math.round(Number(url.searchParams.get('lat')) * 10) / 10
+    const lon = Math.round(Number(url.searchParams.get('lon')) * 10) / 10
+    if (!Number.isFinite(lat) || !Number.isFinite(lon)) return json({ error: 'bad_coords' }, 400)
+    if (lat < 33 || lat > 39 || lon < 124 || lon > 132) {
+      return json({ error: 'out_of_service_area' }, 400)
     }
     const admin = createClient(
       Deno.env.get('SUPABASE_URL')!,
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
     )
-    // 0.1°(≈11km) 반올림 캐시 — 동일 지역 사용자 공유, 위치 정밀도 미저장(프라이버시)
     const cacheName = `weather-${lat.toFixed(1)}-${lon.toFixed(1)}`
     const { data: cached } = await admin
       .from('api_cache')

@@ -88,7 +88,10 @@ export function useWeather(lat: number | undefined, lon: number | undefined) {
   return useQuery({
     queryKey: ['weather', lat?.toFixed(1), lon?.toFixed(1)],
     queryFn: async (): Promise<WeatherPayload | null> => {
-      const r = await fetch(`${FUNCTIONS_BASE}/weather?lat=${lat}&lon=${lon}`)
+      // 정밀 좌표를 네트워크에 싣지 않는다(재검수 P1-2) — 0.1°(≈11km)면 날씨엔 충분
+      const r = await fetch(
+        `${FUNCTIONS_BASE}/weather?lat=${(lat as number).toFixed(1)}&lon=${(lon as number).toFixed(1)}`,
+      )
       if (!r.ok) return null
       const d = await r.json()
       return d?.error ? null : (d as WeatherPayload)
