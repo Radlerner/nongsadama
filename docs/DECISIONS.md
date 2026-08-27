@@ -194,3 +194,9 @@ PRD_v1_3.md를 기준으로 한 기술·제품 의사결정과 이유를 남긴�
   (Supabase·Kakao·OSM·GA4·Clarity·AddToAny)+음성 입력 고지, AI 학습 거부(robots) 명시.
 - 계정 삭제는 현재 이메일 요청 안내 — 앱 내 삭제 기능(2순위) 완성 시 방침 갱신 예정.
 - 노출: 랜딩·내 정보 하단 링크, sitemap 등재. §10-J 숙제 해소.
+
+### D-021. 앱 내 계정 삭제 (2026-08-27, Play 심사 준비 2순위)
+- **결정**: Edge Function delete-account — JWT 본인만 삭제(바디 입력 없음 → 혼동 대리자 불가),
+  admin.deleteUser 1회로 profiles·posts FK cascade 원자 삭제. UI는 내 정보 하단
+  경고+2단계 확인. 실패 시 이메일 대체 경로 안내. /privacy §4 갱신(앱 내 삭제 명시).
+- E2E: 일회용 계정 생성→글 작성→삭제 호출→auth·프로필·글 0건, 타 계정 무손상, 재로그인 불가.

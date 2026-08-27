@@ -1,8 +1,10 @@
-import { Link } from 'react-router-dom'
+import { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useTranslation } from '../i18n/useTranslation'
 import { useRegions } from '../hooks/useRegions'
 import { useOwnProfile } from '../hooks/useOwnProfile'
+import { getSupabaseClient } from '../lib/supabase'
 import { getLocaleLabel } from '../config/app'
 import { regionLabel } from '../lib/regionName'
 
@@ -11,6 +13,24 @@ export function Profile() {
   const { user, initializing, signOut } = useAuth()
   const { data: profile, isLoading } = useOwnProfile(user?.id)
   const { data: regions } = useRegions()
+  const navigate = useNavigate()
+  // 계정 삭제(Play 요건): 2단계 확인 → Edge Function(본인만) → 로그아웃(D-021)
+  const [confirmingDelete, setConfirmingDelete] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState(false)
+
+  const onDeleteAccount = async () => {
+    setDeleting(true)
+    setDeleteError(false)
+    const { data, error } = await getSupabaseClient().functions.invoke('delete-account')
+    if (error || !data?.ok) {
+      setDeleteError(true)
+      setDeleting(false)
+      return
+    }
+    await signOut()
+    navigate('/', { replace: true })
+  }
 
   if (initializing) {
     return (
@@ -88,6 +108,44 @@ export function Profile() {
       >
         {t('profile.logout')}
       </button>
+
+      {/* 계정 삭제(Google Play 요건) — 게시글·프로필 영구 삭제 경고 + 2단계 확인 */}
+      <div className="mt-8 rounded-md border border-red-200 px-4 py-3">
+        <p className="text-xs text-gray-600">{t('profile.deleteAccountWarn')}</p>
+        {confirmingDelete ? (
+          <div className="mt-2 flex gap-2">
+            <button
+              type="button"
+              disabled={deleting}
+              onClick={() => void onDeleteAccount()}
+              className="min-h-[44px] flex-1 rounded-md bg-red-600 text-sm font-semibold text-white disabled:opacity-50"
+            >
+              {deleting ? t('auth.loading') : t('profile.deleteAccountConfirm')}
+            </button>
+            <button
+              type="button"
+              disabled={deleting}
+              onClick={() => setConfirmingDelete(false)}
+              className="min-h-[44px] flex-1 rounded-md border border-gray-300 text-sm text-gray-700 disabled:opacity-50"
+            >
+              {t('postDetail.deleteCancel')}
+            </button>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setConfirmingDelete(true)}
+            className="mt-2 min-h-[44px] w-full rounded-md border border-red-300 text-sm font-semibold text-red-700"
+          >
+            {t('profile.deleteAccount')}
+          </button>
+        )}
+        {deleteError ? (
+          <p className="mt-2 rounded-md bg-red-50 px-3 py-2 text-xs text-red-700">
+            {t('profile.deleteAccountError')}
+          </p>
+        ) : null}
+      </div>
 
       <Link to="/privacy" className="mt-6 inline-block min-h-[44px] text-xs text-gray-500 underline">
         {t('common.privacy')}

@@ -306,3 +306,13 @@ Supabase 프로젝트 **nongsadama**(`ikusdwursvbdrznbcjtw`, ap-northeast-2)에 
 2. localhost 테스트 시 복귀가 localhost에 머무는지(허용목록 검증 — 프로덕션으로 가면 목록 문제)
 3. 카카오 페이지에서 뒤로가기 → 버튼 잠금 해제 확인(P2-1)
 4. profile_image 동의항목 해제 실험(KOE 오류 여부) → 결과를 D-019에 추기
+
+## Play 심사 준비 1·2순위 (2026-08-27)
+
+| # | 검증 | 결과 |
+|---|---|---|
+| PR1 | /privacy 렌더(수집·미수집·제3자 6종·삭제·권리·영문 요약) + 랜딩·내정보 링크 + sitemap | ✅ |
+| PR2 | 계정 삭제 E2E: 일회용 계정→글 시드→delete-account 호출 {ok:true} | ✅ |
+| PR3 | 연쇄 삭제: auth 0·profiles 0·posts 0, 타 계정 5명 무손상 | ✅ (SQL) |
+| PR4 | 삭제 후 재로그인 invalid_credentials | ✅ |
+| PR5 | typecheck 0 / 빌드 성공 / i18n 패리티 | ✅ |

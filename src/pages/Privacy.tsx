@@ -55,12 +55,13 @@ export function Privacy() {
         <div>
           <h2 className="font-bold">4. 보관 및 삭제</h2>
           <p className="text-gray-700">
-            게시글 삭제 시 공개 목록에서 즉시 제외됩니다. 계정 삭제를 원하시면{' '}
+            게시글 삭제 시 공개 목록에서 즉시 제외됩니다. 계정은{' '}
+            <strong>내 정보 → 계정 삭제</strong>에서 즉시 영구 삭제할 수 있으며, 프로필과 작성
+            게시글이 함께 삭제됩니다. 이메일{' '}
             <a className="underline" href={`mailto:${operatorEmail}?subject=${encodeURIComponent('[농사다마] 계정 삭제 요청')}`}>
               {operatorEmail}
             </a>
-            로 요청해 주세요. 확인 후 지체 없이 계정과 프로필 정보를 삭제합니다.
-            (앱 내 즉시 삭제 기능 준비 중 — 제공 시 본 방침을 갱신합니다.)
+            로도 삭제를 요청할 수 있습니다.
           </p>
         </div>
 
@@ -79,9 +80,10 @@ export function Privacy() {
             code/crop, and your posts. Kakao sign-in shares your Kakao nickname, email (optional)
             and profile image. We never collect phone numbers or exact GPS locations. Third
             parties: Supabase (Seoul), Kakao, OpenStreetMap, Google Analytics 4, Microsoft
-            Clarity, AddToAny, and your browser vendor for voice input. To delete your account,
-            email {operatorEmail} — we will delete it promptly. You can change or withdraw
-            optional fields and neighbor-visibility consent anytime in your profile.
+            Clarity, AddToAny, and your browser vendor for voice input. Delete your account
+            anytime in Profile → Delete account (removes your profile and posts), or email{' '}
+            {operatorEmail}. You can change or withdraw optional fields and neighbor-visibility
+            consent anytime in your profile.
           </p>
         </div>
       </section>
