@@ -16,6 +16,7 @@ import { Profile } from './pages/Profile'
 import { ProfileEdit } from './pages/ProfileEdit'
 import { Neighbors } from './pages/Neighbors'
 import { Talk } from './pages/Talk'
+import { Privacy } from './pages/Privacy'
 import { NotFound } from './pages/NotFound'
 
 export function App() {
@@ -24,6 +25,7 @@ export function App() {
       <Route path="/" element={<Landing />} />
       <Route path="/select" element={<Select />} />
       <Route path="/login" element={<Login />} />
+      <Route path="/privacy" element={<Privacy />} />
       <Route element={<AppLayout />}>
         <Route
           path="/home"

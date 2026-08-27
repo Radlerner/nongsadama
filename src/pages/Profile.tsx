@@ -88,6 +88,10 @@ export function Profile() {
       >
         {t('profile.logout')}
       </button>
+
+      <Link to="/privacy" className="mt-6 inline-block min-h-[44px] text-xs text-gray-500 underline">
+        {t('common.privacy')}
+      </Link>
     </section>
   )
 }

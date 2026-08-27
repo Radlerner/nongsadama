@@ -37,6 +37,11 @@ export function Landing() {
           {t('landing.enter')}
         </Link>
       </div>
+      <div className="pb-4 text-center">
+        <Link to="/privacy" className="text-xs text-gray-400 underline">
+          {t('common.privacy')}
+        </Link>
+      </div>
     </div>
   )
 }
