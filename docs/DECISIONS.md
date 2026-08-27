@@ -215,3 +215,8 @@ PRD_v1_3.md를 기준으로 한 기술·제품 의사결정과 이유를 남긴�
   scope=BASE_URL(GH Pages /nongsadama/ 대응 — %BASE_URL% 치환 검증).
 - 이로써 Bubblewrap TWA 패키징 가능 상태. 스토어 등록 시 assetlinks.json(디지털 자산 링크)은
   패키징 단계에서 추가 필요(후속 — play-submission 스킬 후보).
+
+### D-024. 오류 경계 + 오프라인 안내 (2026-08-27, Play 심사 준비 7순위)
+- 최상위 ErrorBoundary(Provider 크래시 포함 — i18n 비의존 한/영 정적 병기, 새로고침 CTA 56px).
+- OfflineBanner: online/offline 이벤트 기반, AppLayout 헤더 아래(농촌 통신 환경 대응).
+- 오프라인 배너 dev 검증 통과. 오류 경계는 코드 검토 수준(크래시 주입 테스트는 생략 — 후속).

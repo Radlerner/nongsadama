@@ -1,6 +1,7 @@
 import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { BottomNav } from './BottomNav'
 import { LanguageSwitcher } from './LanguageSwitcher'
+import { OfflineBanner } from '../OfflineBanner'
 import { useTranslation } from '../../i18n/useTranslation'
 
 export function AppLayout() {
@@ -28,6 +29,7 @@ export function AppLayout() {
         </div>
         <LanguageSwitcher />
       </header>
+      <OfflineBanner />
       <main className="flex-1 px-4 py-4">
         <Outlet />
       </main>

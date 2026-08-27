@@ -59,6 +59,7 @@
   "select.geoNoRegion": "No service area with coordinates yet.",
   "common.retry": "Retry",
   "common.privacy": "Privacy Policy",
+  "common.offline": "You're offline. Please reconnect and try again.",
   "common.back": "Back",
   "postForm.warningRequired": "Please read and check the yellow box first.",
   "neighbors.title": "My neighbors",
