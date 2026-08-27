@@ -29,9 +29,10 @@ PRD v1.7 §3 산출물. **피그마 프레임 명세·디자인 프롬프트에 
 
 | 컴포넌트 | 명세 | 적용 현황 |
 |---|---|---|
-| `CardLink(to)` | white card + active:bg-gray-50, 탭 항목 | FarmTips·Board(PostCard) ✅ / LifeInfo·NeighborCard ⬜ 후속 |
+| `CardLink(to)` | white card + active:bg-gray-50, 탭 항목 | FarmTips·Board(PostCard)·**LifeInfo** ✅ / NeighborCard ⬜ 후속 |
 | `Card` | 정적 컨테이너(현재 동일 스타일 — 플랫 변형은 v1) | ⬜ |
-| `LoadingBox(text)` | gray-50, py-8 중앙 | Farm·Board·Neighbors ✅ / 나머지 ⬜ |
+| `LoadingBox(text)` | gray-50, py-8 중앙 | Farm·Board·Neighbors·**LifeInfo** ✅ / 나머지 ⬜ |
+| `PrimaryButton`·`DangerButton`·`SectionTitle`·`Chip`·`EmptyState`(아이콘+CTA형) | PRD §3 명시 잔여 추출 대상 | ⬜ 미추출 |
 | `ErrorBox(text,onRetry)` | red-50 + **재시도 필수**(무언 실패 금지 표준형) | 동일 ✅/⬜ |
 | `EmptyBox(text)` | gray-50 | 동일 ✅/⬜ |
 | 기존: `NeighborCard`·`ShareButtons`·`FreshnessBadge`·`SafetyBanner`·`OfflineBanner`·`ErrorBoundary` | 도메인 컴포넌트 | — |
@@ -51,6 +52,6 @@ PRD v1.7 §3 산출물. **피그마 프레임 명세·디자인 프롬프트에 
 
 ## 6. 규칙
 
-- 새 화면·수정 시 **раw 클래스 대신 §3 컴포넌트 우선** 사용. 없는 패턴이면 ui/에 추가 후 사용.
+- 새 화면·수정 시 **raw 클래스 대신 §3 컴포넌트 우선** 사용. 없는 패턴이면 ui/에 추가 후 사용.
 - 색·radius·그림자를 임의 값으로 넣지 말 것(토큰만). 카카오 버튼 색만 예외.
 - 오류 상태는 항상 ErrorBox(재시도 포함) — 텍스트만 있는 오류 금지.

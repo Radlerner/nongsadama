@@ -399,3 +399,8 @@ Supabase 프로젝트 **nongsadama**(`ikusdwursvbdrznbcjtw`, ap-northeast-2)에 
 - 적용: FarmTips(전체)·Board(상태 3종+PostCard)·Neighbors(상태 3종) — 시각 동일성 실측
   (radius 12px·bg white 유지). 나머지 화면은 docs/DESIGN_TOKENS.md §3 채택 현황표로 추적.
 - docs/DESIGN_TOKENS.md 신설: 토큰·컴포넌트 인벤토리·화면 프레임 목록·피그마 프롬프트 템플릿.
+
+### v1.7 야간 일괄 재검수(2e0ed15·1744ba5·67e61b8)
+- P0 없음, 코드·시각 회귀 0(클래스 집합 전수 대조·tsc 0·maskable 픽셀 실측 — 콘텐츠 반경
+  191px < 안전영역 205px). 반영: 채택표 LifeInfo ✅ 갱신·키릴 동형문자 정정·잔여 컴포넌트
+  ⬜ 등재. 후속: maskable 흰 카드 모서리 미감 판단, nongsaro 스킬 문구 보강(키 발급 시점).
