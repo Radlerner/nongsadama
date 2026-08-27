@@ -72,7 +72,7 @@ export function Profile() {
           {t('profile.loading')}
         </p>
       ) : (
-        <dl className="flex flex-col gap-3 rounded-md border border-gray-200 px-4 py-4 text-sm">
+        <dl className="flex flex-col gap-3 rounded-card border border-gray-100 shadow-card px-4 py-4 text-sm">
           <div>
             <dt className="text-xs text-gray-500">{t('profile.nicknameLabel')}</dt>
             <dd className="font-semibold text-gray-900">{profile?.nickname ?? '—'}</dd>
@@ -177,7 +177,7 @@ function BlockedUsers({ userId }: { userId: string }) {
   })
   if (ids.length === 0) return null
   return (
-    <div className="mt-6 rounded-md border border-gray-200 px-4 py-3">
+    <div className="mt-6 rounded-card border border-gray-100 shadow-card px-4 py-3">
       <p className="text-xs font-semibold text-gray-500">{t('block.listTitle')}</p>
       <ul className="mt-2 flex flex-col gap-1">
         {ids.map((id) => (

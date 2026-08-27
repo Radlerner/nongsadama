@@ -140,7 +140,7 @@ function LifeInfoCard({ item, regionName }: { item: LifeInfoRow; regionName: str
     <li>
       <Link
         to={`/life-info/${item.id}`}
-        className="block rounded-md border border-gray-200 px-4 py-3 active:bg-gray-50"
+        className="block rounded-card border border-gray-100 shadow-card px-4 py-3 active:bg-gray-50"
       >
         <p className="font-semibold text-gray-900">{name || t('lifeInfo.untitled')}</p>
         <p className="mt-1 flex flex-wrap items-center gap-2 text-xs text-gray-500">

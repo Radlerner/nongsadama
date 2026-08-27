@@ -62,7 +62,7 @@ export function NeighborCard({ neighbor, regionsById, viewerRegionId }: Neighbor
   )
 
   return (
-    <li className="rounded-md border border-gray-200 active:bg-gray-50">
+    <li className="rounded-card border border-gray-100 shadow-card active:bg-gray-50">
       {neighbor.id ? (
         <Link to={`/board?author=${neighbor.id}`} className="block px-4 py-3">
           {body}
