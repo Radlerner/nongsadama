@@ -20,22 +20,48 @@ export function Landing() {
     if (!initializing && regionId) navigate('/home', { replace: true })
   }, [initializing, regionId, navigate])
 
+  // 기능 미리보기 3칩(디자인 v0) — 아이콘·라벨은 하단 탭과 동일한 어휘를 재사용해 학습 비용 0
+  const previews = [
+    { icon: '🗺️', key: 'nav.home' },
+    { icon: '💬', key: 'nav.board' },
+    { icon: '🎤', key: 'nav.talk' },
+  ] as const
+
   return (
-    <div className="mx-auto flex min-h-screen max-w-screen-sm flex-col bg-white px-6 text-gray-900">
+    <div className="mx-auto flex min-h-screen max-w-screen-sm flex-col bg-brand-cream px-6 text-gray-900">
       <div className="flex justify-end py-3">
         <LanguageSwitcher />
       </div>
-      <div className="flex flex-1 flex-col items-center justify-center gap-6 pb-16 text-center">
+      <div className="flex flex-1 flex-col items-center justify-center gap-6 pb-12 text-center">
+        <img
+          src={`${import.meta.env.BASE_URL}icons/icon-192.png`}
+          alt=""
+          aria-hidden
+          className="h-24 w-24 rounded-card shadow-card"
+        />
         <div>
           <h1 className="text-2xl font-bold text-green-700">{t('landing.title')}</h1>
           <p className="mt-2 text-sm text-gray-600">{t('landing.subtitle')}</p>
         </div>
         <Link
           to="/select"
-          className="inline-flex min-h-[56px] items-center justify-center rounded-md bg-green-700 px-6 py-3 text-base font-semibold text-white"
+          className="inline-flex min-h-[56px] w-full max-w-xs items-center justify-center rounded-card bg-green-700 px-6 py-3 text-base font-semibold text-white shadow-card"
         >
           {t('landing.enter')}
         </Link>
+        <ul className="flex gap-3">
+          {previews.map((p) => (
+            <li
+              key={p.key}
+              className="flex min-w-[88px] flex-col items-center gap-1 rounded-card bg-white px-4 py-3 shadow-card"
+            >
+              <span aria-hidden className="text-2xl">
+                {p.icon}
+              </span>
+              <span className="text-xs font-semibold text-gray-700">{t(p.key)}</span>
+            </li>
+          ))}
+        </ul>
       </div>
       <div className="pb-4 text-center">
         <Link to="/privacy" className="text-xs text-gray-400 underline">

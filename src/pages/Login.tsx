@@ -113,19 +113,29 @@ export function Login() {
     'w-full min-h-[44px] rounded-md border border-gray-300 px-3 py-2 text-base text-gray-900'
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-screen-sm flex-col bg-white px-6 py-6 text-gray-900">
-      <h1 className="text-xl font-bold text-green-700">{t('app.name')}</h1>
-      <p className="mt-1 text-sm text-gray-500">{t('landing.subtitle')}</p>
+    <div className="mx-auto flex min-h-screen max-w-screen-sm flex-col bg-brand-cream px-6 py-6 text-gray-900">
+      <div className="flex items-center gap-3">
+        <img
+          src={`${import.meta.env.BASE_URL}favicon.png`}
+          alt=""
+          aria-hidden
+          className="h-10 w-10 rounded-md"
+        />
+        <div>
+          <h1 className="text-xl font-bold text-green-700">{t('app.name')}</h1>
+          <p className="text-sm text-gray-500">{t('landing.subtitle')}</p>
+        </div>
+      </div>
 
       {/* 간편로그인(Linktree식 세로 스택) — 이메일 폼은 아래 접힘(kakao-login 스킬 §2.1) */}
-      <div className="mt-8 flex flex-col gap-3">
+      <div className="mt-8 flex flex-col gap-3 rounded-card bg-white p-4 shadow-card">
         {oauthProviders.map((p) => (
           <button
             key={p}
             type="button"
             onClick={() => void onOAuth(p)}
             disabled={oauthPending !== null}
-            className={`flex min-h-[56px] items-center justify-center gap-2 rounded-md px-6 text-base font-semibold disabled:opacity-50 ${providerButtonClass[p]}`}
+            className={`flex min-h-[56px] items-center justify-center gap-2 rounded-card px-6 text-base font-semibold disabled:opacity-50 ${providerButtonClass[p]}`}
           >
             <span aria-hidden>{providerIcon[p]}</span>
             {oauthPending === p ? t('auth.loading') : t(`auth.${p}Start`)}
