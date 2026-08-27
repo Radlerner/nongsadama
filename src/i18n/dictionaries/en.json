@@ -106,6 +106,7 @@
   "block.confirm": "Confirm block",
   "block.already": "You blocked this user",
   "block.listTitle": "Blocked users",
+  "block.postHidden": "This post is from a user you blocked.",
   "block.unblock": "Unblock",
   "postDetail.similar": "Similar posts",
   "postForm.newTitle": "Write a post",

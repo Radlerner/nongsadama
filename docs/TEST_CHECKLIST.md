@@ -339,3 +339,17 @@ Supabase 프로젝트 **nongsadama**(`ikusdwursvbdrznbcjtw`, ap-northeast-2)에 
 | RB8 | UI: 차단 확정→게시판 복귀+차단 작성자 글 숨김 | ✅ (1차 시도에서 신고 후 차단 버튼 소실 결함 발견→영역 분리 수정 후 통과) |
 | RB9 | 내 정보: 차단 목록 표시→해제→섹션 숨김 | ✅ |
 | RB10 | typecheck 0·i18n 패리티 0·빌드 성공, 테스트 잔여 행 정리(reports/blocks 0) | ✅ |
+
+### 신고·차단 독립 재검수(5c01dff) + 반영
+- P0 없음. RLS 적대 실측 8건 전부 의도대로 거부(신고 위조 42501·anon 차단·blocks 상호 비가시,
+  update/delete 정책 부재도 실제 차단 동작 확인).
+- **P1-1 반영**: (a) 차단 작성자 글 상세 직접 접근 → 본문 대신 안내+해제 버튼(dev E2E 통과:
+  차단→직접 URL 재접근→본문 숨김→해제→복원) (b) similar_posts에 author_id 추가(함수 재생성,
+  grant·search_path 재적용) + 추천 클라 필터 — "차단했는데 앱이 추천"하는 경로 제거.
+- **P2-1 반영**: reports.reason 코드값 4택 DB CHECK(자유 텍스트 저장 차단).
+- **P2-2 반영**: 차단 낙관 갱신(refetch 전 노출 틈 제거).
+- **P1-2(운영 조치·코드 아님)**: admin 0명 — 아침 목록에 추가. P2-3(신고 rate limit): 후속 수용.
+
+#### 아침 목록 추가
+5. 운영자 계정 admin 승격(가입 후 대시보드 SQL: update profiles set role='admin' where id='<운영자uid>')
+   + 신고 주기 점검 루틴 확정 — Play UGC "검토·조치" 요건

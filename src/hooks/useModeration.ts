@@ -31,8 +31,17 @@ export function useBlockUser(userId: string | undefined) {
         .insert({ blocker_id: userId as string, blocked_id: blockedId })
       // 23505(이미 차단)는 목적 달성 상태이므로 성공으로 취급
       if (error && error.code !== '23505') throw new Error(error.message)
+      return blockedId
     },
-    onSuccess: () => void queryClient.invalidateQueries({ queryKey: ['blocks'] }),
+    onSuccess: (blockedId) => {
+      // 낙관 갱신(재검수 P2-2): refetch 도착 전에도 목록에서 즉시 사라지게 한다.
+      queryClient.setQueryData<Set<string>>(['blocks', userId], (prev) => {
+        const next = new Set(prev ?? [])
+        next.add(blockedId)
+        return next
+      })
+      void queryClient.invalidateQueries({ queryKey: ['blocks'] })
+    },
   })
 }
 

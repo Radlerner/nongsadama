@@ -35,3 +35,34 @@ create policy blocks_all_self on public.blocks
 
 comment on table public.reports is '게시글 신고(운영자 검토용). 열람은 admin만(D-022).';
 comment on table public.blocks is '사용자 차단(본인 것만). 게시글·이웃 노출에서 클라이언트 필터.';
+
+-- 재검수 반영(P1-1b·P2-1): similar_posts author_id 추가는 20260726000700 함수를 대체하며
+-- 라이브에는 moderation_hardening 마이그레이션으로 적용됨. reason은 코드값 4택 강제.
+drop function if exists public.similar_posts(uuid, int);
+create function public.similar_posts(source_id uuid, match_count int default 3)
+returns table (
+  id uuid, title text, category text, region_id uuid, author_id uuid,
+  created_at timestamptz, similarity float
+)
+language sql
+stable
+as $$
+  select p.id, p.title, p.category, p.region_id, p.author_id, p.created_at,
+         1 - (p.embedding <=> s.embedding) as similarity
+  from public.posts p
+  cross join (select embedding from public.posts where id = source_id) s
+  where s.embedding is not null
+    and p.status = 'published'
+    and p.embedding is not null
+    and p.id <> source_id
+    and (select count(*) from public.posts where status = 'published') >= 5
+  order by p.embedding <=> s.embedding
+  limit match_count;
+$$;
+revoke all on function public.similar_posts(uuid, int) from public;
+grant execute on function public.similar_posts(uuid, int) to anon, authenticated;
+alter function public.similar_posts(uuid, int) set search_path = public, pg_catalog;
+
+alter table public.reports drop constraint if exists reports_reason_check;
+alter table public.reports add constraint reports_reason_check
+  check (reason in ('spam','abuse','scam','other'));

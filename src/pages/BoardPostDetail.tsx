@@ -10,7 +10,12 @@ import {
 } from '../hooks/usePosts'
 import { useRegions } from '../hooks/useRegions'
 import { useSelectedRegion } from '../context/SelectedRegionContext'
-import { useBlockedIds, useBlockUser, useReportPost } from '../hooks/useModeration'
+import {
+  useBlockedIds,
+  useBlockUser,
+  useUnblockUser,
+  useReportPost,
+} from '../hooks/useModeration'
 import { regionLabel } from '../lib/regionName'
 import { regionDistanceKm } from '../lib/matching'
 
@@ -24,6 +29,8 @@ export function BoardPostDetail() {
   const { regionId: viewerRegionId } = useSelectedRegion()
   const deletePost = useDeletePost()
   const [confirmingDelete, setConfirmingDelete] = useState(false)
+  const { data: blockedIds } = useBlockedIds(user?.id)
+  const unblock = useUnblockUser(user?.id)
 
   if (isLoading) {
     return (
@@ -75,6 +82,29 @@ export function BoardPostDetail() {
         : t('neighbors.aboutKm').replace('{n}', String(Math.max(1, Math.round(dist))))
   const isOwn = user?.id === post.author_id
   const createdDate = post.created_at.slice(0, 10)
+
+  // 차단한 작성자의 글: 본문 대신 안내(뒤로가기·직접 URL 접근 커버, 재검수 P1-1a)
+  if (!isOwn && blockedIds?.has(post.author_id)) {
+    return (
+      <div className="text-center">
+        <p className="rounded-md bg-gray-50 px-4 py-8 text-sm text-gray-500">
+          {t('block.postHidden')}
+        </p>
+        <button
+          type="button"
+          disabled={unblock.isPending}
+          onClick={() => unblock.mutate(post.author_id)}
+          className="mt-3 min-h-[44px] text-sm text-green-700 underline disabled:opacity-50"
+        >
+          {t('block.unblock')}
+        </button>
+        <br />
+        <Link to="/board" className="mt-2 inline-block text-sm text-gray-500 underline">
+          {t('postDetail.back')}
+        </Link>
+      </div>
+    )
+  }
 
   return (
     <article className="flex flex-col gap-4">
@@ -259,11 +289,17 @@ function ModerationActions({ postId, authorId }: { postId: string; authorId: str
   )
 }
 
-/** 비슷한 글(PRD v1.6 §1). 결과 없으면(데이터 5건 미만 포함) 섹션 자체를 숨긴다. */
+/**
+ * 비슷한 글(PRD v1.6 §1). 결과 없으면(데이터 5건 미만 포함) 섹션 자체를 숨긴다.
+ * 차단한 작성자의 글은 추천에서 제외한다(재검수 P1-1b).
+ */
 function SimilarPosts({ postId }: { postId: string }) {
   const { t } = useTranslation()
-  const { data } = useSimilarPosts(postId)
-  if (!data || data.length === 0) return null
+  const { user } = useAuth()
+  const { data: raw } = useSimilarPosts(postId)
+  const { data: blockedIds } = useBlockedIds(user?.id)
+  const data = (raw ?? []).filter((s) => !blockedIds?.has(s.author_id))
+  if (data.length === 0) return null
   return (
     <section className="rounded-md border border-gray-200 px-4 py-3">
       <p className="mb-2 text-xs font-semibold text-gray-500">{t('postDetail.similar')}</p>

@@ -142,6 +142,7 @@ export interface SimilarPost {
   title: string
   category: string
   region_id: string
+  author_id: string
   created_at: string
   similarity: number
 }
