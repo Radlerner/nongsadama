@@ -316,3 +316,14 @@ Supabase 프로젝트 **nongsadama**(`ikusdwursvbdrznbcjtw`, ap-northeast-2)에 
 | PR3 | 연쇄 삭제: auth 0·profiles 0·posts 0, 타 계정 5명 무손상 | ✅ (SQL) |
 | PR4 | 삭제 후 재로그인 invalid_credentials | ✅ |
 | PR5 | typecheck 0 / 빌드 성공 / i18n 패리티 | ✅ |
+
+### 독립 재검수 결과(39e2e27·c22227e) + 반영
+- P0 없음. 실측 통과: 타인 삭제 경로 전무(JWT 본인만), verify_jwt=true, FK cascade 10개
+  전부 확인(잔존물 0 — 롤백 시뮬레이션), storage 버킷 0, CSRF 불가, 방침-구현 정합.
+- **P1-1 반영**: /privacy#delete 전용 섹션 — 앱 내·웹(이메일) 삭제 경로, 삭제되는 데이터
+  전체 범위, 삭제 후 보관 데이터 없음 명시(Play Data safety 제출 URL: nongsadama.app/privacy#delete).
+- **P2-1 반영**: 국외 이전·호스팅(Cloudflare·GH Pages·GA4·Clarity·AddToAny) 고지 추가.
+- **P2-3·P2-4 반영**: delete-account 오류 일반화(delete_failed)+전 응답 Content-Type (v2 재배포).
+- **P2-5 반영**: signOut 시 queryClient.clear()(공용 단말 캐시 방어).
+- P2-2(소프트 삭제 보관 기간): 방침에 "계정 삭제 시 완전 파기" 명시로 부분 해소,
+  주기적 하드 삭제는 후속 검토.

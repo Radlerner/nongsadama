@@ -50,18 +50,34 @@ export function Privacy() {
           <p className="mt-1 text-gray-700">
             AI 크롤러의 게시판 학습 수집은 robots 정책으로 거부하고 있습니다.
           </p>
+          <p className="mt-1 text-gray-700">
+            서비스는 Cloudflare·GitHub Pages(미국 등 국외 서버)에서 호스팅되며, 위 분석
+            도구(GA4·Clarity)와 공유 버튼(AddToAny) 이용 기록도 해당 사업자의 국외 서버로
+            전송·처리됩니다. 계정·게시글 데이터 자체는 Supabase 서울 리전에 저장됩니다.
+          </p>
         </div>
 
-        <div>
-          <h2 className="font-bold">4. 보관 및 삭제</h2>
-          <p className="text-gray-700">
-            게시글 삭제 시 공개 목록에서 즉시 제외됩니다. 계정은{' '}
-            <strong>내 정보 → 계정 삭제</strong>에서 즉시 영구 삭제할 수 있으며, 프로필과 작성
-            게시글이 함께 삭제됩니다. 이메일{' '}
+        {/* Play 심사 제출용 삭제 요청 리소스 — https://nongsadama.app/privacy#delete (재검수 P1-1) */}
+        <div id="delete" className="rounded-md border border-green-200 bg-green-50 px-4 py-3">
+          <h2 className="font-bold">4. 계정 및 데이터 삭제</h2>
+          <p className="mt-1 text-gray-700">
+            <strong>앱 안에서</strong>: 내 정보 → 계정 삭제 버튼으로 즉시 영구 삭제할 수 있습니다.
+            <br />
+            <strong>앱 밖에서(웹 요청)</strong>: 이메일{' '}
             <a className="underline" href={`mailto:${operatorEmail}?subject=${encodeURIComponent('[농사다마] 계정 삭제 요청')}`}>
               {operatorEmail}
             </a>
-            로도 삭제를 요청할 수 있습니다.
+            로 가입 이메일을 보내 요청하면 확인 후 지체 없이 삭제합니다.
+          </p>
+          <p className="mt-2 text-gray-700">
+            <strong>삭제되는 데이터(전부)</strong>: 계정(이메일·비밀번호·카카오 연결 정보),
+            프로필(닉네임·언어·지역·국적·작목), 작성한 게시글 전체.
+            <br />
+            <strong>삭제 후 보관하는 데이터</strong>: 없습니다. 익명 통계(GA4·Clarity)는 계정과
+            연결되지 않은 상태로만 남습니다.
+            <br />
+            개별 게시글을 삭제한 경우 공개 목록에서 즉시 제외되며, 계정 삭제 시 함께 완전
+            파기됩니다.
           </p>
         </div>
 
@@ -80,10 +96,12 @@ export function Privacy() {
             code/crop, and your posts. Kakao sign-in shares your Kakao nickname, email (optional)
             and profile image. We never collect phone numbers or exact GPS locations. Third
             parties: Supabase (Seoul), Kakao, OpenStreetMap, Google Analytics 4, Microsoft
-            Clarity, AddToAny, and your browser vendor for voice input. Delete your account
-            anytime in Profile → Delete account (removes your profile and posts), or email{' '}
-            {operatorEmail}. You can change or withdraw optional fields and neighbor-visibility
-            consent anytime in your profile.
+            Clarity, AddToAny, and your browser vendor for voice input. Hosting and analytics run
+            on overseas servers (US); account and post data are stored in Supabase&apos;s Seoul
+            region. Delete your account anytime in Profile → Delete account — this permanently
+            removes your account, profile and all posts, and nothing linked to you is retained —
+            or request deletion by email: {operatorEmail}. You can change or withdraw optional
+            fields and neighbor-visibility consent anytime in your profile.
           </p>
         </div>
       </section>

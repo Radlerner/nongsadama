@@ -158,7 +158,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = useCallback(async () => {
     await getSupabaseClient().auth.signOut()
-  }, [])
+    // 공용 단말 방어: 이전 사용자 데이터가 gcTime 동안 메모리에 남지 않게 비운다(재검수 P2-5).
+    queryClient.clear()
+  }, [queryClient])
 
   const value = useMemo<AuthContextValue>(
     () => ({
