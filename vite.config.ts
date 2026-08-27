@@ -11,4 +11,9 @@ declare const process: { env: Record<string, string | undefined> }
 export default defineConfig({
   base: process.env.BASE_PATH ?? '/',
   plugins: [react()],
+  server: {
+    // v0 프리뷰는 매번 다른 임시 서브도메인(sb-xxxx.vercel.run)에서 서빙되므로
+    // 와일드카드로 허용한다. 로컬/배포 환경에는 영향 없음.
+    allowedHosts: ['.vercel.run'],
+  },
 })
