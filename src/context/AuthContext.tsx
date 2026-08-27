@@ -68,8 +68,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .eq('id', u.id)
       .maybeSingle()
     if (error || data) return
+    const provider = u.app_metadata?.provider ?? 'email'
+    // pending 닉네임은 이메일 가입 흐름 전용 — 소셜 첫 로그인에 쓰면 다른(이메일) 계정의
+    // 닉네임을 오염시킨다(재검수 P1-1). 소셜에서는 읽지도, 소비하지도 않는다.
     const pending =
-      typeof window !== 'undefined' ? window.localStorage.getItem(PENDING_NICKNAME_KEY) : null
+      provider === 'email' && typeof window !== 'undefined'
+        ? window.localStorage.getItem(PENDING_NICKNAME_KEY)
+        : null
     // 소셜(카카오 등) 로그인: 제공자 프로필 닉네임을 기본값으로 쓴다(kakao-login 스킬 §2.2).
     const meta = u.user_metadata as Record<string, unknown>
     const socialNickname =
@@ -78,19 +83,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       null
     const fallback =
       socialNickname ?? ((u.email ?? 'user').split('@')[0].slice(0, 40) || 'user')
+    // 서로게이트 쌍(이모지 등) 안전 절단(재검수 P2-4)
+    const nickname = Array.from(pending ?? fallback).slice(0, 40).join('') || 'user'
     const { error: insertError } = await supabase.from('profiles').insert({
       id: u.id,
-      nickname: (pending ?? fallback).slice(0, 40),
+      nickname,
       preferred_locale: localeRef.current,
       region_id: regionRef.current,
-      auth_provider: u.app_metadata?.provider ?? 'email',
+      auth_provider: provider,
     })
-    if (!insertError) {
-      if (typeof window !== 'undefined') {
+    if (!insertError || insertError.code === '23505') {
+      // 23505(중복 키)는 동시 콜백 경합의 정상 결과 — 승자가 이미 생성함(재검수 P2-3).
+      if (provider === 'email' && typeof window !== 'undefined') {
         window.localStorage.removeItem(PENDING_NICKNAME_KEY)
       }
       // 첫 로그인 시 useOwnProfile이 insert 이전의 null을 캐시할 수 있으므로 무효화한다.
       void queryClient.invalidateQueries({ queryKey: ['profiles', 'own'] })
+    } else {
+      // 진짜 실패(네트워크·RLS)는 삼키지 않고 최소한 기록한다(무언 실패 금지, P2-3).
+      console.error('[nongsadama] profile create failed:', insertError.message)
     }
   }, [queryClient])
 

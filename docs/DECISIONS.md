@@ -175,3 +175,15 @@ PRD_v1_3.md를 기준으로 한 기술·제품 의사결정과 이유를 남긴�
   오표기하지 않음). 프리렌더는 v1.1 백로그.
 - **실측**: Cloudflare가 AI 봇 UA를 차단하지 않음 확인(전부 200). Bing Webmaster+IndexNow
   등록은 운영자 계정 작업으로 이관.
+
+### D-019. 간편(소셜) 로그인 — 카카오 우선 (2026-08-27, kakao-login 스킬)
+- **결정**: Supabase Auth 네이티브 OAuth로 카카오 간편로그인 도입. 이메일 로그인은 접힘으로
+  **보존**(대체 아님 — 기존 계정·데모 계정 회귀 방지). 제공자 목록은 config(oauthProviders).
+- **제공자 선정 근거**: 카카오(한국 생활 필수)→Google(안드로이드 보편)→Facebook(동남아 지배적)
+  순 확장 예정. WhatsApp은 OAuth 미제공(불가), Telegram·Zalo는 Supabase 미지원(커스텀 필요,
+  파일럿 후 재검토).
+- **재검수 반영**: P0-1(랜딩 M-10 리다이렉트가 OAuth 복귀 해시 토큰 파괴 → initializing 게이트),
+  P1-1(pending 닉네임은 이메일 흐름 전용), P2-1(bfcache 버튼 잠금 pageshow 리셋),
+  P2-3(23505만 무시·실패 로그), P2-4(서로게이트 안전 절단).
+- **미해결(아침 실험)**: scope의 profile_image는 GoTrue 서버 하드코딩(제거 불가) — 카카오 콘솔
+  동의항목 해제 실험 후 불가 시 최소수집 이탈로 수용 기록 예정(P2-2).

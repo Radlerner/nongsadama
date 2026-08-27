@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { Link, useNavigate } from 'react-router-dom'
 import { zodResolver } from '../lib/zodResolver'
@@ -48,6 +48,16 @@ export function Login() {
   const [showEmail, setShowEmail] = useState(false)
   const [oauthError, setOauthError] = useState<string | null>(null)
   const [oauthPending, setOauthPending] = useState<OAuthProvider | null>(null)
+
+  // 카카오 페이지로 떠났다가 뒤로가기로 bfcache 복원되면 oauthPending이 남아
+  // 버튼이 무기한 잠긴다(재검수 P2-1) — pageshow(persisted)에서 리셋.
+  useEffect(() => {
+    const onPageShow = (e: PageTransitionEvent) => {
+      if (e.persisted) setOauthPending(null)
+    }
+    window.addEventListener('pageshow', onPageShow)
+    return () => window.removeEventListener('pageshow', onPageShow)
+  }, [])
 
   const onOAuth = async (provider: OAuthProvider) => {
     setOauthError(null)

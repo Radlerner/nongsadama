@@ -288,3 +288,21 @@ Supabase 프로젝트 **nongsadama**(`ikusdwursvbdrznbcjtw`, ap-northeast-2)에 
 | K6 | 실계정 동의 완료→복귀→profiles(auth_provider='kakao') 생성 | ⬜ **아침 실사용 테스트**(운영자 카카오 계정 필요) |
 - ensureProfile: 소셜 닉네임(user_metadata.name) 기본값 + app_metadata.provider 기록,
   캐시 무효화 유지(79cb76f 회귀 방지). redirectTo에 BASE_URL 포함(Pages 프리픽스 대응).
+
+### 독립 재검수 결과 (0b4b62c, 사후) + 반영
+- **P0-1 반영**: 랜딩 M-10 리다이렉트가 OAuth 복귀 해시(#access_token)를 supabase 소비 전에
+  파괴 → Landing에 `initializing` 게이트 추가. 지역 저장 단말에서 무언 로그인 실패를 사전 차단.
+  이메일 확인 링크 복귀의 잠복 결함도 함께 해소. 게이트 후 M-10 정상 재확인(/ → /home).
+- **P1-1 반영**: pending 닉네임을 provider==='email'일 때만 읽고·소비(소셜 첫 로그인의
+  교차 계정 닉네임 오염 차단).
+- **P2 반영**: P2-1 bfcache 버튼 잠금(pageshow 리셋), P2-3(23505만 무시, 실제 실패는 로그),
+  P2-4(서로게이트 안전 절단), P2-5(D-019 기록).
+- **P2-2 미해결(아침 실험)**: scope profile_image는 GoTrue 하드코딩 — 콘솔 동의항목 해제 실험.
+- 교차검증 확인: redirectTo 고정값(조작 불가)·카카오 메타키(name/preferred_username) 정확·
+  email 거부 시 fallback 안전·RLS insert 통과 가능·이메일 폼 회귀 없음.
+
+#### 아침 실계정 테스트 목록 (K6 + 재검수 지정)
+1. 카카오 동의 완료 전체 왕복(지역 저장된 단말로) → profiles(auth_provider='kakao') 확인
+2. localhost 테스트 시 복귀가 localhost에 머무는지(허용목록 검증 — 프로덕션으로 가면 목록 문제)
+3. 카카오 페이지에서 뒤로가기 → 버튼 잠금 해제 확인(P2-1)
+4. profile_image 동의항목 해제 실험(KOE 오류 여부) → 결과를 D-019에 추기
