@@ -38,7 +38,7 @@ export interface ViewerProfile {
   region_id: string | null
 }
 
-const norm = (s: string | null | undefined) => (s ?? '').trim().toLowerCase()
+export const norm = (s: string | null | undefined) => (s ?? '').trim().toLowerCase()
 
 /**
  * 매칭 점수(PRD v1.4 §2.1): 같은 언어 +3, 같은 작목 +2, 같은/인접 읍·면 +2, 같은 국적 +1.

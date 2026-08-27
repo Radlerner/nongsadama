@@ -6,7 +6,7 @@ create table if not exists public.farm_tips (
   -- 작목 태그(자유 텍스트 — profiles.crop_type과 문자열 매칭, 코드 하드코딩 금지 원칙).
   -- null = 모든 작목 공통(안전·일반).
   crop_type text,
-  localized_content jsonb not null, -- {ko:{title,body},en:{title,body}}
+  localized_content jsonb not null, -- {ko:{name,description},en:{name,description}} — life_info와 동일 키(공용 localizedContent 헬퍼)
   source_url text,
   verified_at timestamptz,
   is_published boolean not null default true,

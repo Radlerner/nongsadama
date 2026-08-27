@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { getSupabaseClient } from '../lib/supabase'
+import { norm } from '../lib/matching'
 import type { Tables } from '../types/database'
 
 export type FarmTip = Tables<'farm_tips'>
@@ -20,8 +21,13 @@ export function useFarmTips(myCrop: string | null) {
       return data ?? []
     },
     select: (tips) => {
+      // 매칭 표준 norm(trim+lowercase, matching.ts)과 동일 규칙(재검수 P2-3)
       const rank = (t: FarmTip) =>
-        myCrop && t.crop_type === myCrop ? 0 : t.crop_type === null ? 1 : 2
+        myCrop && norm(t.crop_type) === norm(myCrop) && norm(myCrop) !== ''
+          ? 0
+          : t.crop_type === null
+            ? 1
+            : 2
       return [...tips].sort((a, b) => rank(a) - rank(b))
     },
   })

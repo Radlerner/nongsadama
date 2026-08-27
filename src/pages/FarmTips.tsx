@@ -4,6 +4,7 @@ import { useTranslation } from '../i18n/useTranslation'
 import { useOwnProfile } from '../hooks/useOwnProfile'
 import { useFarmTips } from '../hooks/useFarmTips'
 import { localizedContent } from '../lib/localizedContent'
+import { norm } from '../lib/matching'
 
 /**
  * 🌾 농사 도움 목록(PRD v1.7 §1·§2) — 비로그인 열람.
@@ -45,7 +46,9 @@ export function FarmTips() {
         <ul className="flex flex-col gap-2">
           {(tips ?? []).map((tip) => {
             const c = localizedContent(tip.localized_content, locale)
-            const isMine = Boolean(myCrop && tip.crop_type === myCrop)
+            const isMine = Boolean(
+              myCrop && norm(tip.crop_type) === norm(myCrop) && norm(myCrop) !== '',
+            )
             return (
               <li key={tip.id}>
                 <Link

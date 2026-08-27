@@ -8,13 +8,30 @@ import { isTtsAvailable, speak } from '../lib/tts'
 export function FarmTipDetail() {
   const { t, locale } = useTranslation()
   const { tipId } = useParams()
-  const { data: tip, isLoading } = useFarmTip(tipId)
+  const { data: tip, isLoading, isError, refetch, isFetching } = useFarmTip(tipId)
 
   if (isLoading) {
     return (
       <p className="rounded-md bg-gray-50 px-4 py-8 text-center text-sm text-gray-500">
         {t('farm.loading')}
       </p>
+    )
+  }
+
+  // 무언 실패 금지(재검수 P1-2): 네트워크 오류를 "정보 없음"으로 오표시하지 않는다.
+  if (isError) {
+    return (
+      <div className="rounded-md bg-red-50 px-4 py-8 text-center text-sm text-red-700">
+        <p className="mb-3">{t('farm.error')}</p>
+        <button
+          type="button"
+          onClick={() => void refetch()}
+          disabled={isFetching}
+          className="min-h-[44px] rounded-md border border-red-300 px-4 text-red-700 disabled:opacity-50"
+        >
+          {t('common.retry')}
+        </button>
+      </div>
     )
   }
   if (!tip) {
@@ -38,6 +55,10 @@ export function FarmTipDetail() {
           <span className="mt-1 inline-block rounded-full bg-green-50 px-2 py-0.5 text-[11px] font-medium text-green-800">
             {tip.crop_type}
           </span>
+        ) : null}
+        {/* verified_at 검수 모델 표시(재검수 P2-5) — life_info와 동일 어휘 재사용 */}
+        {!tip.verified_at ? (
+          <p className="mt-1 text-[11px] text-gray-400">{t('lifeInfo.freshness.unverified')}</p>
         ) : null}
       </header>
 

@@ -381,3 +381,15 @@ Supabase 프로젝트 **nongsadama**(`ikusdwursvbdrznbcjtw`, ap-northeast-2)에 
 - FT1 anon 읽기 8건 ✅ / FT2 anon 쓰기 거부 ✅ (롤백 시뮬레이션)
 - UI(dev): 홈 진입 카드·목록 8건·작목 칩(딸기)·상세 TTS·출처 링크·관리자 확인 문구 ✅
 - typecheck 0·i18n 패리티 0·빌드 성공
+
+### 농사 도움 독립 재검수(291604d) + 반영
+- P0 없음. 통과 실측: RLS(미공개 anon 비가시·쓰기 42501), select per-observer(캐시 오염 없음),
+  line-clamp 빌드 생성, 비로그인 전 화면, MapHome 순수 추가, 출처 3도메인 200,
+  콘텐츠=공공 캠페인 수준·면책 문구 상시.
+- **P1-1 반영**: 시드를 supabase/seeds/20260828_farm_tips_seed.sql로 저장소 보존(안전 문구
+  변경 이력 = git diff — D-026 컨벤션 복원).
+- **P1-2 반영**: FarmTipDetail isError+재시도(네트워크 오류를 "정보 없음"으로 오표시하던
+  무언 실패 제거).
+- **P2 반영**: 작목 매칭 norm() 통일(P2-3), 출처 라벨 "(농사로)" 하드코딩 제거(P2-4),
+  상세 "검수 확인일 없음" 표시(P2-5), 마이그레이션 주석 키 정정(P2-7).
+- 후속: rls_check.sql farm_tips 케이스(P2-6), 영문 작목 태그 확충(자유 텍스트 한계 — D-027 기록).
