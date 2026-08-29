@@ -3,6 +3,7 @@ import { useTranslation } from '../i18n/useTranslation'
 import { useFarmTip } from '../hooks/useFarmTips'
 import { localizedContent } from '../lib/localizedContent'
 import { isTtsAvailable, speak } from '../lib/tts'
+import { Volume2 } from '../components/ui/icons'
 
 /** 🌾 농사 도움 상세 — 비로그인·TTS 읽어주기(저문해력, PRD v1.5 §1 원칙 재사용). */
 export function FarmTipDetail() {
@@ -70,7 +71,8 @@ export function FarmTipDetail() {
           onClick={() => speak(`${c.name}. ${c.description}`, locale)}
           className="min-h-[56px] rounded-card border border-gray-100 bg-white text-base font-semibold text-gray-800 shadow-card"
         >
-          🔊 {t('talk.readAloud')}
+          <Volume2 aria-hidden size={20} strokeWidth={2.25} className="mr-2 inline align-[-3px]" />
+          {t('talk.readAloud')}
         </button>
       ) : null}
 

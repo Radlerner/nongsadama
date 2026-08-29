@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from '../i18n/useTranslation'
+import { Coffee, LifeBuoy, MapPin, MessageCircleQuestion, Mic, Volume2, type LucideIcon } from '../components/ui/icons'
 import { SafetyBanner } from '../components/SafetyBanner'
 import { isSpeechAvailable, listenOnce } from '../lib/speech'
 import { isTtsAvailable, speak } from '../lib/tts'
@@ -36,13 +37,13 @@ export function Talk() {
   }
 
   const options = [
-    { icon: '💬', labelKey: 'talk.optAsk', descKey: 'talk.optAskDesc', color: 'bg-sky-50 border-sky-300',
+    { icon: MessageCircleQuestion as LucideIcon, labelKey: 'talk.optAsk', descKey: 'talk.optAskDesc', color: 'bg-sky-50 border-sky-300',
       go: () => navigate('/board/new', { state: { prefill: transcript, category: 'question', fromTalk: true } }) },
-    { icon: '📍', labelKey: 'talk.optPlace', descKey: 'talk.optPlaceDesc', color: 'bg-green-50 border-green-300',
+    { icon: MapPin as LucideIcon, labelKey: 'talk.optPlace', descKey: 'talk.optPlaceDesc', color: 'bg-green-50 border-green-300',
       go: () => navigate('/life-info?from=talk') },
-    { icon: '🆘', labelKey: 'talk.optHard', descKey: 'talk.optHardDesc', color: 'bg-amber-50 border-amber-400',
+    { icon: LifeBuoy as LucideIcon, labelKey: 'talk.optHard', descKey: 'talk.optHardDesc', color: 'bg-amber-50 border-amber-400',
       go: () => navigate('/life-info?category=support&from=talk') },
-    { icon: '☕', labelKey: 'talk.optChat', descKey: 'talk.optChatDesc', color: 'bg-rose-50 border-rose-300',
+    { icon: Coffee as LucideIcon, labelKey: 'talk.optChat', descKey: 'talk.optChatDesc', color: 'bg-rose-50 border-rose-300',
       go: () => navigate('/board/new', { state: { prefill: transcript, category: 'help', fromTalk: true } }) },
   ]
 
@@ -65,7 +66,7 @@ export function Talk() {
             onClick={readAloud}
             className="flex min-h-[44px] items-center gap-1 rounded-full border border-gray-300 px-3 text-sm text-gray-700"
           >
-            <span aria-hidden>🔊</span>
+            <Volume2 aria-hidden size={18} strokeWidth={2.25} />
             {t('talk.readAloud')}
           </button>
         ) : null}
@@ -80,7 +81,7 @@ export function Talk() {
             disabled={listening}
             className="flex min-h-[64px] w-full items-center justify-center gap-3 rounded-full bg-brand-greenDark text-xl font-extrabold tracking-tight text-white disabled:opacity-60"
           >
-            <span aria-hidden className="text-2xl">🎤</span>
+            <Mic aria-hidden size={26} strokeWidth={2.25} />
             {listening ? t('talk.listening') : t('talk.micButton')}
           </button>
           {showMicNotice ? (
@@ -125,7 +126,7 @@ export function Talk() {
             onClick={opt.go}
             className={`flex min-h-[72px] items-center gap-4 rounded-card border-2 px-4 text-left ${opt.color}`}
           >
-            <span aria-hidden className="text-3xl">{opt.icon}</span>
+            <opt.icon aria-hidden size={30} strokeWidth={2} className="shrink-0 text-gray-800" />
             <span>
               <span className="block text-base font-bold text-gray-900">{t(opt.labelKey)}</span>
               <span className="block text-xs text-gray-600">{t(opt.descKey)}</span>

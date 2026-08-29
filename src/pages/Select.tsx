@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { getLocaleLabel } from '../config/app'
 import { useTranslation } from '../i18n/useTranslation'
+import { MapPin } from '../components/ui/icons'
 import { useRegions, type Region } from '../hooks/useRegions'
 import { useSelectedRegion } from '../context/SelectedRegionContext'
 import { regionLabel } from '../lib/regionName'
@@ -176,7 +177,7 @@ function RegionPicker() {
         disabled={locating}
         className="flex min-h-[56px] w-full items-center justify-center gap-2 rounded-full border-2 border-green-300 bg-green-50 text-base font-semibold text-green-800 disabled:opacity-60"
       >
-        <span aria-hidden className="text-xl">📍</span>
+        <MapPin aria-hidden size={20} strokeWidth={2.25} />
         {locating ? t('select.geoLocating') : t('select.geoButton')}
       </button>
       {geoNotice ? (

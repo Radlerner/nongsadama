@@ -8,10 +8,18 @@ import { useSelectedRegion } from '../context/SelectedRegionContext'
 import { useLifeInfoList, type LifeInfo } from '../hooks/useLifeInfo'
 import {
   LIFE_INFO_CATEGORIES,
-  LIFE_INFO_CATEGORY_ICONS,
   LIFE_INFO_CATEGORY_TINTS,
   categoryLabelKey,
 } from '../lib/categories'
+import {
+  CATEGORY_ICONS,
+  Info as InfoIcon,
+  LayoutGrid,
+  List,
+  MapPin,
+  Sprout,
+} from '../components/ui/icons'
+import { categoryPinMarkup, personPinMarkup } from '../lib/pinIcons'
 import { localizedContent } from '../lib/localizedContent'
 import { regionLabel } from '../lib/regionName'
 import { FreshnessBadge } from '../components/FreshnessBadge'
@@ -100,7 +108,7 @@ export default function MapHome() {
       out.push({
         lat: item.latitude as number,
         lng: item.longitude as number,
-        emoji: LIFE_INFO_CATEGORY_ICONS[item.category] ?? 'ℹ️',
+        emoji: categoryPinMarkup(item.category),
         count: 1,
         items: [item],
       })
@@ -119,7 +127,7 @@ export default function MapHome() {
       out.push({
         lat: region.centroid_lat,
         lng: region.centroid_lng,
-        emoji: group.length === 1 ? LIFE_INFO_CATEGORY_ICONS[group[0].category] ?? 'ℹ️' : '📍',
+        emoji: group.length === 1 ? categoryPinMarkup(group[0].category) : categoryPinMarkup(null),
         count: group.length,
         items: group,
       })
@@ -233,7 +241,7 @@ export default function MapHome() {
           kakaoUserOverlayRef.current?.setMap(null)
           const ov = new ns.CustomOverlay({
             position: new ns.LatLng(pos.lat, pos.lng),
-            content: emojiMarkerEl('🧍'),
+            content: emojiMarkerEl(personPinMarkup()),
           })
           ov.setMap(kmap)
           kakaoUserOverlayRef.current = ov
@@ -244,7 +252,7 @@ export default function MapHome() {
         if (map) {
           if (userMarkerRef.current) userMarkerRef.current.remove()
           userMarkerRef.current = L.marker([pos.lat, pos.lng], {
-            icon: emojiIcon('🧍'),
+            icon: emojiIcon(personPinMarkup()),
           }).addTo(map)
           map.setView([pos.lat, pos.lng], 12)
         }
@@ -289,7 +297,14 @@ export default function MapHome() {
                   active ? 'ring-2 ring-green-700 shadow-card' : 'border border-black/5',
                 ].join(' ')}
               >
-                {c === 'all' ? '🗂️' : LIFE_INFO_CATEGORY_ICONS[c]}
+                {c === 'all' ? (
+                  <LayoutGrid size={22} strokeWidth={2} className="text-gray-600" />
+                ) : (
+                  (() => {
+                    const I = CATEGORY_ICONS[c] ?? InfoIcon
+                    return <I size={22} strokeWidth={2} className={tint.text} />
+                  })()
+                )}
               </span>
               <span
                 className={[
@@ -316,7 +331,7 @@ export default function MapHome() {
           className="absolute right-2 top-2 z-[500] flex min-h-[56px] min-w-[56px] items-center justify-center rounded-full bg-white text-2xl shadow-md disabled:opacity-60"
           aria-label={t('map.locate')}
         >
-          {locating ? '⏳' : '📍'}
+          <MapPin size={24} strokeWidth={2.25} className={locating ? 'animate-pulse text-gray-400' : 'text-green-800'} />
         </button>
       </div>
 
@@ -372,7 +387,10 @@ export default function MapHome() {
                 <li key={item.id} className="border-b border-gray-100 last:border-b-0">
                   <Link to={`/life-info/${item.id}`} className="block px-4 py-3 active:bg-gray-50">
                     <p className="flex items-center gap-2 font-semibold text-gray-900">
-                      <span aria-hidden>{LIFE_INFO_CATEGORY_ICONS[item.category] ?? 'ℹ️'}</span>
+                      {(() => {
+                        const I = CATEGORY_ICONS[item.category] ?? InfoIcon
+                        return <I aria-hidden size={18} strokeWidth={2} className="shrink-0 text-green-800" />
+                      })()}
                       {name || t('lifeInfo.untitled')}
                     </p>
                     <p className="mt-1 flex flex-wrap items-center gap-2 text-xs text-gray-500">
@@ -398,7 +416,7 @@ export default function MapHome() {
         to="/life-info"
         className="flex min-h-[44px] items-center justify-center gap-2 rounded-full border border-green-300 bg-green-50 text-sm font-semibold text-green-800"
       >
-        <span aria-hidden>📋</span>
+        <List aria-hidden size={18} strokeWidth={2.25} />
         {t('map.listView')}
       </Link>
 
@@ -407,7 +425,7 @@ export default function MapHome() {
         to="/farm"
         className="flex min-h-[56px] items-center gap-3 rounded-card border border-gray-100 bg-white px-4 shadow-card active:bg-gray-50"
       >
-        <IconTile emoji="🌾" tint="bg-green-50" size="lg" />
+        <IconTile icon={Sprout} tint="bg-green-50" iconClass="text-green-800" size="lg" />
         <span className="flex-1">
           <span className="block text-sm font-semibold text-gray-900">{t('farm.homeEntry')}</span>
           <span className="block text-xs text-gray-500">{t('farm.homeEntryDesc')}</span>

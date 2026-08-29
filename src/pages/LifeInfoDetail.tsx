@@ -1,5 +1,6 @@
 import { Link, useParams } from 'react-router-dom'
 import { useTranslation } from '../i18n/useTranslation'
+import { Volume2 } from '../components/ui/icons'
 import { useLifeInfoItem } from '../hooks/useLifeInfo'
 import { useRegions } from '../hooks/useRegions'
 import { localizedContent } from '../lib/localizedContent'
@@ -75,7 +76,7 @@ export function LifeInfoDetail() {
               }
               className="flex min-h-[44px] shrink-0 items-center gap-1 rounded-full border border-gray-300 px-3 text-sm text-gray-700"
             >
-              <span aria-hidden>🔊</span>
+              <Volume2 aria-hidden size={18} strokeWidth={2.25} />
               {t('talk.readAloud')}
             </button>
           ) : null}

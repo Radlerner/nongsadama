@@ -436,3 +436,11 @@ Supabase 프로젝트 **nongsadama**(`ikusdwursvbdrznbcjtw`, ap-northeast-2)에 
 - 랜딩 히어로 확대(로고 112px·타이틀 30px). 스크린샷 실측: 홈·생활정보 완전 전환 확인.
 - 캐시 강제 갱신: SW nongsadama-v2·파비콘 ?v=2 (라이브 CSS에 v1 토큰 실재 확인 —
   "안 보임" 원인은 클라이언트 캐시로 진단).
+
+## 디자인 v1.6 — 아이콘 전면 교체 (2026-08-29, 오너 지적 반영)
+- 이모지 UI 아이콘 전량 → lucide 라인 세트(단일 레지스트리 ui/icons.tsx): 하단 5탭·홈 필터
+  타일·생활정보 카드/칩·지도 핀(SVG 정적 렌더)·내위치·날씨 9종·Talk 4택/마이크/읽어주기·
+  신고/차단·안전배너 전화 3종·랜딩 3칩·카카오 버튼·뒤로가기·오류 퍼즐.
+- 실측: /home lucide svg 15개 렌더, 지도 핀 SVG 정상(1차에서 kakao overlay textContent로
+  마크업 텍스트 유출 발견 → innerHTML(자체 생성 마크업 한정)로 수정 후 통과), 빌드 성공.
+- lucide-react 도입(MIT·트리셰이킹) — DESIGN.md §7 아이콘 원칙 갱신(이모지 UI 금지).

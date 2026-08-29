@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import { useTranslation } from '../i18n/useTranslation'
 import { LanguageSwitcher } from '../components/layout/LanguageSwitcher'
 import { useSelectedRegion } from '../context/SelectedRegionContext'
+import { Map as MapIcon, MessagesSquare, Mic, type LucideIcon } from '../components/ui/icons'
 
 export function Landing() {
   const { t } = useTranslation()
@@ -22,9 +23,9 @@ export function Landing() {
 
   // 기능 미리보기 3칩(디자인 v0) — 아이콘·라벨은 하단 탭과 동일한 어휘를 재사용해 학습 비용 0
   const previews = [
-    { icon: '🗺️', key: 'nav.home' },
-    { icon: '💬', key: 'nav.board' },
-    { icon: '🎤', key: 'nav.talk' },
+    { icon: MapIcon as LucideIcon, key: 'nav.home' },
+    { icon: MessagesSquare as LucideIcon, key: 'nav.board' },
+    { icon: Mic as LucideIcon, key: 'nav.talk' },
   ] as const
 
   return (
@@ -57,9 +58,7 @@ export function Landing() {
                 to="/select"
                 className="flex min-h-[44px] min-w-[88px] flex-col items-center gap-1 rounded-card bg-white px-4 py-3 shadow-card active:bg-gray-50"
               >
-                <span aria-hidden className="text-2xl">
-                  {p.icon}
-                </span>
+                <p.icon aria-hidden size={24} strokeWidth={2} className="text-green-800" />
                 <span className="text-xs font-semibold text-gray-700">{t(p.key)}</span>
               </Link>
             </li>

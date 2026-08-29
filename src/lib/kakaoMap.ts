@@ -102,12 +102,15 @@ export async function coordToRegion(
   }
 }
 
-/** 이모지 마커 DOM(리플릿 divIcon과 동일한 시각 언어). onClick은 호출측에서 바인딩. */
-export function emojiMarkerEl(emoji: string, count?: number): HTMLElement {
+/**
+ * 핀 마커 DOM(리플릿 divIcon과 동일한 시각 언어). onClick은 호출측에서 바인딩.
+ * markup은 pinIcons.tsx가 정적 렌더한 자체 SVG 문자열만 받는다(사용자 입력 아님 — innerHTML 안전).
+ */
+export function emojiMarkerEl(markup: string, count?: number): HTMLElement {
   const el = document.createElement('div')
   el.style.cssText =
-    'position:relative;width:38px;height:38px;background:#fff;border:2px solid #15803d;border-radius:9999px;display:flex;align-items:center;justify-content:center;font-size:19px;box-shadow:0 1px 3px rgba(0,0,0,.3);cursor:pointer;'
-  el.textContent = emoji
+    'position:relative;width:38px;height:38px;background:#fff;border:2px solid #15803d;border-radius:9999px;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 3px rgba(0,0,0,.3);cursor:pointer;'
+  el.innerHTML = markup
   if (count && count > 1) {
     const badge = document.createElement('span')
     badge.style.cssText =

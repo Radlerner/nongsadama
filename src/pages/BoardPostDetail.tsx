@@ -17,6 +17,7 @@ import {
   useReportPost,
 } from '../hooks/useModeration'
 import { regionLabel } from '../lib/regionName'
+import { Ban, Flag, MessagesSquare } from '../components/ui/icons'
 import { regionDistanceKm } from '../lib/matching'
 
 export function BoardPostDetail() {
@@ -248,7 +249,8 @@ function ModerationActions({ postId, authorId }: { postId: string; authorId: str
           onClick={() => setReporting(true)}
           className="min-h-[44px] self-start font-semibold text-gray-600 underline"
         >
-          🚩 {t('postDetail.report')}
+          <Flag aria-hidden size={16} strokeWidth={2.25} className="mr-1 inline align-[-2px]" />
+          {t('postDetail.report')}
         </button>
       )}
 
@@ -280,7 +282,8 @@ function ModerationActions({ postId, authorId }: { postId: string; authorId: str
             onClick={() => setConfirmingBlock(true)}
             className="min-h-[44px] font-semibold text-red-600 underline"
           >
-            🚫 {t('block.action')}
+            <Ban aria-hidden size={16} strokeWidth={2.25} className="mr-1 inline align-[-2px]" />
+            {t('block.action')}
           </button>
         )}
         {block.isError ? <p className="text-red-700">{t('report.error')}</p> : null}
@@ -307,7 +310,7 @@ function SimilarPosts({ postId }: { postId: string }) {
         {data.map((s) => (
           <li key={s.id}>
             <Link to={`/board/${s.id}`} className="block min-h-[44px] py-2 text-sm text-gray-800 active:bg-gray-50">
-              <span aria-hidden className="mr-1">💬</span>
+              <MessagesSquare aria-hidden size={16} strokeWidth={2} className="mr-1.5 inline align-[-2px] text-gray-400" />
               {s.title}
               <span className="ml-2 text-[11px] text-gray-400">{t(postCategoryLabelKey(s.category))}</span>
             </Link>

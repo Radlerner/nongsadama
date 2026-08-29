@@ -1,4 +1,5 @@
 import { Component, type ReactNode } from 'react'
+import { Puzzle } from './ui/icons'
 
 /**
  * 최상위 오류 경계(Play 심사 준비 7순위, D-024).
@@ -28,9 +29,7 @@ export class ErrorBoundary extends Component<Props, State> {
     if (!this.state.hasError) return this.props.children
     return (
       <div className="mx-auto flex min-h-screen max-w-screen-sm flex-col items-center justify-center gap-4 bg-brand-cream px-6 text-center text-gray-900">
-        <p className="text-4xl" aria-hidden>
-          🧩
-        </p>
+        <Puzzle aria-hidden size={44} strokeWidth={1.75} className="text-green-800" />
         <h1 className="text-xl font-extrabold tracking-tight">문제가 생겼어요 / Something went wrong</h1>
         <p className="text-sm text-gray-600">
           화면을 다시 불러오면 대부분 해결돼요.

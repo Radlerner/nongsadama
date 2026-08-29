@@ -6,11 +6,11 @@ import { useSelectedRegion } from '../context/SelectedRegionContext'
 import { useLifeInfoList, type LifeInfo as LifeInfoRow } from '../hooks/useLifeInfo'
 import {
   LIFE_INFO_CATEGORIES,
-  LIFE_INFO_CATEGORY_ICONS,
   LIFE_INFO_CATEGORY_TINTS,
   categoryLabelKey,
 } from '../lib/categories'
 import { IconTile } from '../components/ui/IconTile'
+import { CATEGORY_ICONS, Info } from '../components/ui/icons'
 import { localizedContent } from '../lib/localizedContent'
 import { regionLabel } from '../lib/regionName'
 import { FreshnessBadge } from '../components/FreshnessBadge'
@@ -87,7 +87,7 @@ export function LifeInfo() {
             >
               {c === 'all' ? t('lifeInfo.category.all') : (
                 <>
-                  <span aria-hidden className="mr-1">{LIFE_INFO_CATEGORY_ICONS[c] ?? ''}</span>
+                  {(() => { const I = CATEGORY_ICONS[c] ?? Info; return <I aria-hidden size={16} strokeWidth={2.25} className="mr-1 inline align-[-3px]" /> })()}
                   {t(categoryLabelKey(c))}
                 </>
               )}
@@ -135,8 +135,9 @@ function LifeInfoCard({ item, regionName }: { item: LifeInfoRow; regionName: str
     <li>
       <CardLink to={`/life-info/${item.id}`} className="flex items-center gap-3 px-4 py-3">
         <IconTile
-          emoji={LIFE_INFO_CATEGORY_ICONS[item.category] ?? 'ℹ️'}
-          tint={(LIFE_INFO_CATEGORY_TINTS[item.category] ?? { bg: 'bg-gray-100' }).bg}
+          icon={CATEGORY_ICONS[item.category] ?? Info}
+          tint={(LIFE_INFO_CATEGORY_TINTS[item.category] ?? { bg: 'bg-gray-100', text: '' }).bg}
+          iconClass={(LIFE_INFO_CATEGORY_TINTS[item.category] ?? { bg: '', text: 'text-gray-600' }).text}
         />
         <div className="min-w-0 flex-1">
         <p className="font-semibold text-gray-900">{name || t('lifeInfo.untitled')}</p>

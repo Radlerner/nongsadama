@@ -1,4 +1,5 @@
 import { useTranslation } from '../i18n/useTranslation'
+import { LifeBuoy, Phone, Users, type LucideIcon } from './ui/icons'
 
 /**
  * 상시 도움 배너 (PRD v1.5 §3.2-1, 협상 불가 완료 조건).
@@ -8,9 +9,9 @@ import { useTranslation } from '../i18n/useTranslation'
 export function SafetyBanner() {
   const { t } = useTranslation()
   const items = [
-    { icon: '🆘', tel: '1345', labelKey: 'safety.call1345' },
-    { icon: '🚨', tel: '112', labelKey: 'safety.call112' },
-    { icon: '🤝', tel: '1577-1366', labelKey: 'safety.call1366' },
+    { icon: LifeBuoy as LucideIcon, tel: '1345', labelKey: 'safety.call1345' },
+    { icon: Phone as LucideIcon, tel: '112', labelKey: 'safety.call112' },
+    { icon: Users as LucideIcon, tel: '1577-1366', labelKey: 'safety.call1366' },
   ]
   return (
     <aside className="rounded-md border border-amber-300 bg-amber-50 px-3 py-3">
@@ -22,9 +23,9 @@ export function SafetyBanner() {
             href={`tel:${it.tel}`}
             className="flex min-h-[56px] items-center gap-3 rounded-md bg-white px-3 text-sm font-semibold text-amber-900 shadow-sm"
           >
-            <span aria-hidden className="text-xl">{it.icon}</span>
+            <it.icon aria-hidden size={22} strokeWidth={2.25} className="shrink-0 text-amber-700" />
             <span>
-              {t(it.labelKey)} <span className="font-bold">☎ {it.tel}</span>
+              {t(it.labelKey)} <span className="font-bold">{it.tel}</span>
             </span>
           </a>
         ))}

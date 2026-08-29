@@ -3,6 +3,7 @@ import { BottomNav } from './BottomNav'
 import { LanguageSwitcher } from './LanguageSwitcher'
 import { OfflineBanner } from '../OfflineBanner'
 import { useTranslation } from '../../i18n/useTranslation'
+import { ChevronLeft } from 'lucide-react'
 
 export function AppLayout() {
   const { t } = useTranslation()
@@ -23,7 +24,7 @@ export function AppLayout() {
               aria-label={t('common.back')}
               className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-md text-2xl text-gray-700"
             >
-              ←
+              <ChevronLeft size={26} strokeWidth={2.25} />
             </button>
           ) : null}
           <img

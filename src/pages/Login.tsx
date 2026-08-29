@@ -6,14 +6,16 @@ import { z } from 'zod'
 import { useAuth } from '../context/AuthContext'
 import { useTranslation } from '../i18n/useTranslation'
 import { oauthProviders, type OAuthProvider } from '../config/app'
+import { MessageCircleQuestion, type LucideIcon } from '../components/ui/icons'
 
 // 제공자별 브랜드 버튼 스타일(디자인 가이드 준수 — 카카오: #FEE500 배경+검정 텍스트).
 // 제공자 추가 시 여기와 i18n `auth.<provider>Start` 키만 더한다(kakao-login 스킬 §2.1).
 const providerButtonClass: Record<OAuthProvider, string> = {
   kakao: 'bg-[#FEE500] text-[#191919]',
 }
-const providerIcon: Record<OAuthProvider, string> = {
-  kakao: '💬',
+// 카카오 심벌은 말풍선 — 라인 아이콘으로 통일(브랜드 색은 버튼 배경이 담당)
+const providerIcon: Record<OAuthProvider, LucideIcon> = {
+  kakao: MessageCircleQuestion,
 }
 
 // zod 메시지에는 번역 키를 담고, 렌더 시 t()로 변환한다(문자열 하드코딩 금지, PRD 6.1).
@@ -137,7 +139,7 @@ export function Login() {
             disabled={oauthPending !== null}
             className={`flex min-h-[56px] items-center justify-center gap-2 rounded-full px-6 text-base font-semibold disabled:opacity-50 ${providerButtonClass[p]}`}
           >
-            <span aria-hidden>{providerIcon[p]}</span>
+            {(() => { const I = providerIcon[p]; return <I aria-hidden size={20} strokeWidth={2.25} /> })()}
             {oauthPending === p ? t('auth.loading') : t(`auth.${p}Start`)}
           </button>
         ))}

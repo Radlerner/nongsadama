@@ -8,24 +8,12 @@ import { norm } from '../lib/matching'
 import { Card, CardLink } from '../components/ui/Card'
 import { EmptyBox, ErrorBox, LoadingBox } from '../components/ui/StateBoxes'
 import { useRuralPrograms, useUserArea, useWeather } from '../hooks/useRegionalInfo'
+import { MapPin, School, Sprout, Thermometer, WEATHER_ICONS } from '../components/ui/icons'
 
 /**
  * 🌾 농사 도움 목록(PRD v1.7 §1·§2) — 비로그인 열람.
  * 로그인+작목 설정 시 내 작목 팁이 맨 위(훅에서 정렬).
  */
-// OpenWeather 아이콘 코드 → 이모지(글자 없이 이해되는 날씨 — DESIGN.md §7 다국적 직관성)
-const WEATHER_EMOJI: Record<string, string> = {
-  '01': '☀️',
-  '02': '🌤️',
-  '03': '⛅',
-  '04': '☁️',
-  '09': '🌧️',
-  '10': '🌦️',
-  '11': '⛈️',
-  '13': '❄️',
-  '50': '🌫️',
-}
-
 /**
  * 위치 기반 정보 묶음: ☀️ 오늘 날씨 + 🏫 우리 지역 교육·사업(농진청 실데이터).
  * 기본은 선택 지역(파일럿), "내 위치"로 전국 어디서든 자기 지역 정보(항목1).
@@ -46,7 +34,8 @@ function RegionalInfo() {
         disabled={locating}
         className="min-h-[44px] self-start rounded-full border border-green-300 bg-green-50 px-4 text-sm font-semibold text-green-800 disabled:opacity-50"
       >
-        📍 {locating ? t('select.geoLocating') : t('farm.useMyLocation')}
+        <MapPin aria-hidden size={18} strokeWidth={2.25} className="mr-1 inline align-[-3px]" />
+        {locating ? t('select.geoLocating') : t('farm.useMyLocation')}
       </button>
       {geoError ? <p className="text-xs text-red-700">{t('map.geoError')}</p> : null}
       {/* 지오코더 실패로 시군을 못 얻으면 사업 카드가 사라지는 이유를 알려준다(재검수 P2-3) */}
@@ -61,9 +50,10 @@ function RegionalInfo() {
             {area.sigungu ? ` · ${area.sigungu}` : weather.name ? ` · ${weather.name}` : ''}
           </p>
           <div className="mt-1 flex items-center gap-3">
-            <span aria-hidden className="text-4xl leading-none">
-              {WEATHER_EMOJI[weather.icon?.slice(0, 2) ?? ''] ?? '🌡️'}
-            </span>
+            {(() => {
+              const W = WEATHER_ICONS[weather.icon?.slice(0, 2) ?? ''] ?? Thermometer
+              return <W aria-hidden size={44} strokeWidth={1.75} className="text-sky-600" />
+            })()}
             <div>
               <p className="text-3xl font-extrabold tracking-tight text-gray-900">
                 {weather.tempC != null ? `${weather.tempC}°` : '—'}
@@ -80,7 +70,8 @@ function RegionalInfo() {
       {programs && programs.items.length > 0 ? (
         <Card className="px-4 py-3">
           <p className="text-xs font-semibold text-gray-500">
-            🏫 {t('farm.programsTitle')}
+            <School aria-hidden size={14} strokeWidth={2.25} className="mr-1 inline align-[-2px]" />
+            {t('farm.programsTitle')}
             {area?.sigungu ? ` · ${area.sigungu}` : ''}
             <span className="ml-1 font-normal text-gray-400">
               ({programs.total}{t('farm.programsCount')})
@@ -119,7 +110,10 @@ export function FarmTips() {
 
   return (
     <section>
-      <h1 className="mb-1 text-xl font-extrabold tracking-tight">🌾 {t('farm.title')}</h1>
+      <h1 className="mb-1 flex items-center gap-2 text-xl font-extrabold tracking-tight">
+        <Sprout aria-hidden size={22} strokeWidth={2.25} className="text-green-800" />
+        {t('farm.title')}
+      </h1>
       <p className="mb-4 text-xs text-gray-500">{t('farm.subtitle')}</p>
 
       {/* 위치 기반 실시간 정보(PRD v1.7 항목1·2·3) — 비로그인, 전국 대응 */}
