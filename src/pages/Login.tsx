@@ -122,7 +122,7 @@ export function Login() {
           className="h-10 w-10 rounded-md"
         />
         <div>
-          <h1 className="text-xl font-bold text-green-700">{t('app.name')}</h1>
+          <h1 className="text-xl font-extrabold tracking-tight text-green-700">{t('app.name')}</h1>
           <p className="text-sm text-gray-500">{t('landing.subtitle')}</p>
         </div>
       </div>
@@ -135,7 +135,7 @@ export function Login() {
             type="button"
             onClick={() => void onOAuth(p)}
             disabled={oauthPending !== null}
-            className={`flex min-h-[56px] items-center justify-center gap-2 rounded-card px-6 text-base font-semibold disabled:opacity-50 ${providerButtonClass[p]}`}
+            className={`flex min-h-[56px] items-center justify-center gap-2 rounded-full px-6 text-base font-semibold disabled:opacity-50 ${providerButtonClass[p]}`}
           >
             <span aria-hidden>{providerIcon[p]}</span>
             {oauthPending === p ? t('auth.loading') : t(`auth.${p}Start`)}

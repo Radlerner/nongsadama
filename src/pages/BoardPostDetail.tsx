@@ -138,7 +138,7 @@ export function BoardPostDetail() {
         <div className="flex gap-2">
           <Link
             to={`/board/${post.id}/edit`}
-            className="inline-flex min-h-[44px] flex-1 items-center justify-center rounded-md border border-gray-300 text-sm font-semibold text-gray-700"
+            className="inline-flex min-h-[44px] flex-1 items-center justify-center rounded-full border border-gray-300 text-sm font-semibold text-gray-700"
           >
             {t('postDetail.edit')}
           </Link>

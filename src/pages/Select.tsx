@@ -16,8 +16,8 @@ export function Select() {
   const { t, locale, setLocale, supportedLocales } = useTranslation()
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-screen-sm flex-col bg-white px-6 py-6 text-gray-900">
-      <h1 className="text-xl font-bold text-green-700">{t('select.title')}</h1>
+    <div className="mx-auto flex min-h-screen max-w-screen-sm flex-col bg-brand-cream px-6 py-6 text-gray-900">
+      <h1 className="text-xl font-extrabold tracking-tight text-green-700">{t('select.title')}</h1>
 
       <section className="mt-6">
         <h2 className="mb-2 text-sm font-semibold text-gray-700">{t('select.language')}</h2>
@@ -98,7 +98,7 @@ function RegionPicker() {
 
   if (isLoading) {
     return (
-      <p className="rounded-md bg-gray-50 px-4 py-6 text-center text-sm text-gray-500">
+      <p className="rounded-card bg-white/70 px-4 py-6 text-center text-sm text-gray-500">
         {t('select.regionLoading')}
       </p>
     )
@@ -140,7 +140,7 @@ function RegionPicker() {
   const totalTowns = groups.reduce((n, g) => n + g.towns.length, 0)
   if (totalTowns === 0) {
     return (
-      <p className="rounded-md bg-gray-50 px-4 py-6 text-center text-sm text-gray-500">
+      <p className="rounded-card bg-white/70 px-4 py-6 text-center text-sm text-gray-500">
         {t('select.regionEmpty')}
       </p>
     )
@@ -174,13 +174,13 @@ function RegionPicker() {
         type="button"
         onClick={() => void suggestNearest()}
         disabled={locating}
-        className="flex min-h-[56px] w-full items-center justify-center gap-2 rounded-md border-2 border-green-300 bg-green-50 text-base font-semibold text-green-800 disabled:opacity-60"
+        className="flex min-h-[56px] w-full items-center justify-center gap-2 rounded-full border-2 border-green-300 bg-green-50 text-base font-semibold text-green-800 disabled:opacity-60"
       >
         <span aria-hidden className="text-xl">📍</span>
         {locating ? t('select.geoLocating') : t('select.geoButton')}
       </button>
       {geoNotice ? (
-        <p className="rounded-md bg-gray-50 px-3 py-2 text-xs text-gray-700">{t(geoNotice)}</p>
+        <p className="rounded-full bg-gray-50 px-3 py-2 text-xs text-gray-700">{t(geoNotice)}</p>
       ) : null}
       {groups
         .filter((g) => g.towns.length > 0)

@@ -309,7 +309,7 @@ export default function MapHome() {
       </div>
 
       {isLoading ? (
-        <p className="rounded-md bg-gray-50 px-4 py-3 text-center text-sm text-gray-500">
+        <p className="rounded-card bg-white/70 px-4 py-3 text-center text-sm text-gray-500">
           {t('lifeInfo.loading')}
         </p>
       ) : null}

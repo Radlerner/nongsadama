@@ -40,7 +40,7 @@ export function Landing() {
           className="h-24 w-24 rounded-card shadow-card"
         />
         <div>
-          <h1 className="text-2xl font-bold text-green-700">{t('landing.title')}</h1>
+          <h1 className="text-2xl font-extrabold tracking-tight text-green-700">{t('landing.title')}</h1>
           <p className="mt-2 text-sm text-gray-600">{t('landing.subtitle')}</p>
         </div>
         <Link

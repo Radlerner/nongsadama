@@ -14,7 +14,7 @@ export function PagePlaceholder({ title, message, children }: PagePlaceholderPro
   return (
     <section>
       <h1 className="mb-4 text-xl font-extrabold tracking-tight">{title}</h1>
-      <p className="rounded-md bg-gray-50 px-4 py-8 text-center text-sm text-gray-500">
+      <p className="rounded-card bg-white/70 px-4 py-8 text-center text-sm text-gray-500">
         {message}
       </p>
       {children}

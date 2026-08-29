@@ -418,3 +418,13 @@ Supabase 프로젝트 **nongsadama**(`ikusdwursvbdrznbcjtw`, ap-northeast-2)에 
 - 반영 후 라이브: 해외 좌표 400 out_of_service_area ✅ / 정밀 좌표 입력→반올림 응답 ✅ /
   연도 기본 2026(34건)·1999→2015 클램프(39건)·명시 2026(34건) ✅ — v3의 연도 기본값
   회귀(Number(null)=0)를 실측으로 발견·수정한 결과 포함.
+
+## 디자인 v1 (6f81602) + 독립 재검수 반영
+- 실측: 크림 그라운드·카드 16px·CTA 알약 16곳·제목 800/20px·탭 활성 알약·날씨 이모지+30px
+  온도·ko 76키 humanize(파라미터 불일치 0, 파리티 0). P0 없음.
+- P1 반영: Select/NotFound/ErrorBoundary 크림 통일, 수정 Link·내주변 버튼 알약(반경 혼재 해소),
+  ko 과교정 2키 의미 복원(freshnessNotice·farm.sourceNotice — en 정합), DESIGN.md §4를
+  코드 실측으로 정정(보조=gray 테두리·white/80·56px 완화).
+- P2 반영: 카카오 버튼 알약, 잔존 gray-50 박스 white/80+border 이관(야외 대비 강화),
+  자체 레이아웃 제목 extrabold, report.done·consentWhy 카피 손질, Card 주석 갱신.
+- 후속: Talk 4택 색상 §2 등재 판단, PagePlaceholder 삭제 후보, landing.subtitle en 대응.

@@ -84,7 +84,7 @@ export function Talk() {
             {listening ? t('talk.listening') : t('talk.micButton')}
           </button>
           {showMicNotice ? (
-            <div className="mt-3 rounded-md bg-gray-50 px-3 py-3 text-xs text-gray-700">
+            <div className="mt-3 rounded-card bg-white/70 px-3 py-3 text-xs text-gray-700">
               {/* §3.2-4: Web Speech는 브라우저 제공사 서버로 음성을 전송한다 — 사용 전 고지 */}
               <p>{t('talk.micNotice')}</p>
               <div className="mt-2 flex gap-2">

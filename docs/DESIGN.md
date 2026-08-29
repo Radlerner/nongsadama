@@ -36,13 +36,13 @@ Google Stitch DESIGN.md 형식(9섹션). AI 에이전트·디자이너·피그�
 
 | 컴포넌트 | 규격 | 상태 |
 |---|---|---|
-| `CardLink` | white·rounded-card(16px)·shadow-card·border-black/5 | active: bg-gray-50 |
+| `CardLink` | white·rounded-card(16px)·shadow-card·border-gray-100 | active: bg-gray-50 |
 | `Card` | 동일(정적) | — |
-| 주 CTA | **rounded-full 알약**·greenDark·white·min-h 56px·font-bold | active: 살짝 어둡게, disabled: opacity-50 |
-| 보조 버튼 | rounded-full·white·초록 테두리·초록 글자 | — |
-| 위험 버튼 | rounded-full·red-600(확정) / red 테두리(진입) | 2단계 확인 필수 |
-| 칩(필터) | rounded-full, 활성=greenDark+white / 비활성=white+테두리 | — |
-| 상태 박스 | LoadingBox·EmptyBox(크림보다 옅은 white/60)·ErrorBox(재시도 필수) | — |
+| 주 CTA | **rounded-full 알약**·greenDark·white·font-semibold, min-h 44px(화면 대표 CTA는 56px 권장) | disabled: opacity-50 |
+| 보조 버튼 | rounded-full·gray-300 테두리·gray-700 글자 | — |
+| 위험 버튼 | rounded-full·red-600(확정) / red-300 테두리(진입) | 2단계 확인 필수 |
+| 칩(필터) | rounded-full, 활성=greenDark+white / 비활성=white+gray-300 테두리 | — |
+| 상태 박스 | LoadingBox·EmptyBox(white/80+border-black/5)·ErrorBox(red-50, 재시도 필수) | — |
 | 하단 탭 | 활성 = **연초록 알약 배경**(현재 위치가 그림으로 보임) | — |
 
 ## 5. 레이아웃

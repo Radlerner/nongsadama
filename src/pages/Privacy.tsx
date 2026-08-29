@@ -93,7 +93,7 @@ export function Privacy() {
           </p>
         </div>
 
-        <div className="rounded-md bg-gray-50 px-4 py-3">
+        <div className="rounded-card bg-white/70 px-4 py-3">
           <h2 className="font-bold">English summary</h2>
           <p className="mt-1 text-gray-700">
             NongsaDama collects: email, nickname, optional language/town-level region/nationality

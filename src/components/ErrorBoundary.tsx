@@ -27,13 +27,13 @@ export class ErrorBoundary extends Component<Props, State> {
   render() {
     if (!this.state.hasError) return this.props.children
     return (
-      <div className="mx-auto flex min-h-screen max-w-screen-sm flex-col items-center justify-center gap-4 bg-white px-6 text-center text-gray-900">
+      <div className="mx-auto flex min-h-screen max-w-screen-sm flex-col items-center justify-center gap-4 bg-brand-cream px-6 text-center text-gray-900">
         <p className="text-4xl" aria-hidden>
           🧩
         </p>
         <h1 className="text-xl font-extrabold tracking-tight">문제가 생겼어요 / Something went wrong</h1>
         <p className="text-sm text-gray-600">
-          화면을 다시 불러오면 대부분 해결됩니다.
+          화면을 다시 불러오면 대부분 해결돼요.
           <br />
           Reloading usually fixes this.
         </p>

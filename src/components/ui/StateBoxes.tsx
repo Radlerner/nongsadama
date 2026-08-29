@@ -9,13 +9,13 @@ interface TextProps {
 
 export function LoadingBox({ text }: TextProps) {
   return (
-    <p className="rounded-card bg-white/70 px-4 py-8 text-center text-sm text-gray-500">{text}</p>
+    <p className="rounded-card border border-black/5 bg-white/80 px-4 py-8 text-center text-sm text-gray-500">{text}</p>
   )
 }
 
 export function EmptyBox({ text }: TextProps) {
   return (
-    <p className="rounded-card bg-white/70 px-4 py-8 text-center text-sm text-gray-500">{text}</p>
+    <p className="rounded-card border border-black/5 bg-white/80 px-4 py-8 text-center text-sm text-gray-500">{text}</p>
   )
 }
 
