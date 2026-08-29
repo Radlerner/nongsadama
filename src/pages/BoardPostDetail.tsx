@@ -34,7 +34,7 @@ export function BoardPostDetail() {
 
   if (isLoading) {
     return (
-      <p className="rounded-md bg-gray-50 px-4 py-8 text-center text-sm text-gray-500">
+      <p className="rounded-card bg-white/70 px-4 py-8 text-center text-sm text-gray-500">
         {t('board.loading')}
       </p>
     )
@@ -42,13 +42,13 @@ export function BoardPostDetail() {
 
   if (isError) {
     return (
-      <div className="rounded-md bg-red-50 px-4 py-8 text-center text-sm text-red-700">
+      <div className="rounded-card bg-red-50 px-4 py-8 text-center text-sm text-red-700">
         <p className="mb-3">{t('board.error')}</p>
         <button
           type="button"
           onClick={() => void refetch()}
           disabled={isFetching}
-          className="min-h-[44px] rounded-md border border-red-300 px-4 text-red-700 disabled:opacity-50"
+          className="min-h-[44px] rounded-full border border-red-300 px-4 text-red-700 disabled:opacity-50"
         >
           {t('common.retry')}
         </button>
@@ -59,7 +59,7 @@ export function BoardPostDetail() {
   if (!post) {
     return (
       <div className="text-center">
-        <p className="rounded-md bg-gray-50 px-4 py-8 text-sm text-gray-500">
+        <p className="rounded-card bg-white/70 px-4 py-8 text-sm text-gray-500">
           {t('postDetail.empty')}
         </p>
         <Link to="/board" className="mt-4 inline-block text-green-700 underline">
@@ -87,7 +87,7 @@ export function BoardPostDetail() {
   if (!isOwn && blockedIds?.has(post.author_id)) {
     return (
       <div className="text-center">
-        <p className="rounded-md bg-gray-50 px-4 py-8 text-sm text-gray-500">
+        <p className="rounded-card bg-white/70 px-4 py-8 text-sm text-gray-500">
           {t('block.postHidden')}
         </p>
         <button
@@ -109,7 +109,7 @@ export function BoardPostDetail() {
   return (
     <article className="flex flex-col gap-4">
       <header>
-        <h1 className="text-lg font-bold text-gray-900">{post.title}</h1>
+        <h1 className="text-xl font-extrabold tracking-tight text-gray-900">{post.title}</h1>
         <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-gray-500">
           <span>{t(postCategoryLabelKey(post.category))}</span>
           {region ? <span>{regionLabel(region.id, region.names, locale)}</span> : null}
@@ -150,14 +150,14 @@ export function BoardPostDetail() {
                 onClick={() =>
                   deletePost.mutate(post.id, { onSuccess: () => navigate('/board') })
                 }
-                className="min-h-[44px] flex-1 rounded-md bg-red-600 text-sm font-semibold text-white disabled:opacity-50"
+                className="min-h-[44px] flex-1 rounded-full bg-red-600 text-sm font-semibold text-white disabled:opacity-50"
               >
                 {t('postDetail.deleteConfirm')}
               </button>
               <button
                 type="button"
                 onClick={() => setConfirmingDelete(false)}
-                className="min-h-[44px] flex-1 rounded-md border border-gray-300 text-sm text-gray-700"
+                className="min-h-[44px] flex-1 rounded-full border border-gray-300 text-sm text-gray-700"
               >
                 {t('postDetail.deleteCancel')}
               </button>
@@ -166,7 +166,7 @@ export function BoardPostDetail() {
             <button
               type="button"
               onClick={() => setConfirmingDelete(true)}
-              className="min-h-[44px] flex-1 rounded-md border border-red-300 text-sm font-semibold text-red-700"
+              className="min-h-[44px] flex-1 rounded-full border border-red-300 text-sm font-semibold text-red-700"
             >
               {t('postDetail.delete')}
             </button>
@@ -262,7 +262,7 @@ function ModerationActions({ postId, authorId }: { postId: string; authorId: str
               type="button"
               disabled={block.isPending}
               onClick={() => block.mutate(authorId, { onSuccess: () => navigate('/board') })}
-              className="min-h-[44px] rounded-md bg-red-600 px-3 font-semibold text-white disabled:opacity-50"
+              className="min-h-[44px] rounded-full bg-red-600 px-3 font-semibold text-white disabled:opacity-50"
             >
               {t('block.confirm')}
             </button>

@@ -276,7 +276,7 @@ export default function MapHome() {
                 'inline-flex min-h-[44px] shrink-0 items-center rounded-full border px-3 text-sm',
                 active
                   ? 'border-green-700 bg-brand-greenDark font-semibold text-white'
-                  : 'border-gray-300 text-gray-700',
+                  : 'border-gray-300 bg-white text-gray-700',
               ].join(' ')}
             >
               {c === 'all' ? (
@@ -338,7 +338,7 @@ export default function MapHome() {
                 setNearest(null)
                 setSheet(null)
               }}
-              className="mt-2 min-h-[44px] w-full rounded-md bg-brand-greenDark px-4 font-semibold text-white"
+              className="mt-2 min-h-[44px] w-full rounded-full bg-brand-greenDark px-4 font-semibold text-white"
             >
               {t('map.useRegion')}
             </button>

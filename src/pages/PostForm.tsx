@@ -71,7 +71,7 @@ export function PostForm() {
 
   if (initializing || (isEdit && postLoading)) {
     return (
-      <p className="rounded-md bg-gray-50 px-4 py-8 text-center text-sm text-gray-500">
+      <p className="rounded-card bg-white/70 px-4 py-8 text-center text-sm text-gray-500">
         {t('board.loading')}
       </p>
     )
@@ -80,7 +80,7 @@ export function PostForm() {
   if (!user) {
     return (
       <section className="text-center">
-        <p className="mb-4 rounded-md bg-gray-50 px-4 py-8 text-sm text-gray-500">
+        <p className="mb-4 rounded-card bg-white/70 px-4 py-8 text-sm text-gray-500">
           {t('postForm.loginRequired')}
         </p>
         <Link to="/login" className="text-green-700 underline">
@@ -93,7 +93,7 @@ export function PostForm() {
   if (isEdit && (!existing || existing.author_id !== user.id)) {
     return (
       <div className="text-center">
-        <p className="rounded-md bg-gray-50 px-4 py-8 text-sm text-gray-500">
+        <p className="rounded-card bg-white/70 px-4 py-8 text-sm text-gray-500">
           {t('postForm.notEditable')}
         </p>
         <Link to="/board" className="mt-4 inline-block text-green-700 underline">
@@ -109,7 +109,7 @@ export function PostForm() {
   if (!isEdit && !postRegionId) {
     return (
       <section className="text-center">
-        <p className="mb-4 rounded-md bg-gray-50 px-4 py-8 text-sm text-gray-500">
+        <p className="mb-4 rounded-card bg-white/70 px-4 py-8 text-sm text-gray-500">
           {t('postForm.regionRequired')}
         </p>
         <Link to="/select" className="text-green-700 underline">
@@ -156,7 +156,7 @@ export function PostForm() {
 
   return (
     <section>
-      <h1 className="mb-4 text-lg font-bold">
+      <h1 className="mb-4 text-xl font-extrabold tracking-tight">
         {isEdit ? t('postForm.editTitle') : t('postForm.newTitle')}
       </h1>
 
@@ -207,7 +207,7 @@ export function PostForm() {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="min-h-[56px] rounded-md bg-brand-greenDark px-6 py-3 text-base font-semibold text-white disabled:opacity-50"
+          className="min-h-[56px] rounded-full bg-brand-greenDark px-6 py-3 text-base font-semibold text-white disabled:opacity-50"
         >
           {isSubmitting ? t('auth.loading') : t('postForm.submit')}
         </button>

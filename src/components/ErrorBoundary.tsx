@@ -31,7 +31,7 @@ export class ErrorBoundary extends Component<Props, State> {
         <p className="text-4xl" aria-hidden>
           🧩
         </p>
-        <h1 className="text-lg font-bold">문제가 생겼어요 / Something went wrong</h1>
+        <h1 className="text-xl font-extrabold tracking-tight">문제가 생겼어요 / Something went wrong</h1>
         <p className="text-sm text-gray-600">
           화면을 다시 불러오면 대부분 해결됩니다.
           <br />
@@ -40,7 +40,7 @@ export class ErrorBoundary extends Component<Props, State> {
         <button
           type="button"
           onClick={() => window.location.reload()}
-          className="min-h-[56px] rounded-md bg-brand-greenDark px-8 py-3 text-base font-semibold text-white"
+          className="min-h-[56px] rounded-full bg-brand-greenDark px-8 py-3 text-base font-semibold text-white"
         >
           다시 불러오기 / Reload
         </button>

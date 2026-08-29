@@ -13,6 +13,19 @@ import { useRuralPrograms, useUserArea, useWeather } from '../hooks/useRegionalI
  * 🌾 농사 도움 목록(PRD v1.7 §1·§2) — 비로그인 열람.
  * 로그인+작목 설정 시 내 작목 팁이 맨 위(훅에서 정렬).
  */
+// OpenWeather 아이콘 코드 → 이모지(글자 없이 이해되는 날씨 — DESIGN.md §7 다국적 직관성)
+const WEATHER_EMOJI: Record<string, string> = {
+  '01': '☀️',
+  '02': '🌤️',
+  '03': '⛅',
+  '04': '☁️',
+  '09': '🌧️',
+  '10': '🌦️',
+  '11': '⛈️',
+  '13': '❄️',
+  '50': '🌫️',
+}
+
 /**
  * 위치 기반 정보 묶음: ☀️ 오늘 날씨 + 🏫 우리 지역 교육·사업(농진청 실데이터).
  * 기본은 선택 지역(파일럿), "내 위치"로 전국 어디서든 자기 지역 정보(항목1).
@@ -44,19 +57,23 @@ function RegionalInfo() {
       {weather && area ? (
         <Card className="px-4 py-3">
           <p className="text-xs font-semibold text-gray-500">
-            ☀️ {t('farm.weatherTitle')}
+            {t('farm.weatherTitle')}
             {area.sigungu ? ` · ${area.sigungu}` : weather.name ? ` · ${weather.name}` : ''}
           </p>
-          <p className="mt-1 text-2xl font-bold text-gray-900">
-            {weather.tempC != null ? `${weather.tempC}°C` : '—'}
-            <span className="ml-2 text-sm font-normal text-gray-600">
-              {weather.desc ?? ''}
+          <div className="mt-1 flex items-center gap-3">
+            <span aria-hidden className="text-4xl leading-none">
+              {WEATHER_EMOJI[weather.icon?.slice(0, 2) ?? ''] ?? '🌡️'}
             </span>
-          </p>
-          <p className="mt-0.5 text-xs text-gray-500">
-            {t('farm.weatherFeels')} {weather.feelsC != null ? `${weather.feelsC}°C` : '—'} ·{' '}
-            {t('farm.weatherHumidity')} {weather.humidity != null ? `${weather.humidity}%` : '—'}
-          </p>
+            <div>
+              <p className="text-3xl font-extrabold tracking-tight text-gray-900">
+                {weather.tempC != null ? `${weather.tempC}°` : '—'}
+              </p>
+              <p className="text-xs text-gray-500">
+                {t('farm.weatherFeels')} {weather.feelsC != null ? `${weather.feelsC}°` : '—'} ·{' '}
+                {t('farm.weatherHumidity')} {weather.humidity != null ? `${weather.humidity}%` : '—'}
+              </p>
+            </div>
+          </div>
         </Card>
       ) : null}
 
@@ -102,7 +119,7 @@ export function FarmTips() {
 
   return (
     <section>
-      <h1 className="mb-1 text-lg font-bold">🌾 {t('farm.title')}</h1>
+      <h1 className="mb-1 text-xl font-extrabold tracking-tight">🌾 {t('farm.title')}</h1>
       <p className="mb-4 text-xs text-gray-500">{t('farm.subtitle')}</p>
 
       {/* 위치 기반 실시간 정보(PRD v1.7 항목1·2·3) — 비로그인, 전국 대응 */}

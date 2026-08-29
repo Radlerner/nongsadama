@@ -18,7 +18,7 @@ export default {
         },
       },
       borderRadius: {
-        card: '0.75rem', // 카드 통일 라운드(v0)
+        card: '1rem', // 카드 통일 라운드(v1: 12→16px — 손글씨 안내판의 부드러움, DESIGN.md §4)
       },
       boxShadow: {
         card: '0 1px 3px rgba(0,0,0,0.06)',

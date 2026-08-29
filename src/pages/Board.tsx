@@ -52,10 +52,10 @@ export function Board() {
   return (
     <section>
       <div className="mb-4 flex items-center justify-between">
-        <h1 className="text-lg font-bold">{t('board.title')}</h1>
+        <h1 className="text-xl font-extrabold tracking-tight">{t('board.title')}</h1>
         <Link
           to={user ? '/board/new' : '/login'}
-          className="inline-flex min-h-[44px] items-center rounded-md bg-brand-greenDark px-4 text-sm font-semibold text-white"
+          className="inline-flex min-h-[44px] items-center rounded-full bg-brand-greenDark px-4 text-sm font-semibold text-white"
         >
           {t('board.write')}
         </Link>

@@ -65,7 +65,7 @@ export function LifeInfo() {
 
   return (
     <section>
-      <h1 className="mb-4 text-lg font-bold">{t('lifeInfo.title')}</h1>
+      <h1 className="mb-4 text-xl font-extrabold tracking-tight">{t('lifeInfo.title')}</h1>
 
       <div className="mb-4 flex flex-wrap gap-2">
         {FILTERS.map((c) => {
@@ -80,7 +80,7 @@ export function LifeInfo() {
                 'inline-flex min-h-[44px] items-center rounded-full border px-4 text-sm',
                 active
                   ? 'border-green-700 bg-brand-greenDark font-semibold text-white'
-                  : 'border-gray-300 text-gray-700',
+                  : 'border-gray-300 bg-white text-gray-700',
               ].join(' ')}
             >
               {c === 'all' ? t('lifeInfo.category.all') : (

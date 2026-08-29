@@ -18,7 +18,7 @@ export function LifeInfoDetail() {
 
   if (isLoading) {
     return (
-      <p className="rounded-md bg-gray-50 px-4 py-8 text-center text-sm text-gray-500">
+      <p className="rounded-card bg-white/70 px-4 py-8 text-center text-sm text-gray-500">
         {t('lifeInfo.loading')}
       </p>
     )
@@ -26,13 +26,13 @@ export function LifeInfoDetail() {
 
   if (isError) {
     return (
-      <div className="rounded-md bg-red-50 px-4 py-8 text-center text-sm text-red-700">
+      <div className="rounded-card bg-red-50 px-4 py-8 text-center text-sm text-red-700">
         <p className="mb-3">{t('lifeInfo.error')}</p>
         <button
           type="button"
           onClick={() => void refetch()}
           disabled={isFetching}
-          className="min-h-[44px] rounded-md border border-red-300 px-4 text-red-700 disabled:opacity-50"
+          className="min-h-[44px] rounded-full border border-red-300 px-4 text-red-700 disabled:opacity-50"
         >
           {t('common.retry')}
         </button>
@@ -43,7 +43,7 @@ export function LifeInfoDetail() {
   if (!item) {
     return (
       <div className="text-center">
-        <p className="rounded-md bg-gray-50 px-4 py-8 text-sm text-gray-500">
+        <p className="rounded-card bg-white/70 px-4 py-8 text-sm text-gray-500">
           {t('lifeInfoDetail.empty')}
         </p>
         <Link to="/life-info" className="mt-4 inline-block text-green-700 underline">
@@ -61,7 +61,7 @@ export function LifeInfoDetail() {
     <article className="flex flex-col gap-4">
       <header>
         <div className="flex items-start justify-between gap-2">
-          <h1 className="text-lg font-bold text-gray-900">{name || t('lifeInfo.untitled')}</h1>
+          <h1 className="text-xl font-extrabold tracking-tight text-gray-900">{name || t('lifeInfo.untitled')}</h1>
           {isTtsAvailable() ? (
             <button
               type="button"
@@ -112,7 +112,7 @@ export function LifeInfoDetail() {
         {item.phone ? (
           <a
             href={`tel:${item.phone}`}
-            className="flex min-h-[56px] items-center justify-center gap-2 rounded-md bg-brand-greenDark px-6 text-base font-bold text-white"
+            className="flex min-h-[56px] items-center justify-center gap-2 rounded-full bg-brand-greenDark px-6 text-base font-bold text-white"
           >
             <span aria-hidden className="text-xl">☎</span>
             {t('lifeInfoDetail.call')} {item.phone}

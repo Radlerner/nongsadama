@@ -26,7 +26,7 @@ export function Neighbors() {
 
   if (initializing || (user && profileLoading)) {
     return (
-      <p className="rounded-md bg-gray-50 px-4 py-8 text-center text-sm text-gray-500">
+      <p className="rounded-card bg-white/70 px-4 py-8 text-center text-sm text-gray-500">
         {t('neighbors.loading')}
       </p>
     )
@@ -35,13 +35,13 @@ export function Neighbors() {
   if (!user) {
     return (
       <section>
-        <h1 className="mb-4 text-lg font-bold">{t('neighbors.title')}</h1>
-        <p className="mb-4 rounded-md bg-gray-50 px-4 py-8 text-center text-sm text-gray-500">
+        <h1 className="mb-4 text-xl font-extrabold tracking-tight">{t('neighbors.title')}</h1>
+        <p className="mb-4 rounded-card bg-white/70 px-4 py-8 text-center text-sm text-gray-500">
           {t('neighbors.loginRequired')}
         </p>
         <Link
           to="/login"
-          className="flex min-h-[44px] items-center justify-center rounded-md bg-brand-greenDark px-6 py-3 text-base font-semibold text-white"
+          className="flex min-h-[44px] items-center justify-center rounded-full bg-brand-greenDark px-6 py-3 text-base font-semibold text-white"
         >
           {t('profile.loginCta')}
         </Link>
@@ -52,13 +52,13 @@ export function Neighbors() {
   if (!optedIn) {
     return (
       <section>
-        <h1 className="mb-4 text-lg font-bold">{t('neighbors.title')}</h1>
+        <h1 className="mb-4 text-xl font-extrabold tracking-tight">{t('neighbors.title')}</h1>
         <div className="rounded-card border border-gray-100 bg-white shadow-card px-4 py-6 text-center">
           <p className="text-sm text-gray-700">{t('neighbors.consentRequired')}</p>
           <p className="mt-2 text-xs text-gray-500">{t('neighbors.consentWhy')}</p>
           <Link
             to="/profile/edit"
-            className="mt-4 inline-flex min-h-[44px] items-center justify-center rounded-md bg-brand-greenDark px-6 py-3 text-base font-semibold text-white"
+            className="mt-4 inline-flex min-h-[44px] items-center justify-center rounded-full bg-brand-greenDark px-6 py-3 text-base font-semibold text-white"
           >
             {t('neighbors.consentCta')}
           </Link>
@@ -84,7 +84,7 @@ export function Neighbors() {
 
   return (
     <section>
-      <h1 className="mb-4 text-lg font-bold">{t('neighbors.title')}</h1>
+      <h1 className="mb-4 text-xl font-extrabold tracking-tight">{t('neighbors.title')}</h1>
 
       {isLoading ? (
         <LoadingBox text={t('neighbors.loading')} />

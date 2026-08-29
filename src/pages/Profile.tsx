@@ -36,7 +36,7 @@ export function Profile() {
 
   if (initializing) {
     return (
-      <p className="rounded-md bg-gray-50 px-4 py-8 text-center text-sm text-gray-500">
+      <p className="rounded-card bg-white/70 px-4 py-8 text-center text-sm text-gray-500">
         {t('profile.loading')}
       </p>
     )
@@ -45,13 +45,13 @@ export function Profile() {
   if (!user) {
     return (
       <section>
-        <h1 className="mb-4 text-lg font-bold">{t('profile.title')}</h1>
-        <p className="mb-4 rounded-md bg-gray-50 px-4 py-8 text-center text-sm text-gray-500">
+        <h1 className="mb-4 text-xl font-extrabold tracking-tight">{t('profile.title')}</h1>
+        <p className="mb-4 rounded-card bg-white/70 px-4 py-8 text-center text-sm text-gray-500">
           {t('profile.empty')}
         </p>
         <Link
           to="/login"
-          className="flex min-h-[44px] items-center justify-center rounded-md bg-brand-greenDark px-6 py-3 text-base font-semibold text-white"
+          className="flex min-h-[44px] items-center justify-center rounded-full bg-brand-greenDark px-6 py-3 text-base font-semibold text-white"
         >
           {t('profile.loginCta')}
         </Link>
@@ -65,10 +65,10 @@ export function Profile() {
 
   return (
     <section>
-      <h1 className="mb-4 text-lg font-bold">{t('profile.title')}</h1>
+      <h1 className="mb-4 text-xl font-extrabold tracking-tight">{t('profile.title')}</h1>
 
       {isLoading ? (
-        <p className="rounded-md bg-gray-50 px-4 py-8 text-center text-sm text-gray-500">
+        <p className="rounded-card bg-white/70 px-4 py-8 text-center text-sm text-gray-500">
           {t('profile.loading')}
         </p>
       ) : (
@@ -98,7 +98,7 @@ export function Profile() {
 
       <Link
         to="/profile/edit"
-        className="mt-4 flex min-h-[44px] items-center justify-center rounded-md bg-brand-greenDark px-6 py-3 text-base font-semibold text-white"
+        className="mt-4 flex min-h-[44px] items-center justify-center rounded-full bg-brand-greenDark px-6 py-3 text-base font-semibold text-white"
       >
         {t('profile.editCta')}
       </Link>
@@ -106,7 +106,7 @@ export function Profile() {
       <button
         type="button"
         onClick={() => void signOut()}
-        className="mt-3 min-h-[44px] w-full rounded-md border border-gray-300 px-6 py-3 text-base text-gray-700"
+        className="mt-3 min-h-[44px] w-full rounded-full border border-gray-300 px-6 py-3 text-base text-gray-700"
       >
         {t('profile.logout')}
       </button>
@@ -120,7 +120,7 @@ export function Profile() {
               type="button"
               disabled={deleting}
               onClick={() => void onDeleteAccount()}
-              className="min-h-[44px] flex-1 rounded-md bg-red-600 text-sm font-semibold text-white disabled:opacity-50"
+              className="min-h-[44px] flex-1 rounded-full bg-red-600 text-sm font-semibold text-white disabled:opacity-50"
             >
               {deleting ? t('auth.loading') : t('profile.deleteAccountConfirm')}
             </button>
@@ -128,7 +128,7 @@ export function Profile() {
               type="button"
               disabled={deleting}
               onClick={() => setConfirmingDelete(false)}
-              className="min-h-[44px] flex-1 rounded-md border border-gray-300 text-sm text-gray-700 disabled:opacity-50"
+              className="min-h-[44px] flex-1 rounded-full border border-gray-300 text-sm text-gray-700 disabled:opacity-50"
             >
               {t('postDetail.deleteCancel')}
             </button>
@@ -137,7 +137,7 @@ export function Profile() {
           <button
             type="button"
             onClick={() => setConfirmingDelete(true)}
-            className="mt-2 min-h-[44px] w-full rounded-md border border-red-300 text-sm font-semibold text-red-700"
+            className="mt-2 min-h-[44px] w-full rounded-full border border-red-300 text-sm font-semibold text-red-700"
           >
             {t('profile.deleteAccount')}
           </button>

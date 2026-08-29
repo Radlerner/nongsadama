@@ -34,7 +34,7 @@ export function Select() {
                     'flex min-h-[44px] w-full items-center rounded-md border px-4 text-left text-base',
                     active
                       ? 'border-green-700 bg-green-50 font-semibold text-green-700'
-                      : 'border-gray-300 text-gray-700',
+                      : 'border-gray-300 bg-white text-gray-700',
                   ].join(' ')}
                 >
                   {getLocaleLabel(code)}
@@ -53,7 +53,7 @@ export function Select() {
       <div className="mt-auto pt-8">
         <Link
           to="/home"
-          className="flex min-h-[56px] items-center justify-center rounded-md bg-brand-greenDark px-6 py-3 text-base font-semibold text-white"
+          className="flex min-h-[56px] items-center justify-center rounded-full bg-brand-greenDark px-6 py-3 text-base font-semibold text-white"
         >
           {t('select.continue')}
         </Link>
@@ -112,7 +112,7 @@ function RegionPicker() {
           type="button"
           onClick={() => void refetch()}
           disabled={isFetching}
-          className="min-h-[44px] rounded-md border border-red-300 px-4 text-red-700 disabled:opacity-50"
+          className="min-h-[44px] rounded-full border border-red-300 px-4 text-red-700 disabled:opacity-50"
         >
           {t('common.retry')}
         </button>
@@ -158,7 +158,7 @@ function RegionPicker() {
             'flex min-h-[44px] w-full items-center rounded-md border px-4 text-left text-base',
             active
               ? 'border-green-700 bg-green-50 font-semibold text-green-700'
-              : 'border-gray-300 text-gray-700',
+              : 'border-gray-300 bg-white text-gray-700',
           ].join(' ')}
         >
           {active ? <span aria-hidden className="mr-2">✓</span> : null}

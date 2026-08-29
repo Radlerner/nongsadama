@@ -58,12 +58,25 @@ export function BottomNav() {
                 className={({ isActive }) =>
                   [
                     'flex h-14 min-h-[44px] flex-col items-center justify-center text-[11px] leading-tight',
-                    isActive ? 'font-semibold text-green-700' : 'text-gray-500',
+                    isActive ? 'font-semibold text-green-800' : 'text-gray-500',
                   ].join(' ')
                 }
               >
-                <span aria-hidden className="text-lg">{item.icon}</span>
-                {t(item.labelKey)}
+                {({ isActive }) => (
+                  <>
+                    {/* 활성 = 연초록 알약(현재 위치가 글자 없이도 보임 — DESIGN.md §4) */}
+                    <span
+                      aria-hidden
+                      className={[
+                        'text-lg leading-6',
+                        isActive ? 'rounded-full bg-green-100 px-4' : 'px-4',
+                      ].join(' ')}
+                    >
+                      {item.icon}
+                    </span>
+                    {t(item.labelKey)}
+                  </>
+                )}
               </NavLink>
             )}
           </li>

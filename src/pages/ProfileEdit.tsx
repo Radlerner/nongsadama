@@ -58,7 +58,7 @@ export function ProfileEdit() {
 
   if (initializing || (user && isLoading)) {
     return (
-      <p className="rounded-md bg-gray-50 px-4 py-8 text-center text-sm text-gray-500">
+      <p className="rounded-card bg-white/70 px-4 py-8 text-center text-sm text-gray-500">
         {t('profile.loading')}
       </p>
     )
@@ -67,7 +67,7 @@ export function ProfileEdit() {
   if (!user) {
     return (
       <section className="text-center">
-        <p className="mb-4 rounded-md bg-gray-50 px-4 py-8 text-sm text-gray-500">
+        <p className="mb-4 rounded-card bg-white/70 px-4 py-8 text-sm text-gray-500">
           {t('profile.empty')}
         </p>
         <Link to="/login" className="text-green-700 underline">
@@ -114,7 +114,7 @@ export function ProfileEdit() {
 
   return (
     <section>
-      <h1 className="mb-4 text-lg font-bold">{t('profileEdit.title')}</h1>
+      <h1 className="mb-4 text-xl font-extrabold tracking-tight">{t('profileEdit.title')}</h1>
 
       <form onSubmit={(e) => void onSubmit(e)} className="flex flex-col gap-4" noValidate>
         <label className="flex flex-col gap-1 text-sm font-semibold text-gray-700">
@@ -198,7 +198,7 @@ export function ProfileEdit() {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="min-h-[44px] rounded-md bg-brand-greenDark px-6 py-3 text-base font-semibold text-white disabled:opacity-50"
+          className="min-h-[44px] rounded-full bg-brand-greenDark px-6 py-3 text-base font-semibold text-white disabled:opacity-50"
         >
           {isSubmitting ? t('auth.loading') : t('profileEdit.save')}
         </button>

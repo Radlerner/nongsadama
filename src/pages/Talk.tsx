@@ -58,7 +58,7 @@ export function Talk() {
   return (
     <section className="flex flex-col gap-4">
       <div className="flex items-center justify-between gap-2">
-        <h1 className="text-lg font-bold">{t('talk.title')}</h1>
+        <h1 className="text-xl font-extrabold tracking-tight">{t('talk.title')}</h1>
         {isTtsAvailable() ? (
           <button
             type="button"
@@ -78,7 +78,7 @@ export function Talk() {
             type="button"
             onClick={() => (noticeAccepted ? void startListening() : setShowMicNotice(true))}
             disabled={listening}
-            className="flex min-h-[64px] w-full items-center justify-center gap-3 rounded-md bg-brand-greenDark text-lg font-bold text-white disabled:opacity-60"
+            className="flex min-h-[64px] w-full items-center justify-center gap-3 rounded-full bg-brand-greenDark text-xl font-extrabold tracking-tight text-white disabled:opacity-60"
           >
             <span aria-hidden className="text-2xl">🎤</span>
             {listening ? t('talk.listening') : t('talk.micButton')}
@@ -91,14 +91,14 @@ export function Talk() {
                 <button
                   type="button"
                   onClick={() => void startListening()}
-                  className="min-h-[44px] flex-1 rounded-md bg-brand-greenDark font-semibold text-white"
+                  className="min-h-[44px] flex-1 rounded-full bg-brand-greenDark font-semibold text-white"
                 >
                   {t('talk.micAgree')}
                 </button>
                 <button
                   type="button"
                   onClick={() => setShowMicNotice(false)}
-                  className="min-h-[44px] flex-1 rounded-md border border-gray-300 text-gray-700"
+                  className="min-h-[44px] flex-1 rounded-full border border-gray-300 text-gray-700"
                 >
                   {t('talk.micCancel')}
                 </button>

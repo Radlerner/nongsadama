@@ -12,7 +12,7 @@ export function FarmTipDetail() {
 
   if (isLoading) {
     return (
-      <p className="rounded-md bg-gray-50 px-4 py-8 text-center text-sm text-gray-500">
+      <p className="rounded-card bg-white/70 px-4 py-8 text-center text-sm text-gray-500">
         {t('farm.loading')}
       </p>
     )
@@ -21,13 +21,13 @@ export function FarmTipDetail() {
   // 무언 실패 금지(재검수 P1-2): 네트워크 오류를 "정보 없음"으로 오표시하지 않는다.
   if (isError) {
     return (
-      <div className="rounded-md bg-red-50 px-4 py-8 text-center text-sm text-red-700">
+      <div className="rounded-card bg-red-50 px-4 py-8 text-center text-sm text-red-700">
         <p className="mb-3">{t('farm.error')}</p>
         <button
           type="button"
           onClick={() => void refetch()}
           disabled={isFetching}
-          className="min-h-[44px] rounded-md border border-red-300 px-4 text-red-700 disabled:opacity-50"
+          className="min-h-[44px] rounded-full border border-red-300 px-4 text-red-700 disabled:opacity-50"
         >
           {t('common.retry')}
         </button>
@@ -37,7 +37,7 @@ export function FarmTipDetail() {
   if (!tip) {
     return (
       <div className="text-center">
-        <p className="rounded-md bg-gray-50 px-4 py-8 text-sm text-gray-500">{t('farm.empty')}</p>
+        <p className="rounded-card bg-white/70 px-4 py-8 text-sm text-gray-500">{t('farm.empty')}</p>
         <Link to="/farm" className="mt-4 inline-block text-green-700 underline">
           {t('farm.back')}
         </Link>
@@ -50,7 +50,7 @@ export function FarmTipDetail() {
   return (
     <article className="flex flex-col gap-4">
       <header>
-        <h1 className="text-lg font-bold text-gray-900">{c.name}</h1>
+        <h1 className="text-xl font-extrabold tracking-tight text-gray-900">{c.name}</h1>
         {tip.crop_type ? (
           <span className="mt-1 inline-block rounded-full bg-green-50 px-2 py-0.5 text-[11px] font-medium text-green-800">
             {tip.crop_type}
