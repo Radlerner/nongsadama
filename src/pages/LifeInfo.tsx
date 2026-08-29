@@ -7,8 +7,10 @@ import { useLifeInfoList, type LifeInfo as LifeInfoRow } from '../hooks/useLifeI
 import {
   LIFE_INFO_CATEGORIES,
   LIFE_INFO_CATEGORY_ICONS,
+  LIFE_INFO_CATEGORY_TINTS,
   categoryLabelKey,
 } from '../lib/categories'
+import { IconTile } from '../components/ui/IconTile'
 import { localizedContent } from '../lib/localizedContent'
 import { regionLabel } from '../lib/regionName'
 import { FreshnessBadge } from '../components/FreshnessBadge'
@@ -131,7 +133,12 @@ function LifeInfoCard({ item, regionName }: { item: LifeInfoRow; regionName: str
   const { name } = localizedContent(item.localized_content, locale)
   return (
     <li>
-      <CardLink to={`/life-info/${item.id}`} className="px-4 py-3">
+      <CardLink to={`/life-info/${item.id}`} className="flex items-center gap-3 px-4 py-3">
+        <IconTile
+          emoji={LIFE_INFO_CATEGORY_ICONS[item.category] ?? 'ℹ️'}
+          tint={(LIFE_INFO_CATEGORY_TINTS[item.category] ?? { bg: 'bg-gray-100' }).bg}
+        />
+        <div className="min-w-0 flex-1">
         <p className="font-semibold text-gray-900">{name || t('lifeInfo.untitled')}</p>
         <p className="mt-1 flex flex-wrap items-center gap-2 text-xs text-gray-500">
           <span>
@@ -143,6 +150,7 @@ function LifeInfoCard({ item, regionName }: { item: LifeInfoRow; regionName: str
             staleAfterMonths={item.category === 'support' ? STALE_AFTER_MONTHS_SUPPORT : undefined}
           />
         </p>
+        </div>
       </CardLink>
     </li>
   )

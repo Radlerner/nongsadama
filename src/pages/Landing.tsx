@@ -37,10 +37,10 @@ export function Landing() {
           src={`${import.meta.env.BASE_URL}icons/icon-192.png`}
           alt=""
           aria-hidden
-          className="h-24 w-24 rounded-card shadow-card"
+          className="h-28 w-28 rounded-card shadow-card"
         />
         <div>
-          <h1 className="text-2xl font-extrabold tracking-tight text-green-700">{t('landing.title')}</h1>
+          <h1 className="text-3xl font-extrabold tracking-tight text-green-800">{t('landing.title')}</h1>
           <p className="mt-2 text-sm text-gray-600">{t('landing.subtitle')}</p>
         </div>
         <Link

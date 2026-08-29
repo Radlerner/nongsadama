@@ -123,7 +123,7 @@ export function Talk() {
             key={opt.labelKey}
             type="button"
             onClick={opt.go}
-            className={`flex min-h-[72px] items-center gap-4 rounded-xl border-2 px-4 text-left ${opt.color}`}
+            className={`flex min-h-[72px] items-center gap-4 rounded-card border-2 px-4 text-left ${opt.color}`}
           >
             <span aria-hidden className="text-3xl">{opt.icon}</span>
             <span>

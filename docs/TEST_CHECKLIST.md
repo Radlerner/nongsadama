@@ -428,3 +428,11 @@ Supabase 프로젝트 **nongsadama**(`ikusdwursvbdrznbcjtw`, ap-northeast-2)에 
 - P2 반영: 카카오 버튼 알약, 잔존 gray-50 박스 white/80+border 이관(야외 대비 강화),
   자체 레이아웃 제목 extrabold, report.done·consentWhy 카피 손질, Card 주석 갱신.
 - 후속: Talk 4택 색상 §2 등재 판단, PagePlaceholder 삭제 후보, landing.subtitle en 대응.
+
+## 디자인 v1.5 — 아이콘 타일 시스템 (2026-08-29, 로컬 레퍼런스 정독 기반)
+- awesome-design-md-main(airbnb 실파일: ink #222·48px 버튼·라운드 카드·단일 브랜드색) 정독 반영.
+- IconTile 신설: 이모지→틴트 rounded-2xl 타일(카테고리 식별색 6종 — 색+그림 이중 부호화).
+  적용: 홈 필터(타일 행+활성 ring)·생활정보 카드·농사 진입. Talk 4택 색은 §2 등재로 정식화.
+- 랜딩 히어로 확대(로고 112px·타이틀 30px). 스크린샷 실측: 홈·생활정보 완전 전환 확인.
+- 캐시 강제 갱신: SW nongsadama-v2·파비콘 ?v=2 (라이브 CSS에 v1 토큰 실재 확인 —
+  "안 보임" 원인은 클라이언트 캐시로 진단).

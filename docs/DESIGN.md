@@ -22,6 +22,7 @@ Google Stitch DESIGN.md 형식(9섹션). AI 에이전트·디자이너·피그�
 | 보조 초록(칩·강조) | green-50/green-800 | — | 정보 강조·활성 상태 |
 | 경고/위험 | amber-50/red-600 | — | 안전 문구·삭제·차단 전용 |
 | 장식(로고 세계관) | brand-purple/orange | #7b7fc7/#c9812e | 일러스트·포인트 도트만. 버튼 금지 |
+| **카테고리 식별 틴트** | rose/amber/sky/violet/green/gray-50 | categories.ts | **아이콘 타일·Talk 4택 전용** — 색+그림 이중 부호화(글 없이 종류 구분). 버튼·배경 금지 |
 | 카카오 | #FEE500/#191919 | — | 카카오 버튼 전용(브랜드 가이드) |
 
 ## 3. 타이포그래피
@@ -43,6 +44,7 @@ Google Stitch DESIGN.md 형식(9섹션). AI 에이전트·디자이너·피그�
 | 위험 버튼 | rounded-full·red-600(확정) / red-300 테두리(진입) | 2단계 확인 필수 |
 | 칩(필터) | rounded-full, 활성=greenDark+white / 비활성=white+gray-300 테두리 | — |
 | 상태 박스 | LoadingBox·EmptyBox(white/80+border-black/5)·ErrorBox(red-50, 재시도 필수) | — |
+| `IconTile` | **이모지를 틴트 rounded-2xl 사각(40/48px)에** — 맨몸 이모지 금지(목록·필터·진입 카드) | 활성: ring-2 green-700 |
 | 하단 탭 | 활성 = **연초록 알약 배경**(현재 위치가 그림으로 보임) | — |
 
 ## 5. 레이아웃

@@ -9,11 +9,13 @@ import { useLifeInfoList, type LifeInfo } from '../hooks/useLifeInfo'
 import {
   LIFE_INFO_CATEGORIES,
   LIFE_INFO_CATEGORY_ICONS,
+  LIFE_INFO_CATEGORY_TINTS,
   categoryLabelKey,
 } from '../lib/categories'
 import { localizedContent } from '../lib/localizedContent'
 import { regionLabel } from '../lib/regionName'
 import { FreshnessBadge } from '../components/FreshnessBadge'
+import { IconTile } from '../components/ui/IconTile'
 import { ShareButtons } from '../components/ShareButtons'
 import { STALE_AFTER_MONTHS_SUPPORT } from '../lib/freshness'
 import { getCurrentPosition, nearestTown, OUT_OF_AREA_KM } from '../lib/geo'
@@ -260,9 +262,14 @@ export default function MapHome() {
 
   return (
     <section className="flex flex-col gap-3">
-      <div className="flex gap-2 overflow-x-auto pb-1">
+      {/* 카테고리 = 아이콘 타일 행(디자인 v1.5) — 색+그림 이중 부호화, 글 없이도 구분 */}
+      <div className="flex gap-3 overflow-x-auto pb-1">
         {FILTERS.map((c) => {
           const active = category === c
+          const tint =
+            c === 'all'
+              ? { bg: 'bg-white', text: 'text-gray-700' }
+              : (LIFE_INFO_CATEGORY_TINTS[c] ?? { bg: 'bg-gray-100', text: 'text-gray-600' })
           return (
             <button
               key={c}
@@ -272,21 +279,26 @@ export default function MapHome() {
                 setSheet(null)
               }}
               aria-pressed={active}
-              className={[
-                'inline-flex min-h-[44px] shrink-0 items-center rounded-full border px-3 text-sm',
-                active
-                  ? 'border-green-700 bg-brand-greenDark font-semibold text-white'
-                  : 'border-gray-300 bg-white text-gray-700',
-              ].join(' ')}
+              className="flex min-w-[56px] shrink-0 flex-col items-center gap-1"
             >
-              {c === 'all' ? (
-                t('lifeInfo.category.all')
-              ) : (
-                <>
-                  <span aria-hidden className="mr-1">{LIFE_INFO_CATEGORY_ICONS[c]}</span>
-                  {t(categoryLabelKey(c))}
-                </>
-              )}
+              <span
+                aria-hidden
+                className={[
+                  'flex h-12 w-12 items-center justify-center rounded-2xl text-2xl transition-shadow',
+                  tint.bg,
+                  active ? 'ring-2 ring-green-700 shadow-card' : 'border border-black/5',
+                ].join(' ')}
+              >
+                {c === 'all' ? '🗂️' : LIFE_INFO_CATEGORY_ICONS[c]}
+              </span>
+              <span
+                className={[
+                  'text-[11px] leading-tight',
+                  active ? 'font-bold text-green-800' : 'text-gray-600',
+                ].join(' ')}
+              >
+                {c === 'all' ? t('lifeInfo.category.all') : t(categoryLabelKey(c))}
+              </span>
             </button>
           )
         })}
@@ -395,9 +407,7 @@ export default function MapHome() {
         to="/farm"
         className="flex min-h-[56px] items-center gap-3 rounded-card border border-gray-100 bg-white px-4 shadow-card active:bg-gray-50"
       >
-        <span aria-hidden className="text-2xl">
-          🌾
-        </span>
+        <IconTile emoji="🌾" tint="bg-green-50" size="lg" />
         <span className="flex-1">
           <span className="block text-sm font-semibold text-gray-900">{t('farm.homeEntry')}</span>
           <span className="block text-xs text-gray-500">{t('farm.homeEntryDesc')}</span>

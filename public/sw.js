@@ -5,7 +5,7 @@
  * - 동일 출처 정적 자산(해시 파일명): cache-first (불변이므로 안전)
  * - 교차 출처(Supabase·지도 타일·분석)는 관여하지 않음(원본 동작 유지)
  */
-const CACHE = 'nongsadama-v1'
+const CACHE = 'nongsadama-v2' // 디자인 v1.5 강제 갱신
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
