@@ -460,3 +460,16 @@ Supabase 프로젝트 **nongsadama**(`ikusdwursvbdrznbcjtw`, ap-northeast-2)에 
 | 새로고침(신규 로드) 시 404 없음(dev) | ✅ |
 | 라이브 nongsadama.app/child-safety 200, workers.dev 200 | ✅ |
 | npm run build 성공, typecheck 0, sitemap 등재(라이브 확인) | ✅ |
+
+## 공개 법적 페이지 독립 재검수(2 워크플로, 208 에이전트) + 반영 (D-032)
+- P0 없음. 확정 16건(중복 포함) → 코드 반영 12건, 후속 1건(카카오 unlink — Admin 키 필요), 오너 작업 1건(키스토어 이동).
+| 검증 | 결과 |
+|---|---|
+| /delete-account(dev 익명): 'My Profile' 0건·'Sign in → Profile → Delete account' 일치, 10일 기한 ko/en, '7일/business' 0건, 시행일 2026-09-09, 카카오 '연결된 서비스 관리/Connected services' ko/en, section lang ko/en, 홈 링크 44px, mailto 2건 제목 통일, document.title = 페이지 제목 | ✅ |
+| /child-safety(dev 익명): LAST_UPDATED 2026-09-09, 연락처 블록 이메일 링크 높이 44px(문장 내 18px은 인라인 예외), section lang ko/en, 화살표 aria-hidden, document.title | ✅ |
+| /privacy(dev): 헤더 '시행일·최종 개정 + 일반 문의/개인정보·계정 삭제', §4 10일(시행령 §43), §5 dmkim@ 명시, §6 변경 이력, English summary 'Profile → Delete account → Permanently delete'·10 days, '영업일' 0건, 홈 링크 44px | ✅ |
+| 페이지 이탈 시 document.title 공통 제목 복원, 콘솔 오류 0 | ✅ |
+| 내 정보 삭제 실패 안내: ko/en 사전에 gmail 0건(패리티 0), dmkim@ 링크는 설정값에서 렌더 | ✅(코드·사전) |
+| Supabase 환경변수 없는 빌드에서 공개 페이지 렌더(isSupabaseConfigured 가드) | 코드 검토(런타임 미실측 — 라이브는 env 존재) |
+| .gitignore: `git check-ignore` → `.gitignore:39:*.jks nongsadama-release-key.jks`, `git log --all --diff-filter=A -- '*.jks' '*.keystore'` 0건 | ✅ |
+| typecheck 0 · i18n 패리티 0 · 빌드 성공 | ✅ |

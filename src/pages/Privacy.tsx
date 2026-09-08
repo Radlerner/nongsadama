@@ -1,16 +1,29 @@
 import { Link } from 'react-router-dom'
-import { deletionRequestEmail, operatorEmail } from '../config/app'
+import { deletionRequestEmail, deletionRequestMailto, operatorEmail } from '../config/app'
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
 
 /**
  * 개인정보처리방침(PRD v1.5 §10-J, Google Play 심사 필수 URL).
  * 법적 고지 문서로서 번역 오차 위험을 줄이기 위해 한국어 원문을 기준으로 두고
  * 하단에 영어 요약을 병기한다(i18n 사전 미사용 — 의도된 예외, D-020).
+ *
+ * 내용을 실질 변경하면 REVISED_DATE를 올리고 하단 변경 이력에 한 줄 더한다
+ * (개인정보 보호법 §30 — 변경 시 시행일·사유 공개, 재검수 D-032).
  */
+const EFFECTIVE_DATE = '2026-08-27'
+const REVISED_DATE = '2026-09-09'
+
 export function Privacy() {
+  useDocumentTitle('농사다마 개인정보처리방침 / NongsaDaMa Privacy Policy')
+
   return (
-    <div className="mx-auto max-w-screen-sm bg-white px-6 py-8 text-gray-900">
+    <div className="mx-auto min-h-screen max-w-screen-sm bg-white px-6 py-8 text-gray-900">
       <h1 className="text-xl font-bold text-green-700">농사다마 개인정보처리방침</h1>
-      <p className="mt-1 text-xs text-gray-500">시행일: 2026-08-27 · 문의: {operatorEmail}</p>
+      <p className="mt-1 text-xs text-gray-500">
+        시행일: {EFFECTIVE_DATE} · 최종 개정: {REVISED_DATE}
+        <br />
+        일반 문의: {operatorEmail} · 개인정보·계정 삭제: {deletionRequestEmail}
+      </p>
 
       <section className="mt-6 space-y-4 text-sm leading-relaxed">
         <div>
@@ -68,19 +81,21 @@ export function Privacy() {
             <strong>앱 안에서</strong>: 내 정보 → 계정 삭제 버튼으로 즉시 영구 삭제할 수 있습니다.
             <br />
             <strong>앱 밖에서(웹 요청)</strong>: 이메일{' '}
-            <a className="underline" href={`mailto:${deletionRequestEmail}?subject=${encodeURIComponent('[농사다마] 계정 삭제 요청')}`}>
+            <a className="underline" href={deletionRequestMailto}>
               {deletionRequestEmail}
             </a>
-            로 가입 이메일을 보내 요청하면 본인 확인 후 영업일 7일 이내에 삭제합니다. 자세한
-            절차는{' '}
+            로 가입 이메일을 보내 요청하면 본인 확인 후 요청일로부터 10일 이내(개인정보 보호법
+            시행령 제43조, 통상 3일 이내)에 삭제하고 결과를 회신합니다. 자세한 절차는{' '}
             <Link to="/delete-account" className="underline">
               계정 삭제 안내 페이지
             </Link>
             에 있습니다.
           </p>
           <p className="mt-2 text-gray-700">
-            <strong>삭제되는 데이터(전부)</strong>: 계정(이메일·비밀번호·카카오 연결 정보),
-            프로필(닉네임·언어·지역·국적·작목·공개 동의), 작성한 게시글 전체, 차단 목록.
+            <strong>삭제되는 데이터(전부)</strong>: 계정(이메일·비밀번호·카카오 연결 정보와 카카오가
+            전달한 닉네임·프로필 이미지 주소), 프로필(닉네임·언어·지역·국적·작목·공개 동의), 작성한
+            게시글 전체, 차단 목록. 카카오 계정 쪽 연결은 카카오톡 → 설정 → 카카오계정 → 연결된
+            서비스 관리에서 직접 해제할 수 있습니다.
             <br />
             <strong>일정 기간 보관될 수 있는 데이터</strong>: 관계 법령이 보관을 요구하는 정보(예:
             서비스 접속 기록)는 법정 기간 동안 분리 보관 후 파기합니다. 백업 사본은 최대 30일의
@@ -96,11 +111,24 @@ export function Privacy() {
           <h2 className="font-bold">5. 이용자 권리</h2>
           <p className="text-gray-700">
             언제든 프로필에서 국적·작목·이웃 공개 동의를 수정·철회할 수 있습니다. 열람·정정·삭제
-            요청은 위 이메일로 연락 주시면 처리합니다.
+            요청은 {deletionRequestEmail}로 연락 주시면 요청일로부터 10일 이내에 처리하고 결과를
+            알려 드립니다. 그 밖의 문의는 {operatorEmail}로 보내 주세요.
           </p>
         </div>
 
-        <div className="rounded-card bg-white/70 px-4 py-3">
+        <div>
+          <h2 className="font-bold">6. 변경 이력</h2>
+          <ul className="mt-1 list-disc pl-5 text-gray-700">
+            <li>{EFFECTIVE_DATE} 최초 시행</li>
+            <li>
+              {REVISED_DATE} §1 위치 정보 처리 방식(약 11km 반올림), §3 제3자(날씨 제공자·농촌진흥청
+              공공데이터·국외 호스팅), §4 계정 삭제 절차(전용 이메일·10일 기한·법정 보관 고지·카카오
+              연결 해제 안내), §5 문의처 개정
+            </li>
+          </ul>
+        </div>
+
+        <div lang="en" className="rounded-card bg-white/70 px-4 py-3">
           <h2 className="font-bold">English summary</h2>
           <p className="mt-1 text-gray-700">
             NongsaDama collects: email, nickname, optional language/town-level region/nationality
@@ -109,18 +137,22 @@ export function Privacy() {
             parties: Supabase (Seoul), Kakao, OpenStreetMap, Google Analytics 4, Microsoft
             Clarity, AddToAny, and your browser vendor for voice input. Hosting and analytics run
             on overseas servers (US); account and post data are stored in Supabase&apos;s Seoul
-            region. Delete your account anytime in Profile → Delete account — this permanently
-            removes your account, profile and all posts — or request deletion by email:{' '}
-            {deletionRequestEmail} (see /delete-account). Data that laws require us to keep is
-            retained separately for the legal period only; backup copies are removed within 30
-            days. You can change or withdraw optional fields and neighbor-visibility consent
-            anytime in your profile.
+            region. Delete your account anytime in Profile → Delete account → Permanently delete —
+            this permanently removes your account, profile and all posts — or request deletion by
+            email: {deletionRequestEmail} (see /delete-account); we act within 10 days of your
+            request. Data that laws require us to keep is retained separately for the legal period
+            only; backup copies are removed within 30 days. You can change or withdraw optional
+            fields and neighbor-visibility consent anytime in your profile. Effective{' '}
+            {EFFECTIVE_DATE}, last revised {REVISED_DATE}.
           </p>
         </div>
       </section>
 
-      <Link to="/" className="mt-8 inline-block text-sm text-green-700 underline">
-        ← 홈으로 / Back to home
+      <Link
+        to="/"
+        className="mt-8 inline-flex min-h-[44px] items-center text-sm text-green-700 underline"
+      >
+        <span aria-hidden="true">← </span>홈으로 / Back to home
       </Link>
     </div>
   )

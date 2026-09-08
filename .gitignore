@@ -33,3 +33,9 @@ yarn-error.log*
 /LICENSE
 /im-not-ai-main/
 /im-not-ai-main.zip
+
+# Android 릴리스 서명 키·서명 설정 — 공개 저장소이므로 절대 커밋 금지(D-032).
+# 키 파일은 저장소 밖(예: %USERPROFILE%\.android\keys\)에 두고 keystore.properties/환경변수로 참조한다.
+*.jks
+*.keystore
+keystore.properties

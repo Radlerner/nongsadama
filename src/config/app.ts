@@ -44,8 +44,13 @@ export type OAuthProvider = (typeof oauthProviders)[number]
 /** 신고 접수용 운영자 연락처(설정값 — 코드 하드코딩 금지). */
 export const operatorEmail = 'casualpe@gmail.com'
 
-/** 계정 삭제 요청 전용 연락처(Google Play 계정 삭제 URL 제출용 — /delete-account, /privacy§4). */
+/** 계정 삭제 요청 전용 연락처(Google Play 계정 삭제 URL 제출용 — /delete-account, /privacy§4, 앱 내 실패 안내). */
 export const deletionRequestEmail = 'dmkim@nongsadama.app'
+
+/** 계정 삭제 요청 mailto 제목 — /delete-account·/privacy·Profile 세 곳이 같은 제목을 쓴다(D-032). */
+export const deletionRequestMailto = `mailto:${deletionRequestEmail}?subject=${encodeURIComponent(
+  '[NongsaDaMa] 계정 삭제 요청 / Account deletion request',
+)}`
 
 /** 아동 안전 신고·문의 연락처(Google Play 아동 안전 표준 제출용 — /child-safety). */
 export const childSafetyEmail = 'dmkim@nongsadama.app'

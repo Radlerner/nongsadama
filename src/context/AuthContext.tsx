@@ -10,7 +10,7 @@ import {
 } from 'react'
 import type { Session, User } from '@supabase/supabase-js'
 import { useQueryClient } from '@tanstack/react-query'
-import { getSupabaseClient } from '../lib/supabase'
+import { getSupabaseClient, isSupabaseConfigured } from '../lib/supabase'
 import type { OAuthProvider } from '../config/app'
 import { useTranslation } from '../i18n/useTranslation'
 import { useSelectedRegion } from '../context/SelectedRegionContext'
@@ -106,6 +106,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [queryClient])
 
   useEffect(() => {
+    // 환경변수 누락 빌드에서도 인증이 필요 없는 공개 페이지(/privacy·/delete-account·/child-safety)는
+    // ErrorBoundary로 떨어지지 않고 렌더돼야 한다(재검수 D-032). 데이터 화면은 호출 시점에 실패한다.
+    if (!isSupabaseConfigured) {
+      console.error('[nongsadama] Supabase 환경변수 없음 — 인증 초기화 생략(공개 페이지만 동작)')
+      setInitializing(false)
+      return
+    }
     const supabase = getSupabaseClient()
     let cancelled = false
 

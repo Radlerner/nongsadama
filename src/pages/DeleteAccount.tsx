@@ -1,26 +1,39 @@
 import { Link } from 'react-router-dom'
-import { deletionRequestEmail } from '../config/app'
+import { deletionRequestEmail, deletionRequestMailto } from '../config/app'
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
 
 /**
  * 계정 삭제 안내(Google Play 계정 삭제 URL 제출용 — 인증 없이 직접 접근 가능한 공개 페이지).
  * 법적 고지문 성격이라 i18n 사전 대신 한·영을 정적으로 병기한다(D-020·Privacy와 동일 원칙).
  * 라우트는 AppLayout 밖 독립 화면(로그인·지역 선택과 무관, 리다이렉트 없음).
+ *
+ * 문안을 고치면 EFFECTIVE_DATE도 같은 날짜로 올린다(재검수 D-032 — 게시일보다 앞선 날짜 금지).
+ * 처리 기한은 개인정보 보호법 시행령 제43조③(요구를 받은 날부터 10일 이내, 역일)을 따른다.
  */
+const EFFECTIVE_DATE = '2026-09-09'
+const PAGE_TITLE = 'NongsaDaMa 계정 삭제 안내 / Account Deletion'
+
+function EmailLink() {
+  return (
+    <a className="font-semibold text-green-800 underline" href={deletionRequestMailto}>
+      {deletionRequestEmail}
+    </a>
+  )
+}
+
 export function DeleteAccount() {
-  const mailto = `mailto:${deletionRequestEmail}?subject=${encodeURIComponent('[NongsaDaMa] 계정 삭제 요청 / Account deletion request')}`
+  useDocumentTitle(PAGE_TITLE)
 
   return (
-    <div className="mx-auto max-w-screen-sm bg-brand-cream px-6 py-8 text-gray-900">
-      <h1 className="text-xl font-extrabold tracking-tight text-green-800">
-        NongsaDaMa 계정 삭제 안내 / Account Deletion
-      </h1>
+    <div className="mx-auto min-h-screen max-w-screen-sm bg-brand-cream px-6 py-8 text-gray-900">
+      <h1 className="text-xl font-extrabold tracking-tight text-green-800">{PAGE_TITLE}</h1>
       <p className="mt-1 text-xs text-gray-500">
-        개발자/Developer: NongsaDaMa (농사다마) · 앱/App: 농사다마 NongsaDaMa · 시행일/Effective:
-        2026-08-29
+        개발자/Developer: NongsaDaMa (농사다마) · 앱/App: 농사다마 NongsaDaMa · 시행일/Effective:{' '}
+        {EFFECTIVE_DATE}
       </p>
 
       {/* ── 한국어 ── */}
-      <section className="mt-6 space-y-4 text-sm leading-relaxed">
+      <section lang="ko" className="mt-6 space-y-4 text-sm leading-relaxed">
         <h2 className="text-base font-extrabold tracking-tight">한국어</h2>
 
         <div className="rounded-card border border-gray-100 bg-white px-4 py-4 shadow-card">
@@ -32,12 +45,10 @@ export function DeleteAccount() {
               삭제되며 되돌릴 수 없어요.
             </li>
             <li>
-              <strong>이메일로(앱 밖에서)</strong>:{' '}
-              <a className="font-semibold text-green-800 underline" href={mailto}>
-                {deletionRequestEmail}
-              </a>
-              로 <strong>가입에 사용한 이메일 주소</strong>에서 "계정 삭제 요청"이라고 보내 주세요.
-              본인 확인 후 <strong>영업일 기준 7일 이내</strong>에 삭제하고 회신해 드려요.
+              <strong>이메일로(앱 밖에서)</strong>: <EmailLink />로{' '}
+              <strong>가입에 사용한 이메일 주소</strong>에서 "계정 삭제 요청"이라고 보내 주세요.
+              본인 확인 후 <strong>요청일로부터 10일 이내</strong>(개인정보 보호법 시행령 제43조)에
+              삭제하고 결과를 회신해 드려요. 보통은 3일 안에 처리해요.
             </li>
           </ol>
         </div>
@@ -45,7 +56,10 @@ export function DeleteAccount() {
         <div className="rounded-card border border-gray-100 bg-white px-4 py-4 shadow-card">
           <h3 className="font-bold">2. 삭제되는 데이터</h3>
           <ul className="mt-2 list-disc space-y-1 pl-5 text-gray-700">
-            <li>계정 정보: 이메일, 비밀번호(암호화 저장), 카카오 로그인 연결 정보</li>
+            <li>
+              계정 정보: 이메일, 비밀번호(암호화 저장), 카카오 로그인 연결 정보(카카오가 전달한
+              닉네임·프로필 이미지 주소 포함)
+            </li>
             <li>프로필: 닉네임, 언어, 지역(읍·면 단위), 국적 코드, 재배 작목, 이웃 공개 동의</li>
             <li>작성 콘텐츠: 내가 쓴 게시글 전체</li>
             <li>차단 목록, 신고 기록 중 내 계정에 연결된 부분</li>
@@ -53,6 +67,11 @@ export function DeleteAccount() {
           <p className="mt-2 text-gray-700">
             위 데이터는 삭제 즉시 서비스 데이터베이스에서 영구 삭제됩니다. 농사다마는 전화번호·정확한
             위치·실명·농장명을 애초에 수집하지 않습니다.
+          </p>
+          <p className="mt-2 text-gray-700">
+            카카오 간편로그인으로 가입했다면 농사다마에 저장된 연결 정보는 함께 삭제돼요. 카카오
+            계정 쪽 연결은 카카오톡 → 설정 → 카카오계정 → <strong>연결된 서비스 관리</strong>에서
+            직접 해제할 수 있어요.
           </p>
         </div>
 
@@ -79,24 +98,23 @@ export function DeleteAccount() {
       </section>
 
       {/* ── English ── */}
-      <section className="mt-8 space-y-4 text-sm leading-relaxed">
+      <section lang="en" className="mt-8 space-y-4 text-sm leading-relaxed">
         <h2 className="text-base font-extrabold tracking-tight">English</h2>
 
         <div className="rounded-card border border-gray-100 bg-white px-4 py-4 shadow-card">
           <h3 className="font-bold">1. How to request account deletion</h3>
           <ol className="mt-2 list-decimal space-y-2 pl-5 text-gray-700">
             <li>
-              <strong>In the app (immediate)</strong>: Sign in → <strong>My Profile</strong> →
+              <strong>In the app (immediate)</strong>: Sign in → <strong>Profile</strong> →
               <strong> Delete account</strong> → <strong>Permanently delete</strong>. Your account and
               data are deleted right away and cannot be recovered.
             </li>
             <li>
               <strong>By email (outside the app)</strong>: Send "Account deletion request" to{' '}
-              <a className="font-semibold text-green-800 underline" href={mailto}>
-                {deletionRequestEmail}
-              </a>{' '}
-              <strong>from the email address you signed up with</strong>. After verifying it is you,
-              we delete the account within <strong>7 business days</strong> and reply to confirm.
+              <EmailLink /> <strong>from the email address you signed up with</strong>. After
+              verifying it is you, we delete the account and reply{' '}
+              <strong>within 10 days of your request</strong> (usually within 3 days), as required by
+              Korean privacy law.
             </li>
           </ol>
         </div>
@@ -104,7 +122,10 @@ export function DeleteAccount() {
         <div className="rounded-card border border-gray-100 bg-white px-4 py-4 shadow-card">
           <h3 className="font-bold">2. Data that is deleted</h3>
           <ul className="mt-2 list-disc space-y-1 pl-5 text-gray-700">
-            <li>Account: email, password (stored encrypted), Kakao sign-in link</li>
+            <li>
+              Account: email, password (stored encrypted), Kakao sign-in link (including the
+              nickname and profile-image URL Kakao provided)
+            </li>
             <li>Profile: nickname, language, region (town level), nationality code, crop, neighbor-visibility consent</li>
             <li>Your content: all posts you wrote</li>
             <li>Your block list and the parts of report records tied to your account</li>
@@ -112,6 +133,11 @@ export function DeleteAccount() {
           <p className="mt-2 text-gray-700">
             This data is permanently removed from the service database at the time of deletion.
             NongsaDaMa never collects phone numbers, exact locations, real names, or farm names.
+          </p>
+          <p className="mt-2 text-gray-700">
+            If you signed up with Kakao, the link stored by NongsaDaMa is deleted as well. You can
+            also remove NongsaDaMa on the Kakao side under KakaoTalk → Settings → Kakao Account →{' '}
+            <strong>Connected services</strong>.
           </p>
         </div>
 
@@ -138,8 +164,11 @@ export function DeleteAccount() {
         </p>
       </section>
 
-      <Link to="/" className="mt-8 inline-block text-sm text-green-800 underline">
-        ← 홈으로 / Back to home
+      <Link
+        to="/"
+        className="mt-8 inline-flex min-h-[44px] items-center text-sm text-green-800 underline"
+      >
+        <span aria-hidden="true">← </span>홈으로 / Back to home
       </Link>
     </div>
   )

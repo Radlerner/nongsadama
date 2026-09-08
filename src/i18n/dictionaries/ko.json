@@ -183,7 +183,7 @@
   "profile.deleteAccount": "계정 삭제",
   "profile.deleteAccountWarn": "계정을 지우면 프로필과 내가 쓴 글이 모두 사라지고 되돌릴 수 없어요.",
   "profile.deleteAccountConfirm": "영구 삭제 확정",
-  "profile.deleteAccountError": "지우지 못했어요. 잠시 뒤 다시 하거나 casualpe@gmail.com으로 알려 주세요.",
+  "profile.deleteAccountError": "지우지 못했어요. 잠시 뒤 다시 하거나 이메일로 알려 주세요:",
   "profileEdit.title": "프로필 수정",
   "profileEdit.country": "국적 (선택)",
   "profileEdit.countryPlaceholder": "예: VN, KH, NP",

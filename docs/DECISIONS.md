@@ -296,19 +296,48 @@ PRD_v1_3.md를 기준으로 한 기술·제품 의사결정과 이유를 남긴�
 - **문구**: ko.json 76키 humanize(해요체 통일·번역투 제거·짧게 — 의미·수치·법적 고지 보존).
 - 실측: 크림 #f5f1e8·radius 16px·CTA 9999px·제목 800/20px·온도 30px·34건 렌더.
 
-### D-030. 계정 삭제 안내 공개 페이지 /delete-account (2026-08-29, Play Data safety 제출 URL)
+### D-030. 계정 삭제 안내 공개 페이지 /delete-account (2026-09-09, Play Data safety 제출 URL)
 - **결정**: 인증·지역 선택·리다이렉트 무관 독립 라우트(App.tsx, AppLayout 밖). 한·영 정적 병기
   (법정 고지 — i18n 사전 예외, D-020과 동일). 요청 이메일은 config `deletionRequestEmail`
   (dmkim@nongsadama.app) — 신고용 operatorEmail과 분리. /privacy §4도 동일 이메일·문구로 정합.
 - **문구 원칙**: 앱 내 즉시 삭제 경로(내 정보→계정 삭제→영구 삭제 확정) + 이메일 경로(가입 이메일
-  발신·영업일 7일), 삭제 데이터 전체 목록, 법정 보관 가능 고지(관계 법령 요구 시 분리 보관 후
-  파기·백업 30일 순차 삭제). 실제 구현은 delete-account Edge Function의 즉시 cascade 삭제(D-021).
+  발신·요청일로부터 10일 이내 — 시행령 §43③, D-032에서 '영업일 7일'을 정정), 삭제 데이터 전체
+  목록, 법정 보관 가능 고지(관계 법령 요구 시 분리 보관 후 파기·백업 30일 순차 삭제). 실제 구현은
+  delete-account Edge Function의 즉시 cascade 삭제(D-021).
 - **제출 URL**: https://nongsadama.app/delete-account (Cloudflare 200). GitHub Pages는 SPA 폴백으로
   렌더되나 HTTP 404 상태이므로 제출용으로 쓰지 않는다.
 
-### D-031. 아동 안전 표준 공개 페이지 /child-safety (2026-08-29, Play Child Safety Standards 제출 URL)
+### D-031. 아동 안전 표준 공개 페이지 /child-safety (2026-09-09, Play Child Safety Standards 제출 URL)
 - **결정**: /privacy·/delete-account와 동일한 독립 공개 라우트(AppLayout 밖, 인증·지역 무관).
   오너 제공 한·영 문안을 그대로 게시하되 원문에 혼재한 support@/dmkim@ 중 **dmkim@nongsadama.app으로
   통일**(config childSafetyEmail — 미개설 주소 노출 방지, 한 줄로 교체 가능). 마지막 업데이트 날짜
   상수(LAST_UPDATED). 기존 페이지 무수정(라우트·config·sitemap만 추가).
 - **제출 URL**: https://nongsadama.app/child-safety (Cloudflare 200).
+
+### D-032. 공개 법적 페이지 재검수 반영 (2026-09-09, /delete-account·/child-safety 독립 검수 후속)
+- **법정 기한**: 이메일 삭제 요청 처리 기한을 '영업일 7일'에서 **요청일로부터 10일 이내(통상 3일)**로
+  정정 — 개인정보 보호법 시행령 §43③은 역일 10일이라 영업일 7일은 연휴 시 초과. /delete-account·
+  /privacy §4·§5 세 곳 동일 문구.
+- **창구 단일화**: 계정·개인정보 요청은 `deletionRequestEmail` 하나로. 앱 내 삭제 실패 안내
+  (profile.deleteAccountError)에서 gmail 주소를 빼고 설정값 링크를 렌더(사전 문자열 하드코딩 제거).
+  mailto 제목도 `deletionRequestMailto` 상수로 통일. /privacy 헤더는 '일반 문의 / 개인정보·계정
+  삭제' 역할 명시.
+- **카카오 연결 해제**: delete-account Edge Function은 auth.identities만 지우고 카카오 측 unlink는
+  호출하지 않는다. 문구를 사실대로("농사다마 저장 연결 정보 삭제 + 카카오 연결된 서비스 관리에서
+  직접 해제")로 고치고, 삭제 목록에 카카오 전달 닉네임·프로필 이미지 URL을 명시. **후속**: 카카오
+  Admin 키를 Supabase secret으로 받으면 deleteUser 전에 `POST kapi.kakao.com/v1/user/unlink`
+  (target_id_type=user_id) 호출, 실패는 로그만 남기고 삭제 진행.
+- **날짜·이력**: 게시일보다 앞선 시행일 금지 — DeleteAccount 시행일·ChildSafety LAST_UPDATED를
+  2026-09-09로. /privacy는 시행일(08-27) + 최종 개정(09-09) 병기와 §6 변경 이력 신설(§30 요건).
+  문안 변경 시 해당 상수를 같이 올린다(각 파일 상단 주석).
+- **접근성·제목**: 세 페이지 홈 링크 44px(inline-flex) + 화살표 aria-hidden, 한·영 섹션 lang 속성,
+  아동 안전 연락처 블록의 독립 이메일 링크 44px, `useDocumentTitle`로 페이지 제목(탭·북마크·심사
+  스크린샷). min-h-screen으로 크림 배경이 화면 끝까지.
+- **가용성 분리**: AuthProvider 초기화가 Supabase 환경변수 없을 때 throw→ErrorBoundary로 전체 트리가
+  죽던 결합을 끊음(`isSupabaseConfigured` 가드). 공개 법적 페이지는 인증 설정과 무관하게 렌더.
+- **저장소 보호(범위 외 관찰)**: 오너의 Capacitor 작업으로 저장소 루트에 `nongsadama-release-key.jks`
+  (untracked)가 생겼고 공개 저장소에 `*.jks` 규칙이 없었다. `.gitignore`에 `*.jks`·`*.keystore`·
+  `keystore.properties` 추가(이력에 커밋된 적 없음 확인). 키 파일은 저장소 밖으로 옮기고 향후 Gradle
+  signingConfigs는 무시 대상 keystore.properties/환경변수를 참조할 것 — 파일 이동은 오너 작업.
+- **기각 유지**: 보관 데이터 수치 미기재·문체 혼용·Card 컴포넌트 미사용·정적 HTML 부재 등은 검증
+  단계에서 기각(Play 요건·실질 영향 없음) — 변경하지 않음.

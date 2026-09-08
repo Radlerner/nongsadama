@@ -7,7 +7,7 @@ import { useTranslation } from '../i18n/useTranslation'
 import { useRegions } from '../hooks/useRegions'
 import { useOwnProfile } from '../hooks/useOwnProfile'
 import { getSupabaseClient } from '../lib/supabase'
-import { getLocaleLabel } from '../config/app'
+import { deletionRequestEmail, deletionRequestMailto, getLocaleLabel } from '../config/app'
 import { regionLabel } from '../lib/regionName'
 
 export function Profile() {
@@ -144,7 +144,11 @@ export function Profile() {
         )}
         {deleteError ? (
           <p className="mt-2 rounded-md bg-red-50 px-3 py-2 text-xs text-red-700">
-            {t('profile.deleteAccountError')}
+            {t('profile.deleteAccountError')}{' '}
+            {/* 삭제 요청 공식 창구는 설정값 하나로 통일(D-032) — 사전 문자열에 주소를 박지 않는다 */}
+            <a className="font-semibold underline" href={deletionRequestMailto}>
+              {deletionRequestEmail}
+            </a>
           </p>
         ) : null}
       </div>
