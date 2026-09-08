@@ -295,3 +295,13 @@ PRD_v1_3.md를 기준으로 한 기술·제품 의사결정과 이유를 남긴�
   날씨 큰 이모지+30px 온도(다국적 직관성 — 글자 없이 이해).
 - **문구**: ko.json 76키 humanize(해요체 통일·번역투 제거·짧게 — 의미·수치·법적 고지 보존).
 - 실측: 크림 #f5f1e8·radius 16px·CTA 9999px·제목 800/20px·온도 30px·34건 렌더.
+
+### D-030. 계정 삭제 안내 공개 페이지 /delete-account (2026-08-29, Play Data safety 제출 URL)
+- **결정**: 인증·지역 선택·리다이렉트 무관 독립 라우트(App.tsx, AppLayout 밖). 한·영 정적 병기
+  (법정 고지 — i18n 사전 예외, D-020과 동일). 요청 이메일은 config `deletionRequestEmail`
+  (dmkim@nongsadama.app) — 신고용 operatorEmail과 분리. /privacy §4도 동일 이메일·문구로 정합.
+- **문구 원칙**: 앱 내 즉시 삭제 경로(내 정보→계정 삭제→영구 삭제 확정) + 이메일 경로(가입 이메일
+  발신·영업일 7일), 삭제 데이터 전체 목록, 법정 보관 가능 고지(관계 법령 요구 시 분리 보관 후
+  파기·백업 30일 순차 삭제). 실제 구현은 delete-account Edge Function의 즉시 cascade 삭제(D-021).
+- **제출 URL**: https://nongsadama.app/delete-account (Cloudflare 200). GitHub Pages는 SPA 폴백으로
+  렌더되나 HTTP 404 상태이므로 제출용으로 쓰지 않는다.

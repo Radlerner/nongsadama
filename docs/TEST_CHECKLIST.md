@@ -444,3 +444,11 @@ Supabase 프로젝트 **nongsadama**(`ikusdwursvbdrznbcjtw`, ap-northeast-2)에 
 - 실측: /home lucide svg 15개 렌더, 지도 핀 SVG 정상(1차에서 kakao overlay textContent로
   마크업 텍스트 유출 발견 → innerHTML(자체 생성 마크업 한정)로 수정 후 통과), 빌드 성공.
 - lucide-react 도입(MIT·트리셰이킹) — DESIGN.md §7 아이콘 원칙 갱신(이모지 UI 금지).
+
+## /delete-account 공개 페이지 (cd8cb70)
+| 검증 | 결과 |
+|---|---|
+| dev 익명(세션·지역 제거) 직접 접근: 제목·이메일·한/영·보관 고지·로그인 벽 없음·mailto 2 | ✅ |
+| 라이브 nongsadama.app/delete-account: HTTP 200 + 렌더 텍스트 전 항목 | ✅ |
+| workers.dev 200 / GH Pages는 404 상태(SPA 폴백 렌더) — 제출 URL은 nongsadama.app | ✅ 기록 |
+| sitemap 등재(라이브 확인), typecheck 0·빌드 성공 | ✅ |
