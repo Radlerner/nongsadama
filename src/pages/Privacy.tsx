@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { operatorEmail } from '../config/app'
+import { deletionRequestEmail, operatorEmail } from '../config/app'
 
 /**
  * 개인정보처리방침(PRD v1.5 §10-J, Google Play 심사 필수 URL).
@@ -68,17 +68,24 @@ export function Privacy() {
             <strong>앱 안에서</strong>: 내 정보 → 계정 삭제 버튼으로 즉시 영구 삭제할 수 있습니다.
             <br />
             <strong>앱 밖에서(웹 요청)</strong>: 이메일{' '}
-            <a className="underline" href={`mailto:${operatorEmail}?subject=${encodeURIComponent('[농사다마] 계정 삭제 요청')}`}>
-              {operatorEmail}
+            <a className="underline" href={`mailto:${deletionRequestEmail}?subject=${encodeURIComponent('[농사다마] 계정 삭제 요청')}`}>
+              {deletionRequestEmail}
             </a>
-            로 가입 이메일을 보내 요청하면 확인 후 지체 없이 삭제합니다.
+            로 가입 이메일을 보내 요청하면 본인 확인 후 영업일 7일 이내에 삭제합니다. 자세한
+            절차는{' '}
+            <Link to="/delete-account" className="underline">
+              계정 삭제 안내 페이지
+            </Link>
+            에 있습니다.
           </p>
           <p className="mt-2 text-gray-700">
             <strong>삭제되는 데이터(전부)</strong>: 계정(이메일·비밀번호·카카오 연결 정보),
-            프로필(닉네임·언어·지역·국적·작목), 작성한 게시글 전체.
+            프로필(닉네임·언어·지역·국적·작목·공개 동의), 작성한 게시글 전체, 차단 목록.
             <br />
-            <strong>삭제 후 보관하는 데이터</strong>: 없습니다. 익명 통계(GA4·Clarity)는 계정과
-            연결되지 않은 상태로만 남습니다.
+            <strong>일정 기간 보관될 수 있는 데이터</strong>: 관계 법령이 보관을 요구하는 정보(예:
+            서비스 접속 기록)는 법정 기간 동안 분리 보관 후 파기합니다. 백업 사본은 최대 30일의
+            백업 주기에 따라 순차 삭제됩니다. 익명 통계(GA4·Clarity)는 계정과 연결되지 않은
+            상태로만 남습니다.
             <br />
             개별 게시글을 삭제한 경우 공개 목록에서 즉시 제외되며, 계정 삭제 시 함께 완전
             파기됩니다.
@@ -103,9 +110,11 @@ export function Privacy() {
             Clarity, AddToAny, and your browser vendor for voice input. Hosting and analytics run
             on overseas servers (US); account and post data are stored in Supabase&apos;s Seoul
             region. Delete your account anytime in Profile → Delete account — this permanently
-            removes your account, profile and all posts, and nothing linked to you is retained —
-            or request deletion by email: {operatorEmail}. You can change or withdraw optional
-            fields and neighbor-visibility consent anytime in your profile.
+            removes your account, profile and all posts — or request deletion by email:{' '}
+            {deletionRequestEmail} (see /delete-account). Data that laws require us to keep is
+            retained separately for the legal period only; backup copies are removed within 30
+            days. You can change or withdraw optional fields and neighbor-visibility consent
+            anytime in your profile.
           </p>
         </div>
       </section>

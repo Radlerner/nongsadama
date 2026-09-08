@@ -44,6 +44,9 @@ export type OAuthProvider = (typeof oauthProviders)[number]
 /** 신고 접수용 운영자 연락처(설정값 — 코드 하드코딩 금지). */
 export const operatorEmail = 'casualpe@gmail.com'
 
+/** 계정 삭제 요청 전용 연락처(Google Play 계정 삭제 URL 제출용 — /delete-account, /privacy§4). */
+export const deletionRequestEmail = 'dmkim@nongsadama.app'
+
 /** 공식 서비스 주소(D-016). 공유·QR 등 외부 노출용. */
 export const officialSiteUrl = 'https://nongsadama.app/'
 
