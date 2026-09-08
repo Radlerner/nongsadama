@@ -452,3 +452,11 @@ Supabase 프로젝트 **nongsadama**(`ikusdwursvbdrznbcjtw`, ap-northeast-2)에 
 | 라이브 nongsadama.app/delete-account: HTTP 200 + 렌더 텍스트 전 항목 | ✅ |
 | workers.dev 200 / GH Pages는 404 상태(SPA 폴백 렌더) — 제출 URL은 nongsadama.app | ✅ 기록 |
 | sitemap 등재(라이브 확인), typecheck 0·빌드 성공 | ✅ |
+
+## /child-safety 공개 페이지 (7aa56e8)
+| 검증 | 결과 |
+|---|---|
+| dev 익명(세션·지역 제거) 직접 접근: 제목·업데이트 날짜·한/영·mailto 4·홈 링크·로그인 벽 없음 | ✅ |
+| 새로고침(신규 로드) 시 404 없음(dev) | ✅ |
+| 라이브 nongsadama.app/child-safety 200, workers.dev 200 | ✅ |
+| npm run build 성공, typecheck 0, sitemap 등재(라이브 확인) | ✅ |

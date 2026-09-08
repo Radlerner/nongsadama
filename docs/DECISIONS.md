@@ -305,3 +305,10 @@ PRD_v1_3.md를 기준으로 한 기술·제품 의사결정과 이유를 남긴�
   파기·백업 30일 순차 삭제). 실제 구현은 delete-account Edge Function의 즉시 cascade 삭제(D-021).
 - **제출 URL**: https://nongsadama.app/delete-account (Cloudflare 200). GitHub Pages는 SPA 폴백으로
   렌더되나 HTTP 404 상태이므로 제출용으로 쓰지 않는다.
+
+### D-031. 아동 안전 표준 공개 페이지 /child-safety (2026-08-29, Play Child Safety Standards 제출 URL)
+- **결정**: /privacy·/delete-account와 동일한 독립 공개 라우트(AppLayout 밖, 인증·지역 무관).
+  오너 제공 한·영 문안을 그대로 게시하되 원문에 혼재한 support@/dmkim@ 중 **dmkim@nongsadama.app으로
+  통일**(config childSafetyEmail — 미개설 주소 노출 방지, 한 줄로 교체 가능). 마지막 업데이트 날짜
+  상수(LAST_UPDATED). 기존 페이지 무수정(라우트·config·sitemap만 추가).
+- **제출 URL**: https://nongsadama.app/child-safety (Cloudflare 200).
