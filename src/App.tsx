@@ -20,6 +20,7 @@ import { Neighbors } from './pages/Neighbors'
 import { Talk } from './pages/Talk'
 import { Privacy } from './pages/Privacy'
 import { DeleteAccount } from './pages/DeleteAccount'
+import { ChildSafety } from './pages/ChildSafety'
 import { NotFound } from './pages/NotFound'
 
 export function App() {
@@ -31,6 +32,8 @@ export function App() {
       <Route path="/privacy" element={<Privacy />} />
       {/* Google Play 계정 삭제 URL 제출용 — 인증·지역 선택 무관 공개 페이지 */}
       <Route path="/delete-account" element={<DeleteAccount />} />
+      {/* Google Play 아동 안전 표준 제출용 — 인증·지역 선택 무관 공개 페이지 */}
+      <Route path="/child-safety" element={<ChildSafety />} />
       <Route element={<AppLayout />}>
         <Route
           path="/home"
