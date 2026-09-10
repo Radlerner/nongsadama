@@ -1,12 +1,17 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { getLocaleLabel } from '../config/app'
 import { useTranslation } from '../i18n/useTranslation'
 import { MapPin } from '../components/ui/icons'
-import { useRegions, type Region } from '../hooks/useRegions'
+import {
+  useRegions,
+  splitRegionGroups,
+  useStaleRegionCleanup,
+  type Region,
+} from '../hooks/useRegions'
 import { useSelectedRegion } from '../context/SelectedRegionContext'
 import { regionLabel } from '../lib/regionName'
-import { getCurrentPosition, nearestTown, OUT_OF_AREA_KM } from '../lib/geo'
+import { getCurrentPosition, nearestServiceRegion, OUT_OF_AREA_KM } from '../lib/geo'
 
 /**
  * 언어·지역 선택 화면(PRD 5 IA, 4.1 흐름).
@@ -68,7 +73,12 @@ function RegionPicker() {
   const { data: regions, isLoading, isError, refetch, isFetching } = useRegions()
   const { regionId, setRegionId } = useSelectedRegion()
   const [locating, setLocating] = useState(false)
-  const [geoNotice, setGeoNotice] = useState<string | null>(null)
+  // 안내는 키+데이터로 저장하고 렌더 시 번역한다 — 같은 화면에서 언어를 바꿔도 문구가 따라온다(재검수 P2).
+  const [geoNotice, setGeoNotice] = useState<{ key: string; region?: Region; km?: number } | null>(
+    null,
+  )
+  // P2-2: 로드된 활성 지역 목록에 없는 저장된 선택은 무효화한다(공용 훅, v1.1 D-033).
+  useStaleRegionCleanup()
 
   // 위치 동의 시 가까운 지역 추천(v1.3 §4.1). 좌표는 기기 내 계산만, 저장·전송 없음.
   const suggestNearest = async () => {
@@ -76,26 +86,33 @@ function RegionPicker() {
     setLocating(true)
     try {
       const pos = await getCurrentPosition()
-      const near = nearestTown(regions ?? [], pos.lat, pos.lng)
+      const near = nearestServiceRegion(regions ?? [], pos.lat, pos.lng)
       if (!near) {
-        setGeoNotice('select.geoNoRegion')
+        setGeoNotice({ key: 'select.geoNoRegion' })
+        return
+      }
+      if (near.distanceKm > OUT_OF_AREA_KM) {
+        // v1.1(D-033): 서비스 지역 밖이면 자동 선택하지 않는다 — 먼 지역이 사용자의 지역으로
+        // 굳어 게시판·프로필·글쓰기까지 그 지역이 되던 문제. 안내만 하고 선택은 사용자에게.
+        setGeoNotice({ key: 'select.geoFar', region: near.region, km: near.distanceKm })
         return
       }
       setRegionId(near.region.id)
-      setGeoNotice(near.distanceKm > OUT_OF_AREA_KM ? 'map.outOfArea' : 'select.geoSet')
+      setGeoNotice({ key: 'select.geoSet' })
     } catch {
-      setGeoNotice('map.geoError')
+      setGeoNotice({ key: 'map.geoError' })
     } finally {
       setLocating(false)
     }
   }
-
-  // P2-2: 로드된 활성 지역 목록에 없는 저장된 선택은 무효화한다(비활성/삭제된 지역의 stale id 정리).
-  useEffect(() => {
-    if (regions && regionId && !regions.some((r) => r.id === regionId)) {
-      setRegionId(null)
-    }
-  }, [regions, regionId, setRegionId])
+  const noticeText = geoNotice
+    ? t(geoNotice.key)
+        .replace(
+          '{name}',
+          geoNotice.region ? regionLabel(geoNotice.region.id, geoNotice.region.names, locale) : '',
+        )
+        .replace('{n}', geoNotice.km != null ? String(Math.max(1, Math.round(geoNotice.km))) : '')
+    : null
 
   if (isLoading) {
     return (
@@ -121,25 +138,20 @@ function RegionPicker() {
     )
   }
 
-  const all = regions ?? []
-  const cities = all.filter((r) => r.level === 'city')
-  const towns = all.filter((r) => r.level === 'town')
-  const cityIds = new Set(cities.map((c) => c.id))
-
-  // 시별로 읍·면을 묶고, 부모 시가 없는(미분류) 읍·면은 별도 그룹으로 노출한다.
-  // (P2-1: city가 없고 town만 있을 때 아무것도 안 그려지는 무음 공백 방지)
-  const groups: { key: string; label: string; towns: Region[] }[] = cities.map((city) => ({
-    key: city.id,
-    label: regionLabel(city.id, city.names, locale),
-    towns: towns.filter((tn) => tn.parent_id === city.id),
+  // v1.1(D-033): 시·군별 묶음 — 읍·면이 있는 시·군은 읍·면 버튼(파일럿 홍성 그대로),
+  // 읍·면이 아직 없는 시·군은 시·군 자체를 고른다. 후자는 한 묶음(접힘)으로 모아 화면이
+  // 시·군 수만큼 길어지지 않고 '계속' 버튼이 멀어지지 않게 한다. 부모 없는(미분류) 읍·면은 별도 그룹(P2-1).
+  const { detailed, cityOnly } = splitRegionGroups(regions ?? [])
+  const detailedGroups = detailed.map((g) => ({
+    key: g.city?.id ?? '__ungrouped__',
+    label: g.city ? regionLabel(g.city.id, g.city.names, locale) : t('select.regionOther'),
+    members: g.members,
   }))
-  const ungrouped = towns.filter((tn) => !tn.parent_id || !cityIds.has(tn.parent_id))
-  if (ungrouped.length > 0) {
-    groups.push({ key: '__ungrouped__', label: t('select.regionOther'), towns: ungrouped })
-  }
+  // 시·군 묶음은 그 안의 지역이 선택돼 있거나 읍·면 그룹이 하나도 없을 때만 펼친 채로 시작한다.
+  const cityOnlyOpen = cityOnly.some((r) => r.id === regionId) || detailedGroups.length === 0
 
-  const totalTowns = groups.reduce((n, g) => n + g.towns.length, 0)
-  if (totalTowns === 0) {
+  const total = detailedGroups.reduce((n, g) => n + g.members.length, 0) + cityOnly.length
+  if (total === 0) {
     return (
       <p className="rounded-card bg-white/70 px-4 py-6 text-center text-sm text-gray-500">
         {t('select.regionEmpty')}
@@ -147,13 +159,13 @@ function RegionPicker() {
     )
   }
 
-  const renderTown = (town: Region) => {
-    const active = regionId === town.id
+  const renderRegion = (region: Region) => {
+    const active = regionId === region.id
     return (
-      <li key={town.id}>
+      <li key={region.id}>
         <button
           type="button"
-          onClick={() => setRegionId(town.id)}
+          onClick={() => setRegionId(region.id)}
           aria-pressed={active}
           className={[
             'flex min-h-[44px] w-full items-center rounded-md border px-4 text-left text-base',
@@ -163,7 +175,7 @@ function RegionPicker() {
           ].join(' ')}
         >
           {active ? <span aria-hidden className="mr-2">✓</span> : null}
-          {regionLabel(town.id, town.names, locale)}
+          {regionLabel(region.id, region.names, locale)}
         </button>
       </li>
     )
@@ -180,19 +192,26 @@ function RegionPicker() {
         <MapPin aria-hidden size={20} strokeWidth={2.25} />
         {locating ? t('select.geoLocating') : t('select.geoButton')}
       </button>
-      {geoNotice ? (
-        <p className="rounded-full bg-gray-50 px-3 py-2 text-xs text-gray-700">{t(geoNotice)}</p>
+      {noticeText ? (
+        <p className="rounded-full bg-gray-50 px-3 py-2 text-xs text-gray-700">{noticeText}</p>
       ) : null}
-      {groups
-        .filter((g) => g.towns.length > 0)
-        .map((g) => (
-          <div key={g.key}>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">
-              {g.label}
-            </p>
-            <ul className="flex flex-col gap-2">{g.towns.map(renderTown)}</ul>
-          </div>
-        ))}
+      {detailedGroups.map((g) => (
+        <div key={g.key}>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">
+            {g.label}
+          </p>
+          <ul className="flex flex-col gap-2">{g.members.map(renderRegion)}</ul>
+        </div>
+      ))}
+      {cityOnly.length > 0 ? (
+        <details open={cityOnlyOpen}>
+          <summary className="flex min-h-[44px] cursor-pointer list-none items-center gap-1 text-xs font-semibold uppercase tracking-wide text-gray-500">
+            <span aria-hidden>▸</span>
+            {t('select.regionCities')} ({cityOnly.length})
+          </summary>
+          <ul className="mt-1 flex flex-col gap-2">{cityOnly.map(renderRegion)}</ul>
+        </details>
+      ) : null}
     </div>
   )
 }

@@ -473,3 +473,36 @@ Supabase 프로젝트 **nongsadama**(`ikusdwursvbdrznbcjtw`, ap-northeast-2)에 
 | Supabase 환경변수 없는 빌드에서 공개 페이지 렌더(isSupabaseConfigured 가드) | 코드 검토(런타임 미실측 — 라이브는 env 존재) |
 | .gitignore: `git check-ignore` → `.gitignore:39:*.jks nongsadama-release-key.jks`, `git log --all --diff-filter=A -- '*.jks' '*.keystore'` 0건 | ✅ |
 | typecheck 0 · i18n 패리티 0 · 빌드 성공 | ✅ |
+
+## v1.1 — Play 비공개 테스트 업데이트 (2026-09-10, D-033)
+사전 분석: 7개 판독 에이전트 병렬(지역 데이터 모델·클라이언트 흐름·지도/위치·콘텐츠 쿼리·브랜드/헤더·Android/Capacitor·v1.0 인벤토리) + 누락 점검.
+| 검증 | 결과 |
+|---|---|
+| `npm run typecheck` 0 · `npm run build` 성공 · ko/en 키 패리티 0 · 플레이스홀더 불일치 0 | ✅ |
+| 로고 클릭: `/board`에서 헤더 링크(href=/home, aria-label '홈', 44px, cursor pointer) → 클릭 후 `/home`, window 마커 유지(SPA, 새로고침 없음) | ✅ |
+| 브랜드: `NongsaDama` 잔존 0(src·index.html·public·README), 식별자(nongsadama.app·com.nongsadama.myapp·nongsadama-v2·저장 키) 무변경 | ✅ |
+| 라이브 DB: 마이그레이션 `regions_chungnam` 적용 → city 15 / town 11, centroid 누락 0(1차 적용은 커넥터 응답 없음 → 미적용 확인 후 재시도 성공) | ✅ |
+| `/select`(dev 익명): 그룹 "홍성군"(읍·면 11) + "다른 시·군"(14, 이름순) | ✅ |
+| 위치 추천 — 서울(37.57,126.98) 모의: "가장 가까운 서비스 지역은 당진시(약 81km)…" 안내만, regionId 저장 없음 | ✅ |
+| 위치 추천 — 예산(36.68,126.84) 모의: 예산군 자동 선택·저장 | ✅ |
+| 예산군 홈: 지도 중심 예산군(스크린샷), 핀 0, "아직 등록된 정보가 없어요", 오류 문구 0 | ✅ |
+| 예산군 `/board` 빈 상태 · `/life-info` 빈 상태 · 오류 0 | ✅ |
+| 예산군 `/farm`: "오늘 날씨 · 예산군 17.6°", "우리 지역 교육·사업 · 예산군(23건)" 실데이터, 팁 8건 | ✅ |
+| 홍성읍 복귀: 홈 핀 3개 요소, 생활정보 13건, 게시글 10건, 날씨 "홍성군"·사업 34건 — v1.0과 동일 | ✅ |
+| 모바일 375px: `/select`·`/home` 가로 넘침 없음, 헤더 링크 44px | ✅ |
+| 새 탭 클린 로드 `/home`(홍성읍, 핀 3)·`/select` 콘솔 오류 0 (편집 중 HMR 과도기 오류는 기존 탭에만 누적, 클린 탭 재현 없음) | ✅ |
+| `npx cap sync android` 성공, `android/app/src/main/assets/public/index.html` = dist(6038B, 동일 시각) | ✅ |
+| 미실측(로그인 필요): 이웃 "내 지역 정하기" 분기, 프로필 편집 optgroup — 코드 검토 | 코드 검토 |
+| 누락 점검(critic) 반영 후: 홍성읍 홈 핀 3(불변), 천안 좌표(36.815,127.114) 모의 '내 위치 정보 보기' → "우리 지역 교육·사업 · 천안시(22건)"(지오코더 첫 토큰; 수정 전 라이브 프로브 '천안시 동남구' 0건), Privacy 헤더 최종 개정 2026-09-10 + §6 이력 행, DeleteAccount 시행일 2026-09-10 + en 'town or city/county level', typecheck 0, 패리티 0 | ✅ |
+
+### 독립 재검수(4차원 병렬 + 발견별 2인 반박) 반영
+- P0 없음. 발견 20건(P1 1건은 Android 위치 권한 '권고' — 코드 무변경) 중 코드 반영 12건, 문서 반영 6건, 기록만 2건. 세부는 D-033 "독립 재검수 반영".
+- 반박 검증 최종(44 에이전트): **확정 3건** — 위치 안내 텍스트 저장 회귀, 읍·면 정렬 회귀(홍성읍 맨 아래), ProfileEdit 14개 단일 optgroup — 모두 반영·재검증 완료. 기각 17건은 "데이터·심사 실질 영향 없음" 판정이었으나 수정 비용이 작은 항목(stale 정리 0행 가드, ko 키 폴백 차단, 지도 빈 상태 키, 헤더 접근성 이름, 버전 줄 사전화, CTA 접힘, 캡션 절대 표현, geoError 문구, 롤백 문서 FK 주석)은 함께 반영했고, Android 권한·gradle.properties·WebView OAuth·카카오맵 도메인은 문서 기록만.
+| 검증 | 결과 |
+|---|---|
+| `/select`(홍성읍 선택): 읍·면 순서 "✓홍성읍, 광천읍, 홍북읍, 금마면, 홍동면…"(v1.0 순서), 시·군 묶음 `<details>` 기본 접힘·summary 44px·캡션 "시·군 단위로 고르기 (14)", '계속' CTA 상단 1004px(접기 전 ≈1,500px) | ✅ |
+| 서울 좌표 모의 → ko 안내 "가장 가까운 서비스 지역은 당진시(약 81km)이에요. 지역은 아래에서 직접 골라 주세요." → 'English' 탭 → 같은 안내가 영어로 갱신, 기존 선택(홍성읍) 유지 | ✅ |
+| 예산군 선택 상태 `/select`: 시·군 묶음 펼침(open), ✓예산군 | ✅ |
+| 예산군 홈에서 '병원' 타일 → "아직 등록된 정보가 없어요"(emptyFiltered 아님), 헤더 링크 aria-label "농사다마 · 홈" | ✅ |
+| typecheck 0 · 패리티 0 · 플레이스홀더 0 · 빌드 성공 · `npx cap sync android` 재실행(번들 동일) · 클린 탭 콘솔 앱 오류 0(백그라운드 탭 네트워크 중단 메시지만) | ✅ |
+| 미실측(로그인 필요): ProfileEdit optgroup(홍성군 그룹 + '시·군 단위로 고르기' 그룹), 내 정보 버전 줄 `{app.name} v1.1` — 코드 검토 | 코드 검토 |

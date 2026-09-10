@@ -3,7 +3,8 @@ import { Link } from 'react-router-dom'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { useTranslation } from '../i18n/useTranslation'
-import { useRegions, countyRegionIds } from '../hooks/useRegions'
+import { useRegions, countyRegionIds, countyOf } from '../hooks/useRegions'
+import { regionConfig } from '../config/app'
 import { useSelectedRegion } from '../context/SelectedRegionContext'
 import { useLifeInfoList, type LifeInfo } from '../hooks/useLifeInfo'
 import {
@@ -26,7 +27,7 @@ import { FreshnessBadge } from '../components/FreshnessBadge'
 import { IconTile } from '../components/ui/IconTile'
 import { ShareButtons } from '../components/ShareButtons'
 import { STALE_AFTER_MONTHS_SUPPORT } from '../lib/freshness'
-import { getCurrentPosition, nearestTown, OUT_OF_AREA_KM } from '../lib/geo'
+import { getCurrentPosition, nearestServiceRegion, OUT_OF_AREA_KM } from '../lib/geo'
 import {
   mapProvider,
   loadKakaoMaps,
@@ -40,6 +41,38 @@ import type { Tables } from '../types/database'
 type Region = Tables<'regions'>
 
 const FILTERS = ['all', ...LIFE_INFO_CATEGORIES] as const
+
+/**
+ * 지도 초기 보기(v1.1, D-033): 선택 지역 중심 → 부모 시·군 중심 → 설정값(전역 보기).
+ * 예전의 "중심좌표가 있는 아무 지역"(DB 반환 순서 의존) 폴백과 홍성 좌표 상수는 다지역에서
+ * 엉뚱한 시·군을 보여 주므로 제거했다. 지역 미선택이면 전역 보기(전체 핀)로 연다.
+ */
+function initialView(
+  regions: Region[],
+  regionId: string | null,
+): { center: [number, number]; kakaoLevel: number; leafletZoom: number } {
+  const selected = regionId ? regions.find((r) => r.id === regionId) : undefined
+  const county = countyOf(regions, selected)
+  const anchor =
+    selected?.centroid_lat != null && selected.centroid_lng != null
+      ? selected
+      : county?.centroid_lat != null && county.centroid_lng != null
+        ? county
+        : null
+  if (anchor) {
+    const isCity = anchor.level === 'city'
+    return {
+      center: [anchor.centroid_lat as number, anchor.centroid_lng as number],
+      kakaoLevel: isCity ? regionConfig.cityMapKakaoLevel : regionConfig.regionMapKakaoLevel,
+      leafletZoom: isCity ? regionConfig.cityMapLeafletZoom : regionConfig.regionMapLeafletZoom,
+    }
+  }
+  return {
+    center: [regionConfig.defaultMapCenter.lat, regionConfig.defaultMapCenter.lng],
+    kakaoLevel: regionConfig.defaultMapKakaoLevel,
+    leafletZoom: regionConfig.defaultMapLeafletZoom,
+  }
+}
 
 function emojiIcon(emoji: string, count?: number): L.DivIcon {
   const badge =
@@ -116,7 +149,10 @@ export default function MapHome() {
     const groups = new Map<string, LifeInfo[]>()
     for (const item of withoutCoords) {
       const region = regionsById.get(item.region_id)
-      if (!item.address && region?.level === 'city') continue
+      // 전화 전용 항목(전국 핫라인: 시·군 행·주소 없음·support)만 지도에서 뺀다. 예전 규칙은 '시·군 행 +
+      // 주소 없음'이면 모두 제외했는데, 읍·면이 없는 시·군(v1.1)은 모든 정보가 시·군 행이라 병원·마트까지
+      // 사라지는 무언 누락이 생긴다(D-033 누락 점검). 이제 데이터 속성(category)으로 판정한다.
+      if (!item.address && region?.level === 'city' && item.category === 'support') continue
       const arr = groups.get(item.region_id) ?? []
       arr.push(item)
       groups.set(item.region_id, arr)
@@ -141,21 +177,14 @@ export default function MapHome() {
   useEffect(() => {
     if (provider !== 'kakao' || !containerRef.current || kakaoMapRef.current) return
     if (regions === undefined) return
-    const selected = regionId ? regionsById.get(regionId) : undefined
-    const anyCentroid =
-      selected && selected.centroid_lat != null
-        ? selected
-        : (regions ?? []).find((r) => r.centroid_lat != null)
-    const center: [number, number] = anyCentroid
-      ? [anyCentroid.centroid_lat as number, anyCentroid.centroid_lng as number]
-      : [36.6, 126.66]
+    const view = initialView(regions, regionId)
     loadKakaoMaps()
       .then((ns) => {
         if (!containerRef.current || kakaoMapRef.current) return
         kakaoNsRef.current = ns
         kakaoMapRef.current = new ns.Map(containerRef.current, {
-          center: new ns.LatLng(center[0], center[1]),
-          level: 9,
+          center: new ns.LatLng(view.center[0], view.center[1]),
+          level: view.kakaoLevel,
         })
         setKakaoReady(true)
       })
@@ -163,7 +192,7 @@ export default function MapHome() {
         setKakaoError(true)
         setProvider('osm') // 검증된 기본 지도로 자동 폴백
       })
-  }, [provider, regions, regionId, regionsById])
+  }, [provider, regions, regionId])
 
   // kakao 핀(CustomOverlay) 갱신
   useEffect(() => {
@@ -186,15 +215,11 @@ export default function MapHome() {
   useEffect(() => {
     if (provider !== 'osm') return
     if (!containerRef.current || mapRef.current || regions === undefined) return
-    const selected = regionId ? regionsById.get(regionId) : undefined
-    const anyCentroid =
-      selected && selected.centroid_lat != null
-        ? selected
-        : (regions ?? []).find((r) => r.centroid_lat != null)
-    const center: [number, number] = anyCentroid
-      ? [anyCentroid.centroid_lat as number, anyCentroid.centroid_lng as number]
-      : [36.6, 126.66]
-    const map = L.map(containerRef.current, { zoomControl: true }).setView(center, 11)
+    const view = initialView(regions, regionId)
+    const map = L.map(containerRef.current, { zoomControl: true }).setView(
+      view.center,
+      view.leafletZoom,
+    )
     // 타일: OSM 표준(§10-B 확정 전 잠정, 저트래픽 데모 — attribution 필수)
     L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 18,
@@ -203,7 +228,7 @@ export default function MapHome() {
     }).addTo(map)
     layerRef.current = L.layerGroup().addTo(map)
     mapRef.current = map
-  }, [provider, regions, regionId, regionsById])
+  }, [provider, regions, regionId])
 
   // 언마운트 시에만 지도 해제
   useEffect(
@@ -246,6 +271,8 @@ export default function MapHome() {
           ov.setMap(kmap)
           kakaoUserOverlayRef.current = ov
           kmap.setCenter(new ns.LatLng(pos.lat, pos.lng))
+          // 전국 보기(level 13)에서 눌렀을 때 동네가 보이도록 최소 확대. 이미 더 가까우면 그대로.
+          if (kmap.getLevel() > regionConfig.locateKakaoLevel) kmap.setLevel(regionConfig.locateKakaoLevel)
         }
       } else {
         const map = mapRef.current
@@ -254,10 +281,10 @@ export default function MapHome() {
           userMarkerRef.current = L.marker([pos.lat, pos.lng], {
             icon: emojiIcon(personPinMarkup()),
           }).addTo(map)
-          map.setView([pos.lat, pos.lng], 12)
+          map.setView([pos.lat, pos.lng], Math.max(map.getZoom(), regionConfig.locateLeafletZoom))
         }
       }
-      const near = nearestTown(regions ?? [], pos.lat, pos.lng)
+      const near = nearestServiceRegion(regions ?? [], pos.lat, pos.lng)
       if (near) {
         setNearest({ ...near, outOfArea: near.distanceKm > OUT_OF_AREA_KM })
       }
@@ -338,6 +365,11 @@ export default function MapHome() {
       {isLoading ? (
         <p className="rounded-card bg-white/70 px-4 py-3 text-center text-sm text-gray-500">
           {t('lifeInfo.loading')}
+        </p>
+      ) : items && filtered.length === 0 ? (
+        /* v1.1(D-033): 등록 정보가 없는 지역·종류는 오류가 아니라 빈 상태로 알린다 */
+        <p className="rounded-card bg-white/70 px-4 py-3 text-center text-sm text-gray-500">
+          {t(items.length > 0 ? 'lifeInfo.emptyFiltered' : 'lifeInfo.empty')}
         </p>
       ) : null}
 

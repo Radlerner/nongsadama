@@ -1,14 +1,17 @@
-import { Outlet, useLocation, useNavigate } from 'react-router-dom'
+import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { BottomNav } from './BottomNav'
 import { LanguageSwitcher } from './LanguageSwitcher'
 import { OfflineBanner } from '../OfflineBanner'
 import { useTranslation } from '../../i18n/useTranslation'
+import { useStaleRegionCleanup } from '../../hooks/useRegions'
 import { ChevronLeft } from 'lucide-react'
 
 export function AppLayout() {
   const { t } = useTranslation()
   const location = useLocation()
   const navigate = useNavigate()
+  // v1.1(D-033): 비활성·삭제된 지역 id가 localStorage에 남아 조용히 '전체 범위'가 되지 않도록 정리
+  useStaleRegionCleanup()
   // 10세 원칙: 뒤로 가기는 항상 화면 상단에(홈 제외). history가 없으면 홈으로.
   const showBack = location.pathname !== '/home'
 
@@ -27,15 +30,23 @@ export function AppLayout() {
               <ChevronLeft size={26} strokeWidth={2.25} />
             </button>
           ) : null}
-          <img
-            src={`${import.meta.env.BASE_URL}favicon.png`}
-            alt=""
-            aria-hidden
-            className="ml-1 h-6 w-6"
-          />
-          <span className="px-1 text-base font-extrabold tracking-tight text-green-800">
-            {t('app.name')}
-          </span>
+          {/* v1.1: 로고+브랜드 영역 전체가 홈(/home) 링크 — 앱 셸의 홈은 /home(BottomNav·뒤로가기 폴백과 동일).
+              전체 새로고침 없는 SPA 이동을 위해 anchor 대신 Link. 44px 터치 높이·포커스 링(접근성). */}
+          <Link
+            to="/home"
+            aria-label={`${t('app.name')} · ${t('nav.home')}`}
+            className="flex min-h-[44px] cursor-pointer items-center rounded-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-green-700"
+          >
+            <img
+              src={`${import.meta.env.BASE_URL}favicon.png`}
+              alt=""
+              aria-hidden
+              className="ml-1 h-6 w-6"
+            />
+            <span className="px-1 text-base font-extrabold tracking-tight text-green-800">
+              {t('app.name')}
+            </span>
+          </Link>
         </div>
         <LanguageSwitcher />
       </header>

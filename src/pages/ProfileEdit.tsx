@@ -7,7 +7,7 @@ import { zodResolver } from '../lib/zodResolver'
 import { useAuth } from '../context/AuthContext'
 import { useTranslation } from '../i18n/useTranslation'
 import { useSelectedRegion } from '../context/SelectedRegionContext'
-import { useRegions } from '../hooks/useRegions'
+import { useRegions, splitRegionGroups } from '../hooks/useRegions'
 import { getSupabaseClient } from '../lib/supabase'
 import { useOwnProfile } from '../hooks/useOwnProfile'
 import { appConfig, getLocaleLabel } from '../config/app'
@@ -77,7 +77,8 @@ export function ProfileEdit() {
     )
   }
 
-  const towns = (regions ?? []).filter((r) => r.level === 'town')
+  // v1.1(D-033): 시·군별 묶음 — 읍·면이 있으면 읍·면, 없으면 시·군 자체를 고른다(Select와 같은 분할·순서).
+  const { detailed: regionGroups, cityOnly } = splitRegionGroups(regions ?? [])
 
   const onSubmit = handleSubmit(async (values) => {
     setSubmitError(null)
@@ -167,11 +168,27 @@ export function ProfileEdit() {
           {t('profile.regionLabel')}
           <select className={inputClass} {...register('region_id')}>
             <option value="">{t('profileEdit.regionNone')}</option>
-            {towns.map((town) => (
-              <option key={town.id} value={town.id}>
-                {regionLabel(town.id, town.names, locale)}
-              </option>
+            {regionGroups.map((g) => (
+              <optgroup
+                key={g.city?.id ?? '__ungrouped__'}
+                label={g.city ? regionLabel(g.city.id, g.city.names, locale) : t('select.regionOther')}
+              >
+                {g.members.map((r) => (
+                  <option key={r.id} value={r.id}>
+                    {regionLabel(r.id, r.names, locale)}
+                  </option>
+                ))}
+              </optgroup>
             ))}
+            {cityOnly.length > 0 ? (
+              <optgroup label={t('select.regionCities')}>
+                {cityOnly.map((r) => (
+                  <option key={r.id} value={r.id}>
+                    {regionLabel(r.id, r.names, locale)}
+                  </option>
+                ))}
+              </optgroup>
+            ) : null}
           </select>
         </label>
 

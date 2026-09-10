@@ -8,6 +8,7 @@ import { useRegions } from '../hooks/useRegions'
 import { useOwnProfile } from '../hooks/useOwnProfile'
 import { getSupabaseClient } from '../lib/supabase'
 import { deletionRequestEmail, deletionRequestMailto, getLocaleLabel } from '../config/app'
+import { APP_VERSION } from '../config/version'
 import { regionLabel } from '../lib/regionName'
 
 export function Profile() {
@@ -158,6 +159,10 @@ export function Profile() {
       <Link to="/privacy" className="mt-6 inline-block min-h-[44px] text-xs text-gray-500 underline">
         {t('common.privacy')}
       </Link>
+      {/* v1.1: 테스터 문의·버그 리포트용 버전 표기(단일 기준 src/config/version.ts) */}
+      <p className="mt-2 text-[11px] text-gray-400">
+        {t('app.name')} v{APP_VERSION}
+      </p>
     </section>
   )
 }

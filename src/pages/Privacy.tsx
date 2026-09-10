@@ -11,7 +11,7 @@ import { useDocumentTitle } from '../hooks/useDocumentTitle'
  * (개인정보 보호법 §30 — 변경 시 시행일·사유 공개, 재검수 D-032).
  */
 const EFFECTIVE_DATE = '2026-08-27'
-const REVISED_DATE = '2026-09-09'
+const REVISED_DATE = '2026-09-10'
 
 export function Privacy() {
   useDocumentTitle('농사다마 개인정보처리방침 / NongsaDaMa Privacy Policy')
@@ -31,7 +31,7 @@ export function Privacy() {
           <ul className="mt-1 list-disc pl-5 text-gray-700">
             <li>계정: 이메일 주소, 닉네임, 비밀번호(암호화 저장, Supabase Auth)</li>
             <li>카카오 간편로그인 시: 카카오가 제공하는 닉네임·이메일(선택 동의)·프로필 이미지</li>
-            <li>선택 입력: 언어, 지역(읍·면 단위), 국적 코드, 재배 작목 — 모두 입력하지 않아도 이용 가능</li>
+            <li>선택 입력: 언어, 지역(읍·면 또는 시·군 단위), 국적 코드, 재배 작목 — 모두 입력하지 않아도 이용 가능</li>
             <li>작성 콘텐츠: 게시글(제목·본문)</li>
             <li>자동 수집: 서비스 이용 기록(하단 3항의 분석 도구)</li>
           </ul>
@@ -121,9 +121,13 @@ export function Privacy() {
           <ul className="mt-1 list-disc pl-5 text-gray-700">
             <li>{EFFECTIVE_DATE} 최초 시행</li>
             <li>
-              {REVISED_DATE} §1 위치 정보 처리 방식(약 11km 반올림), §3 제3자(날씨 제공자·농촌진흥청
+              2026-09-09 §1 위치 정보 처리 방식(약 11km 반올림), §3 제3자(날씨 제공자·농촌진흥청
               공공데이터·국외 호스팅), §4 계정 삭제 절차(전용 이메일·10일 기한·법정 보관 고지·카카오
               연결 해제 안내), §5 문의처 개정
+            </li>
+            <li>
+              {REVISED_DATE} §1 지역 항목 단위 명확화(읍·면 또는 시·군 — 서비스 지역을 충남 15개
+              시·군으로 확대하며 시·군 단위 선택 추가), 영문 표기 NongsaDaMa 통일
             </li>
           </ul>
         </div>
@@ -131,7 +135,7 @@ export function Privacy() {
         <div lang="en" className="rounded-card bg-white/70 px-4 py-3">
           <h2 className="font-bold">English summary</h2>
           <p className="mt-1 text-gray-700">
-            NongsaDama collects: email, nickname, optional language/town-level region/nationality
+            NongsaDaMa collects: email, nickname, optional language/town- or county-level region/nationality
             code/crop, and your posts. Kakao sign-in shares your Kakao nickname, email (optional)
             and profile image. We never collect phone numbers or exact GPS locations. Third
             parties: Supabase (Seoul), Kakao, OpenStreetMap, Google Analytics 4, Microsoft

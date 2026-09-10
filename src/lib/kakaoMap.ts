@@ -21,6 +21,7 @@ export interface KakaoLatLng { getLat(): number; getLng(): number }
 export interface KakaoMap {
   setCenter(latlng: KakaoLatLng): void
   setLevel(level: number): void
+  getLevel(): number
 }
 export interface KakaoOverlay { setMap(map: KakaoMap | null): void }
 export interface KakaoRegionCode {
@@ -94,7 +95,10 @@ export async function coordToRegion(
         if (status !== ns.services!.Status.OK) return resolve(null)
         const r = result.find((x) => x.region_type === 'H') ?? result[0]
         if (!r) return resolve(null)
-        resolve({ sido: r.region_1depth_name, sigungu: r.region_2depth_name })
+        // 일반구가 있는 시는 region_2depth_name이 '천안시 동남구'처럼 두 토큰이다. 농진청 센터명은
+        // 시·군 단위('천안시농업기술센터')라 첫 토큰만 시·군으로 쓴다(v1.1 D-033 누락 점검, 라이브 확인:
+        // center='천안시 동남구' → 0건, '천안시' → 22건).
+        resolve({ sido: r.region_1depth_name, sigungu: r.region_2depth_name.split(' ')[0] })
       })
     })
   } catch {

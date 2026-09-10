@@ -58,6 +58,29 @@ export const childSafetyEmail = 'dmkim@nongsadama.app'
 /** 공식 서비스 주소(D-016). 공유·QR 등 외부 노출용. */
 export const officialSiteUrl = 'https://nongsadama.app/'
 
+/**
+ * 지역·지도 설정(v1.1, D-033) — 특정 시·군에 종속되지 않는 폴백값.
+ * 지역 목록·중심좌표는 DB(regions)가 유일한 출처이며, 여기에는 "지역을 모를 때"의 값만 둔다.
+ */
+export const regionConfig = {
+  /** 선택 지역·부모 시군 어디에도 중심좌표가 없거나 지역 미선택일 때의 지도 중심(대한민국 전역 보기). */
+  defaultMapCenter: { lat: 36.35, lng: 127.8 },
+  /** 전역 보기 줌 — 카카오 level(클수록 넓게), Leaflet zoom(클수록 좁게). */
+  defaultMapKakaoLevel: 13,
+  defaultMapLeafletZoom: 7,
+  /** 읍·면 단위 선택 지역의 줌. */
+  regionMapKakaoLevel: 9,
+  regionMapLeafletZoom: 11,
+  /** 시·군 단위 선택(읍·면이 없는 시·군, 시·군청 중심)의 줌 — 시·군 전체가 담기도록 한 단계 넓게. */
+  cityMapKakaoLevel: 10,
+  cityMapLeafletZoom: 10,
+  /** "내 위치" 이후 최소 확대 정도(전국 보기에서 눌러도 동네가 보이도록). 이미 더 가까우면 유지. */
+  locateKakaoLevel: 8,
+  locateLeafletZoom: 12,
+  /** 이 거리(km)보다 멀면 "서비스 지역 밖" — 지역을 자동 선택하지 않고 안내만 한다. */
+  outOfAreaKm: 30,
+} as const
+
 // 음성 인식(Web Speech API)용 BCP-47 태그. 설정 데이터이며 로직 분기가 아니다.
 // 언어 추가 시 여기에 태그를 더한다(없으면 locale 코드를 그대로 사용).
 export const speechLangTags: Record<Locale, string> = {

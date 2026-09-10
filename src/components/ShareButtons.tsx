@@ -33,7 +33,7 @@ export function ShareButtons() {
       <div
         className="a2a_kit a2a_kit_size_32 a2a_default_style"
         data-a2a-url={officialSiteUrl}
-        data-a2a-title="농사다마 NongsaDama"
+        data-a2a-title="농사다마 NongsaDaMa"
       >
         <a className="a2a_dd" href="https://www.addtoany.com/share" aria-label={t('share.more')} />
         <a className="a2a_button_whatsapp" />

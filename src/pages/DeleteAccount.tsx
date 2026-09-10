@@ -10,7 +10,7 @@ import { useDocumentTitle } from '../hooks/useDocumentTitle'
  * 문안을 고치면 EFFECTIVE_DATE도 같은 날짜로 올린다(재검수 D-032 — 게시일보다 앞선 날짜 금지).
  * 처리 기한은 개인정보 보호법 시행령 제43조③(요구를 받은 날부터 10일 이내, 역일)을 따른다.
  */
-const EFFECTIVE_DATE = '2026-09-09'
+const EFFECTIVE_DATE = '2026-09-10'
 const PAGE_TITLE = 'NongsaDaMa 계정 삭제 안내 / Account Deletion'
 
 function EmailLink() {
@@ -60,7 +60,7 @@ export function DeleteAccount() {
               계정 정보: 이메일, 비밀번호(암호화 저장), 카카오 로그인 연결 정보(카카오가 전달한
               닉네임·프로필 이미지 주소 포함)
             </li>
-            <li>프로필: 닉네임, 언어, 지역(읍·면 단위), 국적 코드, 재배 작목, 이웃 공개 동의</li>
+            <li>프로필: 닉네임, 언어, 지역(읍·면 또는 시·군 단위), 국적 코드, 재배 작목, 이웃 공개 동의</li>
             <li>작성 콘텐츠: 내가 쓴 게시글 전체</li>
             <li>차단 목록, 신고 기록 중 내 계정에 연결된 부분</li>
           </ul>
@@ -126,7 +126,7 @@ export function DeleteAccount() {
               Account: email, password (stored encrypted), Kakao sign-in link (including the
               nickname and profile-image URL Kakao provided)
             </li>
-            <li>Profile: nickname, language, region (town level), nationality code, crop, neighbor-visibility consent</li>
+            <li>Profile: nickname, language, region (town or city/county level), nationality code, crop, neighbor-visibility consent</li>
             <li>Your content: all posts you wrote</li>
             <li>Your block list and the parts of report records tied to your account</li>
           </ul>

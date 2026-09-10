@@ -67,6 +67,25 @@ export function Neighbors() {
     )
   }
 
+  // v1.1(D-033): 이웃 범위는 프로필 지역의 시·군 기준(DB 뷰). 지역이 없으면 항상 0명이 되므로
+  // '이웃이 없다'가 아니라 '지역을 정하라'고 알려 준다(다지역에서 특히 중요).
+  if (!profile?.region_id) {
+    return (
+      <section>
+        <h1 className="mb-4 text-xl font-extrabold tracking-tight">{t('neighbors.title')}</h1>
+        <div className="rounded-card border border-gray-100 bg-white shadow-card px-4 py-6 text-center">
+          <p className="text-sm text-gray-700">{t('neighbors.regionRequired')}</p>
+          <Link
+            to="/profile/edit"
+            className="mt-4 inline-flex min-h-[44px] items-center justify-center rounded-full bg-brand-greenDark px-6 py-3 text-base font-semibold text-white"
+          >
+            {t('neighbors.regionCta')}
+          </Link>
+        </div>
+      </section>
+    )
+  }
+
   const regionsById = new Map((regions ?? []).map((r) => [r.id, r]))
   // 차단한 이웃 숨김(D-022)
   const others = (neighbors ?? []).filter(
