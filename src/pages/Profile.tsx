@@ -37,7 +37,7 @@ export function Profile() {
 
   if (initializing) {
     return (
-      <p className="rounded-card bg-white/70 px-4 py-8 text-center text-sm text-gray-500">
+      <p className="rounded-card bg-white/70 px-4 py-3 text-center text-sm text-gray-500">
         {t('profile.loading')}
       </p>
     )
@@ -47,7 +47,7 @@ export function Profile() {
     return (
       <section>
         <h1 className="mb-4 text-xl font-extrabold tracking-tight">{t('profile.title')}</h1>
-        <p className="mb-4 rounded-card bg-white/70 px-4 py-8 text-center text-sm text-gray-500">
+        <p className="mb-4 rounded-card bg-white/70 px-4 py-3 text-center text-sm text-gray-500">
           {t('profile.empty')}
         </p>
         <Link
@@ -69,7 +69,7 @@ export function Profile() {
       <h1 className="mb-4 text-xl font-extrabold tracking-tight">{t('profile.title')}</h1>
 
       {isLoading ? (
-        <p className="rounded-card bg-white/70 px-4 py-8 text-center text-sm text-gray-500">
+        <p className="rounded-card bg-white/70 px-4 py-3 text-center text-sm text-gray-500">
           {t('profile.loading')}
         </p>
       ) : (

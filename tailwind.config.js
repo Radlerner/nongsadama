@@ -6,6 +6,17 @@ export default {
   content: ['./index.html', './src/**/*.{ts,tsx}'],
   theme: {
     extend: {
+      // Figma 디자인 시스템 폰트: Inter. 한글 문자열이 대부분이라 시스템 한글 폰트가
+      // 자연히 렌더에 쓰이고, 숫자·영문(닉네임·이메일 등)에서 Inter가 적용된다.
+      fontFamily: {
+        sans: [
+          'Inter',
+          '-apple-system',
+          'Apple SD Gothic Neo',
+          'Malgun Gothic',
+          'sans-serif',
+        ],
+      },
       colors: {
         brand: {
           // 로고 퍼즐 3색 + 크림 배경(favicon-src 실측 근사값)

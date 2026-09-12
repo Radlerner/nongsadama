@@ -26,7 +26,7 @@ export function Neighbors() {
 
   if (initializing || (user && profileLoading)) {
     return (
-      <p className="rounded-card bg-white/70 px-4 py-8 text-center text-sm text-gray-500">
+      <p className="rounded-card bg-white/70 px-4 py-3 text-center text-sm text-gray-500">
         {t('neighbors.loading')}
       </p>
     )
@@ -36,7 +36,7 @@ export function Neighbors() {
     return (
       <section>
         <h1 className="mb-4 text-xl font-extrabold tracking-tight">{t('neighbors.title')}</h1>
-        <p className="mb-4 rounded-card bg-white/70 px-4 py-8 text-center text-sm text-gray-500">
+        <p className="mb-4 rounded-card bg-white/70 px-4 py-3 text-center text-sm text-gray-500">
           {t('neighbors.loginRequired')}
         </p>
         <Link
