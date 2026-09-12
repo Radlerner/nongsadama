@@ -6,6 +6,19 @@ export default {
   content: ['./index.html', './src/**/*.{ts,tsx}'],
   theme: {
     extend: {
+      fontFamily: {
+        // Figma 디자인 기준 Inter — 로마자·숫자에 적용되고, 한글은 브라우저가
+        // 시스템 한글 폰트로 자동 대체한다(Inter는 한글 글리프가 없음).
+        sans: [
+          'Inter',
+          'ui-sans-serif',
+          'system-ui',
+          '-apple-system',
+          'Apple SD Gothic Neo',
+          'Malgun Gothic',
+          'sans-serif',
+        ],
+      },
       colors: {
         brand: {
           // 로고 퍼즐 3색 + 크림 배경(favicon-src 실측 근사값)
