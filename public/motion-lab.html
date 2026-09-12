@@ -1,0 +1,342 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex" />
+<title>NongsaDaMa in motion</title>
+<style>
+  :root {
+    --bg: #10120f;
+    --panel: #171915;
+    --panel-2: #1d201b;
+    --line: #2b2e27;
+    --ink: #eef0e9;
+    --ink-dim: #9aa196;
+    --accent: #6b8f4e;
+    --accent-2: #c9812e;
+    --danger: #c65a4a;
+    --ok: #4f9a6b;
+    --mono: "IBM Plex Mono", "SFMono-Regular", Menlo, Consolas, monospace;
+    --sans: "Inter", "Pretendard", -apple-system, "Apple SD Gothic Neo", sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--sans); }
+  body { line-height: 1.55; }
+  a { color: var(--accent); text-decoration: none; }
+
+  .wrap { max-width: 920px; margin: 0 auto; padding: 64px 24px 120px; }
+
+  header.hero { padding: 8px 0 48px; border-bottom: 1px solid var(--line); margin-bottom: 48px; }
+  .eyebrow { font-family: var(--mono); font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); margin-bottom: 18px; }
+  h1 { font-size: 40px; line-height: 1.15; letter-spacing: -0.01em; margin: 0 0 12px; font-weight: 700; }
+  .subtitle { color: var(--ink-dim); font-size: 16px; max-width: 560px; margin: 0 0 24px; }
+  .meta-row { display: flex; gap: 24px; flex-wrap: wrap; font-family: var(--mono); font-size: 12px; color: var(--ink-dim); }
+  .meta-row span b { color: var(--ink); }
+
+  section { margin-bottom: 56px; }
+  .sec-num { font-family: var(--mono); font-size: 12px; color: var(--ink-dim); margin-bottom: 6px; }
+  h2 { font-size: 20px; margin: 0 0 20px; font-weight: 600; }
+  h2 small { display: block; font-family: var(--mono); font-size: 12px; color: var(--ink-dim); font-weight: 400; margin-top: 4px; }
+
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 24px; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 640px) { .grid-2 { grid-template-columns: 1fr; } }
+
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-family: var(--mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-dim); font-weight: 500; }
+  td.mono, .mono { font-family: var(--mono); font-size: 13px; }
+  tr:last-child td { border-bottom: none; }
+
+  .tag { display: inline-block; font-family: var(--mono); font-size: 11px; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--line); color: var(--ink-dim); }
+  .tag.keep { border-color: var(--ok); color: var(--ok); }
+  .tag.drop { border-color: var(--danger); color: var(--danger); }
+  .tag.new { border-color: var(--accent-2); color: var(--accent-2); }
+
+  /* easing curve viz */
+  .curve-card { display: flex; gap: 16px; align-items: center; padding: 16px; background: var(--panel-2); border: 1px solid var(--line); border-radius: 10px; margin-bottom: 12px; }
+  .curve-svg { flex: 0 0 96px; width: 96px; height: 96px; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; }
+  .curve-info { flex: 1; }
+  .curve-name { font-weight: 600; font-size: 14px; margin-bottom: 4px; }
+  .curve-code { font-family: var(--mono); font-size: 12px; color: var(--accent-2); }
+  .curve-desc { font-size: 13px; color: var(--ink-dim); margin-top: 4px; }
+
+  /* duration bars */
+  .dur-row { display: flex; align-items: center; gap: 14px; margin-bottom: 12px; }
+  .dur-label { width: 108px; font-family: var(--mono); font-size: 12px; color: var(--ink-dim); flex-shrink: 0; }
+  .dur-track { flex: 1; height: 10px; background: var(--panel-2); border-radius: 6px; overflow: hidden; }
+  .dur-fill { height: 100%; border-radius: 6px; background: var(--accent); }
+  .dur-val { width: 64px; text-align: right; font-family: var(--mono); font-size: 12px; color: var(--ink); flex-shrink: 0; }
+
+  .callout { border-left: 3px solid var(--accent-2); background: var(--panel-2); border-radius: 0 8px 8px 0; padding: 14px 16px; font-size: 14px; margin: 16px 0; }
+  .callout.warn { border-left-color: var(--danger); }
+  .callout.ok { border-left-color: var(--ok); }
+
+  ul.plain { margin: 0; padding: 0; list-style: none; }
+  ul.plain li { padding: 8px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
+  ul.plain li:last-child { border-bottom: none; }
+  ul.plain li b { color: var(--ink); }
+
+  pre { background: var(--panel-2); border: 1px solid var(--line); border-radius: 10px; padding: 18px; overflow-x: auto; font-family: var(--mono); font-size: 12.5px; line-height: 1.6; color: var(--ink); }
+  pre .cm { color: var(--ink-dim); }
+
+  .screen-list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  @media (max-width: 640px) { .screen-list { grid-template-columns: 1fr; } }
+  .screen-item { background: var(--panel-2); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; }
+  .screen-item .name { font-weight: 600; font-size: 13px; margin-bottom: 6px; }
+  .screen-item .desc { font-size: 12.5px; color: var(--ink-dim); }
+
+  footer { border-top: 1px solid var(--line); padding-top: 24px; font-family: var(--mono); font-size: 12px; color: var(--ink-dim); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <div class="eyebrow">NongsaDaMa Motion Lab</div>
+    <h1>NongsaDaMa in motion</h1>
+    <p class="subtitle">Every easing curve, duration and keyframe animation detected from nongsadama.app</p>
+    <div class="meta-row">
+      <span>SOURCE <b>https://nongsadama.app</b></span>
+      <span>VERSION <b>v1.1 (live)</b></span>
+      <span>SCOPE <b>UI / motion analysis only — no functional change</b></span>
+    </div>
+  </header>
+
+  <!-- 1. Easing -->
+  <section>
+    <div class="sec-num">01 / 11</div>
+    <h2>감지된 easing 목록<small>Detected easing curves</small></h2>
+    <div class="curve-card">
+      <svg class="curve-svg" viewBox="0 0 100 100"><path d="M10 90 C 10 90, 40 90, 60 10" stroke="#6b8f4e" stroke-width="3" fill="none"/></svg>
+      <div class="curve-info">
+        <div class="curve-name">ease-in-out (Tailwind default)</div>
+        <div class="curve-code">cubic-bezier(0.4, 0, 0.2, 1)</div>
+        <div class="curve-desc">가장 흔한 감지 지점 — <code class="mono">transition-shadow</code> 유틸리티(홈 카테고리 타일)의 기본 timing-function. 명시적으로 override되지 않음.</div>
+      </div>
+    </div>
+    <div class="curve-card">
+      <svg class="curve-svg" viewBox="0 0 100 100"><path d="M10 90 C 30 20, 40 20, 90 10" stroke="#c9812e" stroke-width="3" fill="none"/></svg>
+      <div class="curve-info">
+        <div class="curve-name">ease-in-out (pulse keyframe)</div>
+        <div class="curve-code">cubic-bezier(0.4, 0, 0.6, 1)</div>
+        <div class="curve-desc"><code class="mono">animate-pulse</code>에 쓰이는 Tailwind 기본 easing. 위치추적 중인 지도 핀 아이콘(<code class="mono">MapPin</code>)에만 사용.</div>
+      </div>
+    </div>
+    <div class="callout warn">
+      <b>발견:</b> 그 외 버튼 · 카드 · 입력창 · select · 하단 탭 · 필터 chip에서는 <b>명시적 transition/animation이 전혀 감지되지 않음</b>. 즉 커스텀 easing curve, spring 효과는 존재하지 않는다. 랜딩/지역선택/지도 페이지 라이브 DOM 검사에서 <code class="mono">transitionDuration ≠ 0s</code>인 엘리먼트가 두 곳(카테고리 타일, 위치추적 아이콘) 외에는 하나도 없었다.
+    </div>
+  </section>
+
+  <!-- 2. Duration -->
+  <section>
+    <div class="sec-num">02 / 11</div>
+    <h2>duration 목록<small>Detected + inferred durations</small></h2>
+    <div class="panel">
+      <div class="dur-row">
+        <div class="dur-label">transition-shadow</div>
+        <div class="dur-track"><div class="dur-fill" style="width:53%; background:#6b8f4e"></div></div>
+        <div class="dur-val">150ms</div>
+      </div>
+      <div class="dur-row">
+        <div class="dur-label">animate-pulse</div>
+        <div class="dur-track"><div class="dur-fill" style="width:100%; background:#c9812e"></div></div>
+        <div class="dur-val">2000ms</div>
+      </div>
+      <div class="dur-row">
+        <div class="dur-label">route change</div>
+        <div class="dur-track"><div class="dur-fill" style="width:5%; background:#9aa196"></div></div>
+        <div class="dur-val">0ms</div>
+      </div>
+      <div class="dur-row">
+        <div class="dur-label">focus outline</div>
+        <div class="dur-track"><div class="dur-fill" style="width:5%; background:#9aa196"></div></div>
+        <div class="dur-val">0ms</div>
+      </div>
+    </div>
+    <div class="callout">
+      <b>범주화:</b> fast = 카드 hover shadow (150ms) · normal = 없음 · slow = pulse 로딩(2000ms, 반복). 라우트 전환, 모달/바텀시트, 필터 chip, 탭바 전환 duration은 <b>0ms(즉시 전환)</b> — 브라우저 기본 동작 그대로다.
+    </div>
+  </section>
+
+  <!-- 3. Keyframes -->
+  <section>
+    <div class="sec-num">03 / 11</div>
+    <h2>keyframe 목록<small>@keyframes + JS animation</small></h2>
+    <table>
+      <thead><tr><th>Name</th><th>사용 위치</th><th>Duration</th><th>Easing</th><th>반복</th><th>UX 목적</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="mono">pulse</td>
+          <td>지도 상단 위치추적 아이콘(<code class="mono">MapPin</code>), <code class="mono">locating=true</code>일 때</td>
+          <td class="mono">2000ms</td>
+          <td class="mono">ease-in-out</td>
+          <td>infinite</td>
+          <td>GPS 좌표를 가져오는 동안 "진행 중" 신호. 50%에서 opacity 0.5로 페이드.</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="callout">이 외 JS 기반 애니메이션(Framer Motion, GSAP, spring 라이브러리 등)은 코드베이스와 라이브 사이트 어디에도 없음. 화면 전환 · 모달 · 바텀시트 · 드롭다운은 모두 <b>즉시 나타나고 즉시 사라짐</b>(enter/exit transition 없음).</div>
+  </section>
+
+  <!-- 4. Screen interaction -->
+  <section>
+    <div class="sec-num">04 / 11</div>
+    <h2>화면별 interaction<small>Screen-by-screen motion audit</small></h2>
+    <div class="screen-list">
+      <div class="screen-item"><div class="name">01 홈 (지도)</div><div class="desc">카테고리 타일: hover 시 <code class="mono">shadow</code>만 전환(150ms). 탭 피드백 없음. 위치추적 핀: pulse.</div></div>
+      <div class="screen-item"><div class="name">02 지역 선택</div><div class="desc">select/input 포커스 시 브라우저 기본 outline만. transition 없음. "현 위치로 찾기" 버튼: 정적.</div></div>
+      <div class="screen-item"><div class="name">03 지도</div><div class="desc">마커 hover/tap 피드백 없음. 지도 자체는 라이브러리(카카오/구글) 기본 pan·zoom 모션 사용.</div></div>
+      <div class="screen-item"><div class="name">04 게시판</div><div class="desc">리스트 카드 hover 없음. 글쓰기 버튼 정적. 페이지 전환 즉시.</div></div>
+      <div class="screen-item"><div class="name">05 이웃/매칭</div><div class="desc">프로필 카드 정적. 매칭 액션 버튼에 피드백 애니메이션 없음.</div></div>
+      <div class="screen-item"><div class="name">06 내 정보</div><div class="desc">폼 필드 전환 없음. 저장 버튼 클릭 후 로딩/성공 피드백 모션 미확인.</div></div>
+      <div class="screen-item"><div class="name">07 하단 탭바</div><div class="desc">active 상태가 색상만 즉시 전환. 탭 전환 시 인디케이터 슬라이드 없음.</div></div>
+      <div class="screen-item"><div class="name">08 빈 상태</div><div class="desc">텍스트 즉시 표시. 아이콘/일러스트 등장 애니메이션 없음(과함도 없고, 존재감도 약함).</div></div>
+      <div class="screen-item"><div class="name">09 로딩 상태</div><div class="desc">유일한 모션 지점 — pulse. 스켈레톤 · 스피너 등 별도 로딩 언어는 없음.</div></div>
+      <div class="screen-item"><div class="name">10 버튼/카드/필터</div><div class="desc">전 화면 공통: press 상태(active) 시각 피드백이 사실상 없음. 필터 chip 선택 시 색상만 즉시 전환.</div></div>
+    </div>
+  </section>
+
+  <!-- 5. Problems -->
+  <section>
+    <div class="sec-num">05 / 11</div>
+    <h2>문제점<small>What&apos;s actually wrong</small></h2>
+    <ul class="plain">
+      <li><b>tap 피드백 부재</b> — 모바일 우선 서비스인데 버튼/카드에 press 시 눌리는 느낌(scale/opacity)이 전혀 없다. hover 의존 UI가 모바일에서는 그대로 "무반응"으로 느껴진다.</li>
+      <li><b>duration 일관성 자체가 없음</b> — 전환이 존재하는 지점(150ms)과 존재하지 않는 지점(0ms)만 있고, 그 사이 단계(200~300ms급 normal/slow)가 설계된 적이 없다.</li>
+      <li><b>모달/바텀시트 enter·exit 없음</b> — 화면이 즉시 나타나고 사라져 위치 전환의 공간감이 없다. 특히 지도 위에 뜨는 오버레이일수록 급작스럽게 느껴진다.</li>
+      <li><b>로딩 신호가 pulse 하나뿐</b> — 지도 위치추적 외 다른 비동기 동작(글쓰기 제출, 프로필 저장, 매칭 요청)에는 로딩 상태 모션이 확인되지 않아 사용자가 "눌렸는지" 확신하기 어렵다.</li>
+      <li><b>과도한 motion은 없음(역설적 문제)</b> — AI 생성 UI 특유의 bounce/scale/그라디언트 애니메이션은 전혀 없다. 다만 그 결과가 "신뢰감 있는 정적임"이 아니라 "반응이 없어 보임"으로 읽힌다.</li>
+      <li><b>지도 사용성을 방해하는 애니메이션은 없음</b> — 긍정적 발견. 다만 이는 의도적 설계가 아니라 모션 자체가 없기 때문.</li>
+    </ul>
+  </section>
+
+  <!-- 6/7 delete-recommend / keep-recommend -->
+  <section>
+    <div class="sec-num">06–07 / 11</div>
+    <h2>삭제 권장 / 유지 권장 animation</h2>
+    <div class="grid-2">
+      <div class="panel">
+        <div style="margin-bottom:12px"><span class="tag drop">DROP</span></div>
+        <ul class="plain">
+          <li>없음 — 삭제할 정도로 과한 애니메이션이 현재 존재하지 않는다.</li>
+          <li>단, <code class="mono">animate-pulse</code>의 2000ms 주기는 v1.2에서 더 빠른 인지 신호(예: 1200~1400ms)로 조정 권장.</li>
+        </ul>
+      </div>
+      <div class="panel">
+        <div style="margin-bottom:12px"><span class="tag keep">KEEP</span></div>
+        <ul class="plain">
+          <li><b>transition-shadow (150ms)</b> — 카테고리 타일의 미묘한 hover 피드백. 방향은 맞음, 대상 범위만 버튼/카드 전체로 확장.</li>
+          <li><b>pulse 로딩 신호</b> — 위치추적처럼 "기다림"이 있는 지점의 개념 자체는 유지, duration/easing만 토큰화.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- 8. v1.2 tokens -->
+  <section>
+    <div class="sec-num">08 / 11</div>
+    <h2>NongsaDaMa v1.2 motion token</h2>
+    <table>
+      <thead><tr><th>Token</th><th>Value</th><th>용도</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">--motion-fast</td><td class="mono">120ms</td><td>tap feedback, chip 선택, 아이콘 상태 전환</td></tr>
+        <tr><td class="mono">--motion-md</td><td class="mono">200ms</td><td>카드 hover/press, 탭바 active, 포커스 링</td></tr>
+        <tr><td class="mono">--motion-slow</td><td class="mono">280ms</td><td>바텀시트/모달 enter·exit, 페이지 전환</td></tr>
+        <tr><td class="mono">--easing-standard</td><td class="mono">cubic-bezier(0.2, 0, 0, 1)</td><td>대부분의 UI 전환 기본값</td></tr>
+        <tr><td class="mono">--easing-emphasized</td><td class="mono">cubic-bezier(0.2, 0, 0, 1)</td><td>모달/바텀시트 등장, 강조가 필요한 전환</td></tr>
+      </tbody>
+    </table>
+    <div class="callout ok">방향: transition 최소화 · 150~250ms 중심 · ease-out 계열 · hover보다 tap 우선 · scale 최소화(opacity + translate 조합 우선) · 지도 interaction은 건드리지 않음 · enter/exit이 필요한 곳은 바텀시트/모달 뿐.</div>
+  </section>
+
+  <!-- 9. CSS vars -->
+  <section>
+    <div class="sec-num">09 / 11</div>
+    <h2>CSS 변수 예시</h2>
+    <pre><span class="cm">/* globals.css 또는 :root */</span>
+:root {
+  --motion-fast: 120ms;
+  --motion-md: 200ms;
+  --motion-slow: 280ms;
+
+  --easing-standard: cubic-bezier(0.2, 0, 0, 1);
+  --easing-emphasized: cubic-bezier(0.2, 0, 0, 1);
+}
+
+<span class="cm">/* 버튼 / 카드 공통 tap feedback */</span>
+.tappable {
+  transition: transform var(--motion-fast) var(--easing-standard),
+              opacity var(--motion-fast) var(--easing-standard);
+}
+.tappable:active {
+  transform: scale(0.98);
+  opacity: 0.92;
+}
+
+<span class="cm">/* 바텀시트 enter/exit */</span>
+.sheet-enter {
+  transform: translateY(12px);
+  opacity: 0;
+}
+.sheet-enter-active {
+  transform: translateY(0);
+  opacity: 1;
+  transition: transform var(--motion-slow) var(--easing-emphasized),
+              opacity var(--motion-slow) var(--easing-emphasized);
+}
+
+<span class="cm">/* 접근성: reduced motion 대응 */</span>
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition-duration: 0.001ms !important;
+    animation-duration: 0.001ms !important;
+  }
+}</pre>
+  </section>
+
+  <!-- 7. reduced motion note -->
+  <section>
+    <div class="sec-num">— / 11</div>
+    <h2>prefers-reduced-motion 대응 현황</h2>
+    <div class="callout warn">라이브 스타일시트 검사 결과 <code class="mono">prefers-reduced-motion</code> 미디어쿼리가 <b>존재하지 않음</b>. 현재는 모션이 거의 없어 실질적 위험은 낮지만, v1.2에서 tap/enter-exit 모션을 추가하는 순간 반드시 위 CSS 변수 예시의 fallback 블록을 함께 넣어야 한다.</div>
+  </section>
+
+  <!-- 10. Figma guideline -->
+  <section>
+    <div class="sec-num">10 / 11</div>
+    <h2>Figma motion guideline</h2>
+    <div class="panel">
+      <ul class="plain">
+        <li><b>Prototype 설정</b> — Smart Animate, Easing: <span class="mono">Custom cubic-bezier(0.2, 0, 0, 1)</span>, Duration: Fast=120ms / Medium=200ms / Slow=280ms 세 프리셋만 사용.</li>
+        <li><b>컴포넌트 variant</b> — 모든 버튼/카드 컴포넌트에 <span class="mono">Default / Pressed</span> variant 추가(Hover variant는 참고용, 실제 모바일 적용은 Pressed 기준).</li>
+        <li><b>바텀시트/모달 프레임</b> — "Move in" (Y +12px → 0, opacity 0 → 100%), Slow 토큰 적용.</li>
+        <li><b>주석 규칙</b> — 각 인터랙션 프레임에 <span class="mono">motion: fast|md|slow</span> 태그를 텍스트 레이어로 명시해 개발 핸드오프 시 토큰 매핑 오차를 없앤다.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 11. v0 implementation rule -->
+  <section>
+    <div class="sec-num">11 / 11</div>
+    <h2>v0 구현 시 적용할 motion rule</h2>
+    <div class="panel">
+      <ul class="plain">
+        <li>Tailwind 커스텀 유틸리티로 <span class="mono">duration-fast(120ms) / duration-md(200ms) / duration-slow(280ms)</span> 및 <span class="mono">ease-standard</span> 토큰을 <span class="mono">tailwind.config.js</span>에 추가하고, 임의의 <span class="mono">duration-[Nms]</span> 하드코딩은 지양한다.</li>
+        <li>모든 clickable 요소(버튼/카드/필터 chip)에 <span class="mono">active:scale-[0.98] transition-transform duration-fast</span> 패턴을 기본값으로 적용해 tap 피드백을 통일한다.</li>
+        <li>모달/바텀시트는 컨테이너 등장에만 <span class="mono">duration-slow ease-standard</span>로 opacity+translateY 조합을 쓰고, 배경 딤(dim)은 별도로 <span class="mono">duration-md</span> 사용.</li>
+        <li>지도 위 오버레이(마커 팝업 등)는 motion 자체보다 등장 지점의 명확성이 더 중요하므로 애니메이션을 추가하지 않거나 <span class="mono">duration-fast</span>만 적용한다.</li>
+        <li>새 로딩 상태를 추가할 때는 <span class="mono">animate-pulse</span>를 그대로 재사용하되, Tailwind 기본 2000ms 대신 커스텀 <span class="mono">animate-pulse-fast(1300ms)</span> 유틸을 우선 검토한다.</li>
+        <li>Supabase/API/라우팅/hooks/지도 로직은 이번 리포트의 스코프가 아니므로, 위 rule은 어디까지나 <b>클래스명·CSS 토큰 레벨</b>에서만 적용한다.</li>
+      </ul>
+    </div>
+  </section>
+
+  <footer>
+    NongsaDaMa Motion Lab — analysis only, no Supabase / API / auth / routing / map logic changed. Generated for v1.2 motion planning.
+  </footer>
+
+</div>
+</body>
+</html>
