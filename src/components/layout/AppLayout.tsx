@@ -1,9 +1,11 @@
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom'
+import { AnimatePresence, motion } from 'framer-motion'
 import { BottomNav } from './BottomNav'
 import { LanguageSwitcher } from './LanguageSwitcher'
 import { OfflineBanner } from '../OfflineBanner'
 import { useTranslation } from '../../i18n/useTranslation'
 import { useStaleRegionCleanup } from '../../hooks/useRegions'
+import { pageVariants } from '../../lib/motion'
 import { ChevronLeft } from 'lucide-react'
 
 export function AppLayout() {
@@ -52,7 +54,17 @@ export function AppLayout() {
       </header>
       <OfflineBanner />
       <main className="flex-1 px-4 py-4">
-        <Outlet />
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.div
+            key={location.pathname}
+            variants={pageVariants}
+            initial="hidden"
+            animate="show"
+            exit="exit"
+          >
+            <Outlet />
+          </motion.div>
+        </AnimatePresence>
       </main>
       <BottomNav />
     </div>

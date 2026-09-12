@@ -1,4 +1,6 @@
 import { Link, useSearchParams } from 'react-router-dom'
+import { motion } from 'framer-motion'
+import { listContainer } from '../lib/motion'
 import { useTranslation } from '../i18n/useTranslation'
 import { useAuth } from '../context/AuthContext'
 import { useRegions, countyRegionIds } from '../hooks/useRegions'
@@ -85,7 +87,12 @@ export function Board() {
       ) : (posts ?? []).length === 0 ? (
         <EmptyBox text={t('board.empty')} />
       ) : (
-        <ul className="flex flex-col gap-2">
+        <motion.ul
+          variants={listContainer}
+          initial="hidden"
+          animate="show"
+          className="flex flex-col gap-2"
+        >
           {(posts ?? []).map((post) => (
             <PostCard
               key={post.id}
@@ -94,7 +101,7 @@ export function Board() {
               viewerRegionId={regionId}
             />
           ))}
-        </ul>
+        </motion.ul>
       )}
     </section>
   )

@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import { motion } from 'framer-motion'
+import { listContainer } from '../lib/motion'
 import { useTranslation } from '../i18n/useTranslation'
 import { useRegions, countyRegionIds } from '../hooks/useRegions'
 import { useSelectedRegion } from '../context/SelectedRegionContext'
@@ -114,7 +116,12 @@ export function LifeInfo() {
       ) : filtered.length === 0 ? (
         <EmptyBox text={(items ?? []).length > 0 ? t('lifeInfo.emptyFiltered') : t('lifeInfo.empty')} />
       ) : (
-        <ul className="flex flex-col gap-2">
+        <motion.ul
+          variants={listContainer}
+          initial="hidden"
+          animate="show"
+          className="flex flex-col gap-2"
+        >
           {filtered.map((item) => (
             <LifeInfoCard
               key={item.id}
@@ -122,7 +129,7 @@ export function LifeInfo() {
               regionName={regionNameOf(item.region_id)}
             />
           ))}
-        </ul>
+        </motion.ul>
       )}
     </section>
   )

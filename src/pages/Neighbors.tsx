@@ -1,4 +1,6 @@
 import { Link } from 'react-router-dom'
+import { motion } from 'framer-motion'
+import { listContainer } from '../lib/motion'
 import { useAuth } from '../context/AuthContext'
 import { useTranslation } from '../i18n/useTranslation'
 import { useOwnProfile } from '../hooks/useOwnProfile'
@@ -117,7 +119,12 @@ export function Neighbors() {
       ) : ranked.length === 0 ? (
         <EmptyBox text={t('neighbors.empty')} />
       ) : (
-        <ul className="flex flex-col gap-2">
+        <motion.ul
+          variants={listContainer}
+          initial="hidden"
+          animate="show"
+          className="flex flex-col gap-2"
+        >
           {ranked.map(({ n }) => (
             <NeighborCard
               key={n.id}
@@ -126,7 +133,7 @@ export function Neighbors() {
               viewerRegionId={viewer.region_id}
             />
           ))}
-        </ul>
+        </motion.ul>
       )}
 
       <p className="mt-4 text-xs text-gray-400">{t('neighbors.privacyNote')}</p>
