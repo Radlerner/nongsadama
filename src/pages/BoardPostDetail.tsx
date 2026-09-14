@@ -293,19 +293,23 @@ function ModerationActions({ postId, authorId }: { postId: string; authorId: str
 }
 
 /**
- * 비슷한 글(PRD v1.6 §1). 결과 없으면(데이터 5건 미만 포함) 섹션 자체를 숨긴다.
- * 차단한 작성자의 글은 추천에서 제외한다(재검수 P1-1b).
+ * 비슷한 글(PRD v1.6 §1, v1.2 D-034). 서버 RPC가 관련성 게이트(의미+어휘)를 통과한 글만 돌려주며,
+ * 후보가 없으면 억지로 채우지 않고 "아직 비슷한 글이 없어요"를 보여 준다(무관한 글 노출 금지).
+ * 차단한 작성자의 글은 추천에서 제외한다(재검수 P1-1b). 로딩·오류 중에는 섹션을 숨긴다(부가 기능).
  */
 function SimilarPosts({ postId }: { postId: string }) {
   const { t } = useTranslation()
   const { user } = useAuth()
-  const { data: raw } = useSimilarPosts(postId)
+  const { data: raw, isLoading, isError } = useSimilarPosts(postId)
   const { data: blockedIds } = useBlockedIds(user?.id)
   const data = (raw ?? []).filter((s) => !blockedIds?.has(s.author_id))
-  if (data.length === 0) return null
+  if (isLoading || isError) return null
   return (
     <section className="rounded-card border border-gray-100 bg-white shadow-card px-4 py-3">
       <p className="mb-2 text-xs font-semibold text-gray-500">{t('postDetail.similar')}</p>
+      {data.length === 0 ? (
+        <p className="py-2 text-sm text-gray-500">{t('postDetail.similarEmpty')}</p>
+      ) : (
       <ul className="flex flex-col gap-1">
         {data.map((s) => (
           <li key={s.id}>
@@ -317,6 +321,7 @@ function SimilarPosts({ postId }: { postId: string }) {
           </li>
         ))}
       </ul>
+      )}
     </section>
   )
 }

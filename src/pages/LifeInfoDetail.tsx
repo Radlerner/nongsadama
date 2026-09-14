@@ -112,7 +112,7 @@ export function LifeInfoDetail() {
       <section className="flex flex-col gap-2 text-sm">
         {item.phone ? (
           <a
-            href={`tel:${item.phone}`}
+            href={`tel:${item.phone.replace(/[^0-9+]/g, '')}`}
             className="flex min-h-[56px] items-center justify-center gap-2 rounded-full bg-brand-greenDark px-6 text-base font-bold text-white"
           >
             <span aria-hidden className="text-xl">☎</span>

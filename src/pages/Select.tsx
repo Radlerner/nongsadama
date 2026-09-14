@@ -6,6 +6,7 @@ import { MapPin } from '../components/ui/icons'
 import {
   useRegions,
   splitRegionGroups,
+  provinceOf,
   useStaleRegionCleanup,
   type Region,
 } from '../hooks/useRegions'
@@ -79,6 +80,11 @@ function RegionPicker() {
   )
   // P2-2: 로드된 활성 지역 목록에 없는 저장된 선택은 무효화한다(공용 훅, v1.1 D-033).
   useStaleRegionCleanup()
+  // v1.2(D-035): 시/도 → 시·군·구 두 단계. 사용자가 고른 시/도가 없으면 현재 선택 지역의 시/도를 따른다.
+  const [provinceChoice, setProvinceChoice] = useState<string | null>(null)
+  const selectedRegion = (regions ?? []).find((r) => r.id === regionId)
+  const provinces = (regions ?? []).filter((r) => r.level === 'province')
+  const provinceId = provinceChoice ?? provinceOf(regions ?? [], selectedRegion)?.id ?? null
 
   // 위치 동의 시 가까운 지역 추천(v1.3 §4.1). 좌표는 기기 내 계산만, 저장·전송 없음.
   const suggestNearest = async () => {
@@ -98,6 +104,7 @@ function RegionPicker() {
         return
       }
       setRegionId(near.region.id)
+      setProvinceChoice(null) // 추천된 지역의 시/도를 따라가도록 수동 선택 해제
       setGeoNotice({ key: 'select.geoSet' })
     } catch {
       setGeoNotice({ key: 'map.geoError' })
@@ -141,7 +148,11 @@ function RegionPicker() {
   // v1.1(D-033): 시·군별 묶음 — 읍·면이 있는 시·군은 읍·면 버튼(파일럿 홍성 그대로),
   // 읍·면이 아직 없는 시·군은 시·군 자체를 고른다. 후자는 한 묶음(접힘)으로 모아 화면이
   // 시·군 수만큼 길어지지 않고 '계속' 버튼이 멀어지지 않게 한다. 부모 없는(미분류) 읍·면은 별도 그룹(P2-1).
-  const { detailed, cityOnly } = splitRegionGroups(regions ?? [])
+  // 시/도 데이터가 있으면 고른 시/도의 시·군·구만(아직 안 골랐으면 비움), 없으면(구 데이터) 전체를 보여 준다.
+  const { detailed, cityOnly } =
+    provinces.length > 0 && !provinceId
+      ? { detailed: [], cityOnly: [] }
+      : splitRegionGroups(regions ?? [], provinces.length > 0 ? provinceId : undefined)
   const detailedGroups = detailed.map((g) => ({
     key: g.city?.id ?? '__ungrouped__',
     label: g.city ? regionLabel(g.city.id, g.city.names, locale) : t('select.regionOther'),
@@ -151,13 +162,32 @@ function RegionPicker() {
   const cityOnlyOpen = cityOnly.some((r) => r.id === regionId) || detailedGroups.length === 0
 
   const total = detailedGroups.reduce((n, g) => n + g.members.length, 0) + cityOnly.length
-  if (total === 0) {
+  if ((regions ?? []).length === 0) {
     return (
       <p className="rounded-card bg-white/70 px-4 py-6 text-center text-sm text-gray-500">
         {t('select.regionEmpty')}
       </p>
     )
   }
+
+  const provinceSelect =
+    provinces.length > 0 ? (
+      <label className="flex flex-col gap-1 text-sm font-semibold text-gray-700">
+        {t('select.province')}
+        <select
+          value={provinceId ?? ''}
+          onChange={(e) => setProvinceChoice(e.target.value || null)}
+          className="min-h-[44px] rounded-md border border-gray-300 bg-white px-3 text-base font-normal text-gray-900"
+        >
+          <option value="">{t('select.provincePlaceholder')}</option>
+          {provinces.map((p) => (
+            <option key={p.id} value={p.id}>
+              {regionLabel(p.id, p.names, locale)}
+            </option>
+          ))}
+        </select>
+      </label>
+    ) : null
 
   const renderRegion = (region: Region) => {
     const active = regionId === region.id
@@ -194,6 +224,17 @@ function RegionPicker() {
       </button>
       {noticeText ? (
         <p className="rounded-full bg-gray-50 px-3 py-2 text-xs text-gray-700">{noticeText}</p>
+      ) : null}
+      {provinceSelect}
+      {provinces.length > 0 && !provinceId ? (
+        <p className="rounded-card bg-white/70 px-4 py-4 text-center text-sm text-gray-500">
+          {t('select.pickProvinceFirst')}
+        </p>
+      ) : null}
+      {provinceId && total === 0 ? (
+        <p className="rounded-card bg-white/70 px-4 py-4 text-center text-sm text-gray-500">
+          {t('select.regionEmpty')}
+        </p>
       ) : null}
       {detailedGroups.map((g) => (
         <div key={g.key}>

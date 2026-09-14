@@ -498,6 +498,7 @@ Supabase 프로젝트 **nongsadama**(`ikusdwursvbdrznbcjtw`, ap-northeast-2)에 
 ### 독립 재검수(4차원 병렬 + 발견별 2인 반박) 반영
 - P0 없음. 발견 20건(P1 1건은 Android 위치 권한 '권고' — 코드 무변경) 중 코드 반영 12건, 문서 반영 6건, 기록만 2건. 세부는 D-033 "독립 재검수 반영".
 - 반박 검증 최종(44 에이전트): **확정 3건** — 위치 안내 텍스트 저장 회귀, 읍·면 정렬 회귀(홍성읍 맨 아래), ProfileEdit 14개 단일 optgroup — 모두 반영·재검증 완료. 기각 17건은 "데이터·심사 실질 영향 없음" 판정이었으나 수정 비용이 작은 항목(stale 정리 0행 가드, ko 키 폴백 차단, 지도 빈 상태 키, 헤더 접근성 이름, 버전 줄 사전화, CTA 접힘, 캡션 절대 표현, geoError 문구, 롤백 문서 FK 주석)은 함께 반영했고, Android 권한·gradle.properties·WebView OAuth·카카오맵 도메인은 문서 기록만.
+
 | 검증 | 결과 |
 |---|---|
 | `/select`(홍성읍 선택): 읍·면 순서 "✓홍성읍, 광천읍, 홍북읍, 금마면, 홍동면…"(v1.0 순서), 시·군 묶음 `<details>` 기본 접힘·summary 44px·캡션 "시·군 단위로 고르기 (14)", '계속' CTA 상단 1004px(접기 전 ≈1,500px) | ✅ |
@@ -506,3 +507,30 @@ Supabase 프로젝트 **nongsadama**(`ikusdwursvbdrznbcjtw`, ap-northeast-2)에 
 | 예산군 홈에서 '병원' 타일 → "아직 등록된 정보가 없어요"(emptyFiltered 아님), 헤더 링크 aria-label "농사다마 · 홈" | ✅ |
 | typecheck 0 · 패리티 0 · 플레이스홀더 0 · 빌드 성공 · `npx cap sync android` 재실행(번들 동일) · 클린 탭 콘솔 앱 오류 0(백그라운드 탭 네트워크 중단 메시지만) | ✅ |
 | 미실측(로그인 필요): ProfileEdit optgroup(홍성군 그룹 + '시·군 단위로 고르기' 그룹), 내 정보 버전 줄 `{app.name} v1.1` — 코드 검토 | 코드 검토 |
+
+## v1.2 — 기능·데이터 품질 개선 (2026-09-12, D-034~D-037)
+원인 분석은 라이브 측정 기반: 연관 글 = gte-small 임베딩 코사인 상위 3(임계값 없음, OpenAI 미사용), 정적 팁 = farm_tips 시드 8건, 지역 = 충남 15 city만·시도 단계 없음.
+| 검증 | 결과 |
+|---|---|
+| `npm run typecheck` 0 · `npm run build` 성공 · ko/en 패리티 0 · 플레이스홀더 0 · `npx cap sync android` 성공(android 자산 = dist) | ✅ |
+| 라이브 마이그레이션 4건 적용: similar_posts_relevance, farm_tips_unpublish_static, regions_nationwide, life_info_chungnam_public | ✅ |
+| 라이브 DB: regions province 16 / city 230(parent·centroid 100%) / town 11, 충남 자식 15, 홍성 읍·면 parent 유지 | ✅ |
+| 라이브 DB(anon 역할): life_info 공개 107(홍성 13 + 충남 94, 좌표 94/94), farm_tips 공개 0, regions 257 | ✅ |
+| 연관 글 RPC(라이브·anon): "몸이 아파요"→"읍내 내과"(0.928/0.030)만, "풋살"→"축구"(0.927/0.045)만, "임금 체불"·"월급"·"덥네요"→0건, 헬퍼 bigram_jaccard 동작 | ✅ |
+| 브라우저 글 상세: "임금 체불" → 비슷한 글 섹션에 "아직 비슷한 글이 없어요", 풋살 미노출; "몸이 아파요" → 링크 1건(읍내 내과) | ✅ |
+| embed-post v2 배포(verify_jwt=true), OPENAI 키 없는 상태에서 gte-small 경로 유지(코드 검토; 키 있는 경로는 미실측) | ✅/코드 |
+| `/select`: 시/도 미선택 시 안내만(버튼 0), 시/도 16개 옵션, 충남 → 홍성군 읍·면 11 + 시·군·구 14(접힘), 경기도 → 31(펼침), 수원시 선택·저장 | ✅ |
+| 수원시(데이터 없음): 홈 지도 중심 수원·핀 0·"아직 등록된 정보가 없어요", crash 0, 가짜 정보 0; 농사 도움 "수원시 날씨 + 사업 7건" | ✅ |
+| 예산군: 생활정보 7건(청·보건소·종합병원·상설시장·가족센터·역·터미널) + "최근 확인됨" 배지, 지도 핀 7 | ✅ |
+| 홍성읍 회귀: 생활정보 13건, 읍·면 11 첫 그룹 | ✅ |
+| 농사 도움: 정적 팁 문구 0(번들·화면), 부제 "오늘 날씨와 우리 지역 교육·사업 정보", 홈 진입 카드 문구 갱신 | ✅ |
+| 카카오맵: 홈 지도·핀·내 위치 코드 무변경, 지오코더(coordToRegion) 무변경 | ✅(코드) |
+| 기존 로그인: AuthContext·Login 무변경 | ✅(코드) |
+| 클린 로드 콘솔: 앱 오류 0(편집 중 HMR 500은 과도기) | ✅ |
+| 미실측(로그인 필요): 프로필 편집 시·도별 optgroup 렌더·저장 — 코드 검토 | 코드 검토 |
+| 독립 재검수(4차원 병렬 + 발견별 반박, 워크플로 wb5tifm56): 확정 5 — P0 `text_bigrams` O(N²) 임시파일(5000자 무공백 → 144MB)·public 노출, P1 OpenAI 경로 UGC 국외 전송(방침 §3 전제), P1 이웃 뷰 범위가 시·도로 확대, P1 문서 누락, P2 발신 불가 전화 문자열. 기각 39 중 staleTime·주석·주소 접두·'민간' 표기·장날 오독·롤백 문서 등 9건 자발 반영 | ✅ 반영 |
+| 하드닝 마이그레이션 `20260912000400_v12_hardening` 라이브 적용(09-13): pg_proc에 `private.text_bigrams`·`private.bigram_jaccard`만, `public.text_bigrams` 0; REST `rpc/text_bigrams` → 404 PGRST202, `rpc/similar_posts` → 200; `explain (analyze,buffers) select private.text_bigrams(repeat('가',5000))` Temp Written 0(적용 전 144MB) | ✅ |
+| 하드닝 후 연관 글 회귀(anon): "몸이 아파요"→"읍내 내과"(0.928/0.030)만, "풋살"→"축구"(0.927/0.045)만, "임금 체불"→0 — 적용 전과 동일 | ✅ |
+| `neighbor_profiles`: 정의에 단계 기반 키(`vr.level = 'town'`) 포함, `security_barrier=true`, 권한 authenticated SELECT만(anon 조회 permission denied) | ✅ |
+| life_info 정정: 범위·접미·잘못된 지역번호 전화 0건(남은 비표준 4건은 `1422-xx` 공식 시청 콜센터), 시·군 없는 주소 0건, 우편번호 접두 0건, '민간' 명시 4건, 보령중앙시장 장날 문구 0건 | ✅ |
+| `LifeInfoDetail` `tel:` 링크 숫자·+만 남김(표시 원문) — typecheck·빌드 | ✅ |

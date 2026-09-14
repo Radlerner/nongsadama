@@ -6,25 +6,32 @@ import { useFarmTips } from '../hooks/useFarmTips'
 import { localizedContent } from '../lib/localizedContent'
 import { norm } from '../lib/matching'
 import { Card, CardLink } from '../components/ui/Card'
-import { EmptyBox, ErrorBox, LoadingBox } from '../components/ui/StateBoxes'
+import { EmptyBox } from '../components/ui/StateBoxes'
 import { useRuralPrograms, useUserArea, useWeather } from '../hooks/useRegionalInfo'
 import { MapPin, School, Sprout, Thermometer, WEATHER_ICONS } from '../components/ui/icons'
 
 /**
- * 🌾 농사 도움 목록(PRD v1.7 §1·§2) — 비로그인 열람.
- * 로그인+작목 설정 시 내 작목 팁이 맨 위(훅에서 정렬).
+ * 🌾 농사 도움(PRD v1.7 §1·§2, v1.2 D-036) — 비로그인 열람.
+ * v1.2부터 본문은 API 실데이터(날씨·농촌지도사업)이고, 정적 상식 팁은 비공개 처리됐다.
+ * 팁 목록은 실데이터(농사로 OpenAPI 연동 후)가 생길 때만 렌더되며, 그때 내 작목 팁이 맨 위(훅에서 정렬).
  */
 /**
  * 위치 기반 정보 묶음: ☀️ 오늘 날씨 + 🏫 우리 지역 교육·사업(농진청 실데이터).
- * 기본은 선택 지역(파일럿), "내 위치"로 전국 어디서든 자기 지역 정보(항목1).
- * 데이터 없음/실패 시 각 카드 숨김(부가 정보 — 핵심 흐름 비차단).
+ * 기본은 선택 지역(읍·면 또는 시·군·구), "내 위치"로 전국 어디서든 자기 지역 정보(항목1).
+ * 지역이 없으면 안내, 지역이 있는데 둘 다 없거나 실패하면 빈 상태(정적 폴백 없음, D-036).
  */
 function RegionalInfo() {
   const { t } = useTranslation()
   const { area, useMyLocation, locating, geoError } = useUserArea()
-  const { data: weather } = useWeather(area?.lat, area?.lon)
-  const { data: programs } = useRuralPrograms(area?.sido ?? null, area?.sigungu ?? null)
+  const { data: weather, isLoading: weatherLoading } = useWeather(area?.lat, area?.lon)
+  const { data: programs, isLoading: programsLoading } = useRuralPrograms(
+    area?.sido ?? null,
+    area?.sigungu ?? null,
+  )
   const [showAllPrograms, setShowAllPrograms] = useState(false)
+  const hasPrograms = Boolean(programs && programs.items.length > 0)
+  // v1.2(D-036): 정적 팁이 사라졌으므로 이 묶음이 화면의 본문이다. 지역이 없으면 안내, 있는데 둘 다 없으면 빈 상태.
+  const showNoData = Boolean(area) && !weatherLoading && !programsLoading && !weather && !hasPrograms
 
   return (
     <div className="mb-4 flex flex-col gap-2">
@@ -39,9 +46,11 @@ function RegionalInfo() {
       </button>
       {geoError ? <p className="text-xs text-red-700">{t('map.geoError')}</p> : null}
       {/* 지오코더 실패로 시군을 못 얻으면 사업 카드가 사라지는 이유를 알려준다(재검수 P2-3) */}
-      {area?.source === 'geo' && !area.sigungu ? (
+      {area?.source === 'geo' && !area.sigungu && weather ? (
         <p className="text-xs text-gray-500">{t('farm.regionUnknown')}</p>
       ) : null}
+      {!area ? <EmptyBox text={t('farm.pickRegionHint')} /> : null}
+      {showNoData ? <EmptyBox text={t('farm.noRegionalData')} /> : null}
 
       {weather && area ? (
         <Card className="px-4 py-3">
@@ -67,7 +76,7 @@ function RegionalInfo() {
         </Card>
       ) : null}
 
-      {programs && programs.items.length > 0 ? (
+      {hasPrograms && programs ? (
         <Card className="px-4 py-3">
           <p className="text-xs font-semibold text-gray-500">
             <School aria-hidden size={14} strokeWidth={2.25} className="mr-1 inline align-[-2px]" />
@@ -106,7 +115,9 @@ export function FarmTips() {
   const { user } = useAuth()
   const { data: profile } = useOwnProfile(user?.id)
   const myCrop = profile?.crop_type ?? null
-  const { data: tips, isLoading, isError, refetch, isFetching } = useFarmTips(myCrop)
+  // v1.2(D-036): 정적 상식 팁은 비공개 처리됐다. 실데이터(농사로 API 연동 후)가 생길 때만 목록을 그린다 —
+  // 항상 비어 있을 목록에 로딩·오류·빈 상태 박스를 따로 두지 않는다(본문은 위 RegionalInfo).
+  const { data: tips } = useFarmTips(myCrop)
 
   return (
     <section>
@@ -120,18 +131,7 @@ export function FarmTips() {
       <RegionalInfo />
 
 
-      {isLoading ? (
-        <LoadingBox text={t('farm.loading')} />
-      ) : isError ? (
-        <ErrorBox
-          text={t('farm.error')}
-          retryLabel={t('common.retry')}
-          onRetry={() => void refetch()}
-          retrying={isFetching}
-        />
-      ) : (tips ?? []).length === 0 ? (
-        <EmptyBox text={t('farm.empty')} />
-      ) : (
+      {(tips ?? []).length > 0 ? (
         <ul className="flex flex-col gap-2">
           {(tips ?? []).map((tip) => {
             const c = localizedContent(tip.localized_content, locale)
@@ -159,7 +159,7 @@ export function FarmTips() {
             )
           })}
         </ul>
-      )}
+      ) : null}
     </section>
   )
 }

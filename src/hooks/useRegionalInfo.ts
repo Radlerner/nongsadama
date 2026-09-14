@@ -2,7 +2,7 @@ import { useCallback, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { getCurrentPosition } from '../lib/geo'
 import { coordToRegion } from '../lib/kakaoMap'
-import { useRegions, countyOf } from './useRegions'
+import { useRegions, countyOf, provinceOf } from './useRegions'
 import { useSelectedRegion } from '../context/SelectedRegionContext'
 import type { Json } from '../types/database'
 
@@ -49,11 +49,12 @@ export function useUserArea() {
       // 무관하게 한국어 이름만 쓴다(데이터 규칙: 시·군 names에 'ko' 필수). 다른 언어로 폴백하면
       // 잘못된 파라미터가 전송되므로 폴백 없이 읽고, 없으면 카드를 생략한다(재검수 P2).
       const sigungu = county ? koreanName(county.names) : null
+      // v1.2(D-035): 시·도 행이 생겨 동명 시·군(강원·경남 고성군 등)을 시·도로 구분할 수 있다.
+      const province = provinceOf(regions, selected)
       regionArea = {
         lat: centroid.centroid_lat,
         lon: centroid.centroid_lng,
-        // regions에는 시도 단계가 없어(level city/town) 시도는 지오코더 경로에서만 안다.
-        sido: null,
+        sido: province ? koreanName(province.names) : null,
         sigungu,
         source: 'region',
       }
@@ -132,13 +133,25 @@ export function useRuralPrograms(sido: string | null, sigungu: string | null) {
   return useQuery({
     queryKey: ['ruralPrograms', sido, center],
     queryFn: async (): Promise<{ total: number; items: RuralProgram[] } | null> => {
-      const params = new URLSearchParams()
-      if (sido) params.set('sido', sido)
-      if (center) params.set('center', center)
-      const r = await fetch(`${FUNCTIONS_BASE}/rural-programs?${params.toString()}`)
-      if (!r.ok) return null
-      const d = await r.json()
-      return d?.error ? null : { total: d.total, items: d.items ?? [] }
+      // 센터명 부분일치 시도 순서(v1.2 D-035, 라이브 확인): ① 시·도+시·군 그대로 ② 접미 '시/군' 제거(제주시→'제주농업기술센터')
+      // ③ 시·도 없이 — 시·도 표기가 API(농진청)와 다를 때. 0건이면 다음 시도, 모두 0건이면 빈 결과(카드 숨김).
+      const attempts: { sido: string | null; center: string }[] = [{ sido, center }]
+      const short = center.length >= 3 && /[시군]$/.test(center) ? center.slice(0, -1) : null
+      if (short) attempts.push({ sido, center: short })
+      if (sido) attempts.push({ sido: null, center })
+      let last: { total: number; items: RuralProgram[] } | null = null
+      for (const a of attempts) {
+        const params = new URLSearchParams()
+        if (a.sido) params.set('sido', a.sido)
+        if (a.center) params.set('center', a.center)
+        const r = await fetch(`${FUNCTIONS_BASE}/rural-programs?${params.toString()}`)
+        if (!r.ok) continue
+        const d = await r.json()
+        if (d?.error) continue
+        last = { total: d.total, items: d.items ?? [] }
+        if (last.total > 0) return last
+      }
+      return last
     },
     enabled: Boolean(sido || center),
     staleTime: 60 * 60_000,
