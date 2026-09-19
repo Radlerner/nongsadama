@@ -1,5 +1,6 @@
-import { Suspense, lazy } from 'react'
-import { Navigate, Route, Routes } from 'react-router-dom'
+import { Suspense, lazy, useEffect } from 'react'
+import { Navigate, Route, Routes, useNavigate } from 'react-router-dom'
+import { useAuth } from './context/AuthContext'
 import { AppLayout } from './components/layout/AppLayout'
 import { Landing } from './pages/Landing'
 import { Select } from './pages/Select'
@@ -24,6 +25,13 @@ import { ChildSafety } from './pages/ChildSafety'
 import { NotFound } from './pages/NotFound'
 
 export function App() {
+  const { oauthCallbackStatus, clearOAuthCallbackStatus } = useAuth()
+  const navigate = useNavigate()
+  useEffect(() => {
+    if (!oauthCallbackStatus) return
+    clearOAuthCallbackStatus()
+    navigate(oauthCallbackStatus === 'success' ? '/home' : '/login', { replace: true })
+  }, [oauthCallbackStatus, clearOAuthCallbackStatus, navigate])
   return (
     <Routes>
       <Route path="/" element={<Landing />} />

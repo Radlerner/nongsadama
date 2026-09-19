@@ -1,5 +1,6 @@
 import type { Locale } from '../config/app'
 import { speechLangTags } from '../config/app'
+import { getSupabaseClient } from './supabase'
 
 // Web Speech API 최소 타입(브라우저 내장, @types 미포함 환경 대비)
 interface SpeechRecognitionLike {
@@ -27,9 +28,7 @@ function getCtor(): SpeechRecognitionCtor | null {
 // ── 외부 STT 어댑터(환경변수 게이트) ──────────────────────────────────────
 // VITE_STT_ENDPOINT 가 설정되면 브라우저 Web Speech 대신 지정 엔드포인트로 전환한다.
 // 계약: POST multipart(form field "file"=audio/webm, "language"=BCP-47) → JSON {"text": string}
-// (예: 운영자가 띄운 Whisper 프록시. 키가 없으면 이 코드는 어떤 요청도 만들지 않는다.)
 const sttEndpoint = import.meta.env.VITE_STT_ENDPOINT as string | undefined
-const sttKey = import.meta.env.VITE_STT_KEY as string | undefined
 
 export type SttProvider = 'external' | 'webspeech' | 'none'
 
@@ -47,31 +46,50 @@ export function isSpeechAvailable(): boolean {
 const EXTERNAL_RECORD_MS = 5000
 
 async function listenViaExternal(locale: Locale): Promise<string> {
+  const supabase = getSupabaseClient()
+  const initial = await supabase.auth.getSession()
+  if (initial.error || !initial.data.session || initial.data.session.user.is_anonymous) {
+    throw new Error('stt-login-required')
+  }
+  const mimeType = ['audio/webm;codecs=opus', 'audio/webm'].find((type) => MediaRecorder.isTypeSupported(type))
+  if (!mimeType) throw new Error('stt-format-unavailable')
   const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
   try {
-    const recorder = new MediaRecorder(stream)
+    const recorder = new MediaRecorder(stream, { mimeType })
     const chunks: Blob[] = []
     recorder.ondataavailable = (e) => {
       if (e.data.size > 0) chunks.push(e.data)
     }
-    const stopped = new Promise<void>((resolve) => {
+    const stopped = new Promise<void>((resolve, reject) => {
       recorder.onstop = () => resolve()
+      recorder.onerror = () => reject(new Error('stt-recording-failed'))
     })
     recorder.start()
-    await new Promise((r) => setTimeout(r, EXTERNAL_RECORD_MS))
-    recorder.stop()
-    await stopped
+    const timer = setTimeout(() => {
+      if (recorder.state !== 'inactive') recorder.stop()
+    }, EXTERNAL_RECORD_MS)
+    try {
+      await stopped
+    } finally {
+      clearTimeout(timer)
+    }
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
+    if (sessionError || !sessionData.session || sessionData.session.user.is_anonymous) {
+      throw new Error('stt-login-required')
+    }
     const form = new FormData()
-    form.append('file', new Blob(chunks, { type: 'audio/webm' }), 'speech.webm')
+    form.append('file', new Blob(chunks, { type: mimeType }), 'speech.webm')
     form.append('language', speechLangTags[locale] ?? locale)
     const res = await fetch(sttEndpoint as string, {
       method: 'POST',
-      headers: sttKey ? { Authorization: `Bearer ${sttKey}` } : undefined,
+      headers: { Authorization: `Bearer ${sessionData.session.access_token}` },
       body: form,
+      signal: AbortSignal.timeout(45_000),
     })
     if (!res.ok) throw new Error(`stt-http-${res.status}`)
-    const data = (await res.json()) as { text?: string }
-    return data.text ?? ''
+    const data = (await res.json()) as { text?: unknown }
+    if (typeof data?.text !== 'string') throw new Error('stt-response-invalid')
+    return data.text
   } finally {
     for (const track of stream.getTracks()) track.stop()
   }

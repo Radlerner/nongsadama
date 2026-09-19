@@ -214,6 +214,7 @@ export type Database = {
           is_matching_visible: boolean
           nickname: string
           preferred_locale: string
+          preferred_locale_explicit: boolean
           region_id: string | null
           role: string
         }
@@ -225,7 +226,8 @@ export type Database = {
           id: string
           is_matching_visible?: boolean
           nickname: string
-          preferred_locale: string
+          preferred_locale?: string
+          preferred_locale_explicit?: boolean
           region_id?: string | null
           role?: string
         }
@@ -238,6 +240,7 @@ export type Database = {
           is_matching_visible?: boolean
           nickname?: string
           preferred_locale?: string
+          preferred_locale_explicit?: boolean
           region_id?: string | null
           role?: string
         }

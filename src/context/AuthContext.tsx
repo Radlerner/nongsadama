@@ -11,6 +11,10 @@ import {
 import type { Session, User } from '@supabase/supabase-js'
 import { useQueryClient } from '@tanstack/react-query'
 import { getSupabaseClient, isSupabaseConfigured } from '../lib/supabase'
+import { Capacitor } from '@capacitor/core'
+import { App as CapacitorApp } from '@capacitor/app'
+import { Browser } from '@capacitor/browser'
+import { completeNativeOAuth, NATIVE_OAUTH_REDIRECT } from '../lib/nativeOAuth'
 import type { OAuthProvider } from '../config/app'
 import { useTranslation } from '../i18n/useTranslation'
 import { useSelectedRegion } from '../context/SelectedRegionContext'
@@ -37,6 +41,9 @@ interface AuthContextValue {
    */
   signInWithOAuth: (provider: OAuthProvider) => Promise<{ error: string | null }>
   signOut: () => Promise<void>
+  oauthCallbackStatus: 'success' | 'error' | null
+  clearOAuthCallbackStatus: () => void
+  oauthCallbackError: boolean
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
@@ -44,13 +51,18 @@ const AuthContext = createContext<AuthContextValue | null>(null)
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null)
   const [initializing, setInitializing] = useState(true)
-  const { locale } = useTranslation()
+  const { locale, localeExplicit, localeSelection } = useTranslation()
+  const [oauthCallbackStatus, setOAuthCallbackStatus] = useState<'success' | 'error' | null>(null)
+  const [oauthCallbackError, setOAuthCallbackError] = useState(false)
+  const clearOAuthCallbackStatus = useCallback(() => setOAuthCallbackStatus(null), [])
   const { regionId } = useSelectedRegion()
   const queryClient = useQueryClient()
 
   // onAuthStateChange 콜백에서 최신 언어·지역을 읽기 위한 ref (PRD 4.1: 선택값을 프로필에 저장)
   const localeRef = useRef(locale)
   localeRef.current = locale
+  const localeExplicitRef = useRef(localeExplicit)
+  localeExplicitRef.current = localeExplicit
   const regionRef = useRef(regionId)
   regionRef.current = regionId
 
@@ -88,7 +100,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { error: insertError } = await supabase.from('profiles').insert({
       id: u.id,
       nickname,
-      preferred_locale: localeRef.current,
+      ...(localeExplicitRef.current ? { preferred_locale: localeRef.current, preferred_locale_explicit: true } : {}),
       region_id: regionRef.current,
       auth_provider: provider,
     })
@@ -125,7 +137,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const { data: sub } = supabase.auth.onAuthStateChange((_event, next) => {
       setSession(next)
-      if (next?.user) void ensureProfile(next.user)
+      if (next?.user) setTimeout(() => { if (!cancelled) void ensureProfile(next.user) }, 0)
     })
 
     return () => {
@@ -133,6 +145,56 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       sub.subscription.unsubscribe()
     }
   }, [ensureProfile])
+
+  const processedLocaleSelection = useRef(localeSelection)
+  useEffect(() => {
+    if (processedLocaleSelection.current === localeSelection) return
+    processedLocaleSelection.current = localeSelection
+    if (!session?.user) return
+    const userId = session.user.id
+    void getSupabaseClient().from('profiles')
+      .update({ preferred_locale: locale, preferred_locale_explicit: true })
+      .eq('id', userId)
+      .then(({ error }) => {
+        if (error) console.error('[nongsadama] preferred locale update failed')
+        else void queryClient.invalidateQueries({ queryKey: ['profiles', 'own', userId] })
+      })
+  }, [localeSelection, locale, session?.user.id, queryClient])
+
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform() || !isSupabaseConfigured) return
+    let cancelled = false
+    const handleUrl = async (url: string) => {
+      if (cancelled) return
+      try {
+        if (await completeNativeOAuth(url)) {
+          await Browser.close().catch(() => undefined)
+          if (!cancelled) {
+            setOAuthCallbackError(false)
+            setOAuthCallbackStatus('success')
+          }
+        }
+      } catch {
+        await Browser.close().catch(() => undefined)
+        if (!cancelled) {
+          setOAuthCallbackError(true)
+          setOAuthCallbackStatus('error')
+        }
+      }
+    }
+    const listener = CapacitorApp.addListener('appUrlOpen', ({ url }) => { void handleUrl(url) })
+    void listener.then(async () => {
+      if (cancelled) return
+      const launch = await CapacitorApp.getLaunchUrl()
+      if (launch?.url) await handleUrl(launch.url)
+    }).catch(() => {
+      if (!cancelled) setOAuthCallbackError(true)
+    })
+    return () => {
+      cancelled = true
+      void listener.then((handle) => handle.remove()).catch(() => undefined)
+    }
+  }, [])
 
   const signIn = useCallback(async (email: string, password: string) => {
     const { error } = await getSupabaseClient().auth.signInWithPassword({ email, password })
@@ -154,13 +216,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const signInWithOAuth = useCallback(async (provider: OAuthProvider) => {
-    // BASE_URL 포함 필수 — GitHub Pages는 /nongsadama/ 프리픽스라 origin만 쓰면 404
-    // (kakao-login 스킬 §2.1). 성공 시 이 페이지를 떠나 제공자 동의 화면으로 이동한다.
-    const { error } = await getSupabaseClient().auth.signInWithOAuth({
-      provider,
-      options: { redirectTo: `${window.location.origin}${import.meta.env.BASE_URL}` },
-    })
-    return { error: error ? error.message : null }
+    setOAuthCallbackError(false)
+    try {
+      const native = Capacitor.isNativePlatform()
+      const { data, error } = await getSupabaseClient().auth.signInWithOAuth({
+        provider,
+        options: native
+          ? { redirectTo: NATIVE_OAUTH_REDIRECT, skipBrowserRedirect: true }
+          : { redirectTo: `${window.location.origin}${import.meta.env.BASE_URL}` },
+      })
+      if (error) return { error: error.message }
+      if (native) {
+        if (!data.url) return { error: 'oauth-start-failed' }
+        await Browser.open({ url: data.url })
+      }
+      return { error: null }
+    } catch {
+      return { error: 'oauth-start-failed' }
+    }
   }, [])
 
   const signOut = useCallback(async () => {
@@ -178,8 +251,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signUp,
       signInWithOAuth,
       signOut,
+      oauthCallbackStatus,
+      clearOAuthCallbackStatus,
+      oauthCallbackError,
     }),
-    [session, initializing, signIn, signUp, signInWithOAuth, signOut],
+    [session, initializing, signIn, signUp, signInWithOAuth, signOut, oauthCallbackStatus, clearOAuthCallbackStatus, oauthCallbackError],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

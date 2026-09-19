@@ -11,6 +11,7 @@
   "talk.micButton": "Say it",
   "talk.listening": "Listening…",
   "talk.micNotice": "Your voice is sent to your browser provider's server (e.g. Google) to turn it into text. NongsaDaMa never stores it. Continue?",
+  "talk.micNoticeExternal": "Your voice is sent to OpenAI to turn it into text. NongsaDaMa does not store the audio. Continue?",
   "talk.micAgree": "OK, speak",
   "talk.micCancel": "Not now",
   "talk.readAloud": "Read aloud",

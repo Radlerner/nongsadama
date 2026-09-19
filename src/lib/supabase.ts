@@ -1,5 +1,6 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '../types/database'
+import { Capacitor } from '@capacitor/core'
 
 const url = import.meta.env.VITE_SUPABASE_URL
 const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
@@ -23,7 +24,11 @@ export function getSupabaseClient(): SupabaseClient<Database> {
     )
   }
   if (!client) {
-    client = createClient<Database>(url as string, anonKey as string)
+    client = createClient<Database>(url as string, anonKey as string, {
+      auth: Capacitor.isNativePlatform()
+        ? { flowType: 'pkce', detectSessionInUrl: false, persistSession: true, autoRefreshToken: true }
+        : undefined,
+    })
   }
   return client
 }

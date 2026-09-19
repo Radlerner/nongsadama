@@ -36,6 +36,8 @@ export function ProfileEdit() {
   const navigate = useNavigate()
   const [submitError, setSubmitError] = useState<string | null>(null)
 
+  const [localeChosen, setLocaleChosen] = useState(false)
+
   const { data: profile, isLoading } = useOwnProfile(user?.id)
 
   const {
@@ -85,26 +87,27 @@ export function ProfileEdit() {
     const countryCode = values.country_code.trim().toUpperCase()
     const cropType = values.crop_type.trim()
     const regionIdValue = values.region_id || null
-    // upsert(P1-3): 드문 케이스로 profiles 행이 아직 없으면(첫 로그인 시 생성 실패 등)
-    // update가 0행으로 조용히 성공하는 무음 no-op을 막고 행을 생성한다.
-    // RLS(profiles_insert_self)가 본인 id + role='user'(기본값)를 강제하므로 안전.
-    const { error } = await getSupabaseClient()
-      .from('profiles')
-      .upsert({
-        id: user.id,
-        nickname: values.nickname.trim(),
-        country_code: countryCode === '' ? null : countryCode,
-        crop_type: cropType === '' ? null : cropType,
-        preferred_locale: values.preferred_locale,
-        region_id: regionIdValue,
-        is_matching_visible: values.is_matching_visible,
-      })
+    const changes = {
+      nickname: values.nickname.trim(),
+      country_code: countryCode === '' ? null : countryCode,
+      crop_type: cropType === '' ? null : cropType,
+      ...(localeChosen ? { preferred_locale: values.preferred_locale, preferred_locale_explicit: true } : {}),
+      region_id: regionIdValue,
+      is_matching_visible: values.is_matching_visible,
+    }
+    const profiles = getSupabaseClient().from('profiles')
+    const mutation = profile
+      ? profiles.update(changes).eq('id', user.id)
+      : profiles.insert({ id: user.id, ...changes })
+    const { data: saved, error } = await mutation.select('preferred_locale, preferred_locale_explicit').single()
     if (error) {
       setSubmitError('profileEdit.error.saveFailed')
       return
     }
     // 프로필의 언어·지역 선택을 앱 상태에도 반영한다(PRD P0-10).
-    if (values.preferred_locale !== locale) setLocale(values.preferred_locale)
+    if (localeChosen || saved.preferred_locale !== locale) {
+      setLocale(saved.preferred_locale, saved.preferred_locale_explicit)
+    }
     setRegionId(regionIdValue)
     await queryClient.invalidateQueries({ queryKey: ['profiles', 'own', user.id] })
     navigate('/profile')
@@ -155,7 +158,7 @@ export function ProfileEdit() {
 
         <label className="flex flex-col gap-1 text-sm font-semibold text-gray-700">
           {t('profile.localeLabel')}
-          <select className={inputClass} {...register('preferred_locale')}>
+          <select className={inputClass} {...register('preferred_locale', { onChange: () => setLocaleChosen(true) })}>
             {appConfig.supportedLocales.map((code) => (
               <option key={code} value={code}>
                 {getLocaleLabel(code)}
