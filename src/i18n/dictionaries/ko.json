@@ -11,6 +11,7 @@
   "talk.micButton": "말로 하기",
   "talk.listening": "듣고 있어요…",
   "talk.micNotice": "음성을 글자로 바꾸려고 브라우저 회사(예: Google) 서버로 보내요. 농사다마에는 저장하지 않아요. 계속할까요?",
+  "talk.micNoticeExternal": "음성을 글자로 바꾸려고 OpenAI 서버로 보내요. 농사다마에는 음성을 저장하지 않아요. 계속할까요?",
   "talk.micAgree": "알겠어요, 말하기",
   "talk.micCancel": "안 할래요",
   "talk.readAloud": "읽어주기",
