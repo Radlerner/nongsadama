@@ -3,8 +3,9 @@
 농촌 지역 외국인 계절근로자가 자신의 언어로 지역 생활정보와 지역 게시글을 찾는 모바일 우선 웹앱.
 
 - 제품 요구사항(기능 스펙 반복본): [PRD_v1_3.md](./PRD_v1_3.md) ~ [PRD_v1_7.md](./PRD_v1_7.md)
-- 현재 릴리스: **v1.2** (Google Play 비공개 테스트, `versionCode 3`) — 릴리스 PRD [docs/prd/PRD_v1.2.md](./docs/prd/PRD_v1.2.md),
-  변경 이력 [docs/changelog/CHANGELOG.md](./docs/changelog/CHANGELOG.md), 릴리스 절차 [docs/releases/RELEASE_v1.2.md](./docs/releases/RELEASE_v1.2.md)
+- 현재 릴리스: **v1.3** (Google Play 비공개 테스트, `versionCode 4`) — 릴리스 PRD [docs/prd/PRD_v1.3.md](./docs/prd/PRD_v1.3.md),
+  변경 이력 [docs/changelog/CHANGELOG.md](./docs/changelog/CHANGELOG.md), 릴리스 절차 [docs/releases/RELEASE_v1.3.md](./docs/releases/RELEASE_v1.3.md)
+- 이전 릴리스: v1.2 (`versionCode 3`) — [PRD_v1.2](./docs/prd/PRD_v1.2.md) · [RELEASE_v1.2](./docs/releases/RELEASE_v1.2.md)
 - 버전 기준: `src/config/version.ts`(웹) · `android/app/build.gradle`(Android) · `package.json` — 세 곳을 함께 올린다
 
 ## 기술 스택

@@ -4,6 +4,34 @@
 버전 번호는 Google Play `versionName`·`src/config/version.ts`의 `APP_VERSION`과 같다.
 릴리스별 상세는 `docs/prd/PRD_v<버전>.md`(요구·영향·롤백)와 `docs/releases/RELEASE_v<버전>.md`(빌드·업로드 절차)에 있다.
 
+## [1.3] - 2026-09-20
+
+[PR #1](https://github.com/Radlerner/nongsadama/pull/1) 병합분(STT 프록시·국가 기본 언어·Android 카카오 콜백)의 공식 릴리스.
+PR 본문의 "v1.4" 표기는 릴리스 버전이 아니며 이 병합본의 릴리스 버전은 1.3이다.
+운영 설정(Supabase secret·Redirect URL·`VITE_STT_ENDPOINT`)이 끝나야 실제로 동작하는 항목이 있다 — RELEASE_v1.3 §3.
+
+### Added
+- 음성 인식(STT) Edge Function `stt`: 로그인 사용자(익명 로그인 제외)만 호출. multipart `file`(WebM, 1 MiB 이하) + `language` → `{"text": ...}`. OpenAI `audio/transcriptions`로 중계하는 프록시이며 음성·인식 결과를 저장하거나 로그에 남기지 않는다.
+- 사용자별 STT 호출 횟수 제한: 테이블 `stt_rate_windows` + RPC `stt_try_consume`(service_role 전용, 고정 시간 구간). 허용 횟수·구간은 Supabase secret `STT_RATE_LIMIT_MAX`·`STT_RATE_LIMIT_WINDOW_SECONDS`가 정하고, 없거나 잘못되면 호출을 500으로 막는다. 초과 시 429.
+- 국가/기본 언어 구조: `countries` 테이블 7개국 시드(KR·VN·KH·TH·NP·MN·UZ — 기본 언어·지원 언어 코드), `profiles.preferred_locale_explicit` 컬럼, 트리거 `profiles_apply_country_locale`. 언어를 직접 고르지 않은 프로필에만 국적 기본 언어(없으면 `en`)를 채우고, 기존 프로필은 `true`로 보호한다. 클라이언트는 아직 `countries`를 읽지 않으며 프로필의 국가 입력은 자유 입력 그대로다.
+- Android 카카오 OAuth 콜백: 딥링크 `com.nongsadama.myapp://auth/callback`(AndroidManifest intent-filter). 앱에서는 시스템 브라우저로 동의 화면을 열고, 앱으로 돌아오면 PKCE 코드를 세션으로 교환한 뒤 홈으로 이동한다. 실패하면 로그인 화면에 오류를 표시한다.
+- Capacitor 플러그인 `@capacitor/app` 8.1.1, `@capacitor/browser` 8.0.4.
+- Android 권한 `RECORD_AUDIO`, `MODIFY_AUDIO_SETTINGS`(음성 입력용).
+- 외부 STT 사용 시 음성 입력 고지 문구 `talk.micNoticeExternal`(ko/en).
+- 테스트(`node --test`, 세 파일 합계 15건): `tests/client-integration.test.mjs`, `supabase/functions/stt/*.test.ts`. SQL 검증 스크립트 `supabase/tests/stt_and_countries.sql`·`supabase/tests/preflight_stt_and_countries.sql`. npm script·CI에는 연결돼 있지 않다(수동 실행).
+
+### Changed
+- 클라이언트 STT 호출이 정적 키 대신 로그인 세션 access token을 Bearer로 보낸다. 비로그인 상태면 요청을 만들지 않는다. 45초 타임아웃, 응답 형식 검증, 녹음 MIME 협상(`audio/webm;codecs=opus` → `audio/webm`).
+- 인증 클라이언트 옵션: 네이티브 앱에서만 PKCE(`flowType: 'pkce'`, `detectSessionInUrl: false`). 웹 로그인 흐름은 그대로다.
+- 프로필 생성·수정: 사용자가 언어를 직접 고른 경우에만 `preferred_locale`을 보내고(`preferred_locale_explicit = true`), 로그인 상태에서 언어를 바꾸면 프로필에 반영한다. 프로필 저장은 upsert 대신 update/insert로 나뉜다.
+- v1.2 대비 동작 변화(신규 사용자): 언어를 한 번도 직접 고르지 않고(기본 한국어 화면 그대로) 가입하면 프로필 언어가 v1.2의 `ko`(당시 UI 언어) 대신 `en`으로 기록된다(가입 시점에는 국적 값이 없다). 이 상태에서 국적을 비우거나 `countries`에 없는 코드로 프로필을 저장하면 저장된 `en`이 앱 언어로 반영돼 UI가 영어로 바뀔 수 있다(국적 KR이면 `ko`). 코드 분석 기준이며 미실측이다 — PRD_v1.3 §4·§11. 기존 프로필은 영향 없음.
+- GitHub Pages(보조 배포) 워크플로 `deploy-pages.yml`이 저장소 Variable `VITE_STT_ENDPOINT`를 빌드에 주입한다(비어 있으면 브라우저 Web Speech 사용). 공식 `nongsadama.app`은 Cloudflare 빌드라 이 워크플로와 무관하며 Cloudflare 빌드 변수에 따로 등록해야 한다 — RELEASE_v1.3 §3. 엔드포인트를 켜면 음성 입력은 로그인 사용자 전용이 된다.
+- `capacitor.config.ts` `loggingBehavior: 'none'`. 루트 `.gitignore`에 Supabase CLI 로컬 상태(`supabase/.temp/`)·에이전트 도구 폴더 추가, `android/.gitignore`의 키스토어 패턴(`*.jks`·`*.keystore`) 주석 해제(루트 `.gitignore`에는 이전부터 있음).
+- Android `versionName 1.3` / `versionCode 4`, `package.json` 1.3.0.
+
+### Removed
+- `VITE_STT_KEY` 환경변수(정적 STT 키를 클라이언트 번들에 싣던 경로). OpenAI 키는 저장소·번들에 없고 Supabase secret에만 둔다.
+
 ## [1.2] - 2026-09-12
 
 ### Added
