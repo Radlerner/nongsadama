@@ -1,3 +1,4 @@
+import { Capacitor } from '@capacitor/core'
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { Link, useNavigate } from 'react-router-dom'
@@ -41,7 +42,7 @@ function errorKeyOf(message: string): string {
 
 export function Login() {
   const { t } = useTranslation()
-  const { signIn, signUp, signInWithOAuth } = useAuth()
+  const { signIn, signUp, signInWithOAuth, oauthCallbackError } = useAuth()
   const navigate = useNavigate()
   const [mode, setMode] = useState<Mode>('signin')
   const [submitError, setSubmitError] = useState<string | null>(null)
@@ -68,6 +69,8 @@ export function Login() {
     if (error) {
       // 시작 실패만 여기 도달(성공 시 제공자 페이지로 이동). 무언 실패 금지.
       setOauthError('auth.oauthError')
+      setOauthPending(null)
+    } else if (Capacitor.isNativePlatform()) {
       setOauthPending(null)
     }
   }
@@ -145,8 +148,8 @@ export function Login() {
         ))}
       </div>
 
-      {oauthError ? (
-        <p className="mt-3 rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">{t(oauthError)}</p>
+      {oauthError || oauthCallbackError ? (
+        <p className="mt-3 rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">{t(oauthError ?? 'auth.oauthError')}</p>
       ) : null}
 
       <button

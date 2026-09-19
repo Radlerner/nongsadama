@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useTranslation } from '../i18n/useTranslation'
 import { Coffee, LifeBuoy, MapPin, MessageCircleQuestion, Mic, Volume2, type LucideIcon } from '../components/ui/icons'
 import { SafetyBanner } from '../components/SafetyBanner'
-import { isSpeechAvailable, listenOnce } from '../lib/speech'
+import { isSpeechAvailable, listenOnce, sttProvider } from '../lib/speech'
 import { isTtsAvailable, speak } from '../lib/tts'
 
 /**
@@ -86,8 +86,7 @@ export function Talk() {
           </button>
           {showMicNotice ? (
             <div className="mt-3 rounded-card bg-white/70 px-3 py-3 text-xs text-gray-700">
-              {/* §3.2-4: Web Speech는 브라우저 제공사 서버로 음성을 전송한다 — 사용 전 고지 */}
-              <p>{t('talk.micNotice')}</p>
+              <p>{t(sttProvider() === 'external' ? 'talk.micNoticeExternal' : 'talk.micNotice')}</p>
               <div className="mt-2 flex gap-2">
                 <button
                   type="button"
