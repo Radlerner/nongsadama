@@ -43,6 +43,9 @@ keystore.properties
 # Supabase CLI 로컬 상태
 supabase/.temp/
 
+# wrangler 로컬 상태(dry-run·dev 실행 시 생성)
+.wrangler/
+
 # 에이전트 도구 설정(제품 코드 아님)
 .grok/
 .codex/

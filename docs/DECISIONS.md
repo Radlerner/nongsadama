@@ -451,3 +451,43 @@ PRD_v1_3.md를 기준으로 한 기술·제품 의사결정과 이유를 남긴�
 - **정정(재검수 확정 P1 등)**: 전화 4건(범위 '~'·'(대표)'·전국대표번호 앞 지역번호)을 단일 발신 번호로, 시·군 없는
   주소 11건 보정, 보령중앙시장 장날 오독 제거, 민간 병원 4건에 '민간' 명시(20260912000400). 클라이언트 tel: 링크는
   숫자·+만 남기도록 정규화(표시는 원문).
+
+### D-038. Cloudflare 배포의 wrangler 자동 설정 오류 — Vite 5 유지, deploy 명령 명시 (2026-09-20)
+- **증상(오너 보고)**: Cloudflare 빌드에서 `npm run build` 성공 후 `npx wrangler deploy`가
+  `The version of Vite used in the project ("5.4.21") cannot be automatically configured … at least "6.0.0"`로 실패.
+- **진단(재현·소스 확인)**: 이 오류는 wrangler의 자동 설정(autoconfig, 4.68.0부터 `wrangler deploy` 기본 동작, Vite 최소
+  버전 검사는 4.79.0)이 돌 때만 난다. 자동 설정은 cwd부터 파일시스템 루트까지 `wrangler.json`·`wrangler.jsonc`·
+  `wrangler.toml`을 하나도 못 찾았고 `--config`·`--assets`·스크립트 인자가 없을 때만 실행된다(4.135.0 소스
+  `maybeRunAutoConfig`·`getDetailsForAutoConfig`). HEAD 사본에서 `npx wrangler@4.135.0 deploy --dry-run`은 성공(4.129~4.134도
+  동일, CI·WORKERS_CI 환경변수 무관)했고, `wrangler.jsonc`를 숨기면 오너의 오류가 글자 그대로 재현됐다. 환경변수·
+  `--env`·assets 전용 설정(`main` 없음)은 판정에 영향이 없다.
+- **운영 상태(실측)**: `nongsadama.app`은 Cloudflare에서 1.3 번들을 서비스 중이고 `/home`·`/privacy` 200(SPA 폴백 정상).
+  `df30608`(v1.3) 빌드는 2026-09-19T23:08:57Z 성공. 즉 **현재 main 파이프라인은 실패하지 않았다.** GitHub 체크
+  "Workers Builds: nongsadama"를 전 커밋에 대해 조회하면 실패는 2건뿐이다. (1) `40254b5`("Delete wrangler.jsonc", main,
+  2026-08-01 08:04 KST, Build `a2cca8e7-52a8-4f91-a39f-660d731efc20`) — 설정 파일이 없던 유일한 main 커밋이고 당시
+  `npx wrangler` latest는 4.118.0(자동 설정 기본 ON + Vite 최소 버전 검사 포함)이라 오너의 오류와 조건이 전부 일치한다.
+  1분 뒤 `98e97fa`에서 파일을 되살려 성공했다. 오너가 본 오류의 출처로 가장 유력하지만 확정은 대시보드 로그로만 가능.
+  (2) `80a6d7e`(`v0/figma-ui-refresh`, 2026-09-12, Build `41082f6a-a9da-461e-8465-679c94690d5c`) — 설정 파일이 있어 이 오류일
+  수 없고 원인 미확인(같은 트리의 v1.1 빌드는 성공). 2026-09-12 이후 실패 0건. 같은 커밋의 재실행도 GitHub에 별도
+  Build ID로 기록된다(`98e97fa` 2회). 설정 파일이 없는 ref는 `24837e9` 이전 커밋, `40254b5`, 태그 `v0.1.0`·`v0.3.0`뿐이며
+  포크(`yldst-dev/nongsadama`)에도 파일이 있다. 최초 진단에서 최근 7개 커밋만 보고 "GitHub에 실패 기록 없음"이라 한 것은
+  독립 검증에서 정정됐다.
+- **결정**: Vite 6 업그레이드·`@cloudflare/vite-plugin` 도입은 하지 않는다 — 정적 SPA에는 불필요하고 현재
+  `wrangler.jsonc`(`assets.directory` + `not_found_handling: single-page-application`)가 Cloudflare SPA 문서의 공식 구성과
+  같다. 대신 재발 방지 가드로 Deploy command를 `npx wrangler deploy --config wrangler.jsonc`(비운영 브랜치 빌드가 켜져 있으므로 그쪽은
+  `npx wrangler versions upload --config wrangler.jsonc`)로 명시해 자동 설정 경로를 원천 차단한다. 설정 파일이 없는
+  체크아웃에서는 "Could not read file: wrangler.jsonc"로 명확히 실패한다(실패 자체를 없애지는 않는다 — 그런 커밋은 빌드 대상이
+  아니다). `--no-autoconfig`(4.101.0+)보다 `--config`가 오래된 안정 플래그라 이쪽을 택했다. `--assets ./dist`는 쓰지 않는다 —
+  설정 없이도 배포가 성공해 SPA 폴백 없는 사이트가 올라갈 수 있다.
+- **저장소 변경(동작 무변경)**: `wrangler.jsonc`에 설명 주석(키·값 동일 — 주석 제거 후 JSON 동일성 검증), `.gitignore`에
+  `.wrangler/`, README "배포"에 Cloudflare 절(대시보드 값·빌드 변수·로컬 검증·문제 해결). wrangler를 devDependency로
+  넣지 않았다 — lockfile이 바뀌고 Vercel·GitHub Pages·Capacitor의 `npm ci`에 workerd·miniflare가 실린다.
+- **빌드 변수**: `VITE_*`는 Cloudflare "Build variables and secrets"로 넣어야 `npm run build`의 프로세스 환경으로 전달돼
+  Vite가 인라인한다(로컬에서 `VITE_STT_ENDPOINT`를 환경변수로 준 `vite build`가 번들에 값을 넣는 것을 확인). 런타임
+  Variables·`wrangler.jsonc`의 `vars`는 빌드에 전달되지 않는다. 등록 위치는 Cloudflare(공식)·GitHub Variables(보조 Pages)·
+  Vercel 프로젝트(보조 — push마다 Production 배포가 생성되는 것을 GitHub deployments에서 확인)·빌드 PC `.env.local`(AAB).
+  RELEASE_v1.3 §3-4는 Vercel을 빠뜨렸다.
+- **하지 않은 것 / 백로그**: `routes`·`workers_dev`·`_headers`·`public/sw.js` 무변경. SPA 폴백 때문에 없는 해시 자산
+  (`/assets/index-OLD.js`)에도 200 text/html이 응답되고 `sw.js`가 상태·MIME 검사 없이 캐시하는 것은 기존 동작이다(새로고침으로
+  복구) — 별도 버전에서 검토. unpinned `npx wrangler`는 매 빌드 latest를 받으므로 동작이 다시 바뀌면 Deploy command에
+  `wrangler@<버전>`을 지정한다.

@@ -119,9 +119,36 @@ supabase db push
 
 ## 배포
 
+### Cloudflare Workers (공식 운영 — https://nongsadama.app)
+- 방식: Workers 정적 자산(Static Assets). Worker 스크립트 없이 `dist`만 올린다. 설정은 루트 `wrangler.jsonc`
+  (`assets.directory: ./dist`, `not_found_handling: single-page-application` = SPA 폴백).
+  Vite 5 그대로 쓴다 — `@cloudflare/vite-plugin`·Vite 6 은 필요 없다(D-038).
+- Cloudflare 대시보드(Workers & Pages → nongsadama → Settings → Build):
+
+  | 항목 | 값 |
+  | --- | --- |
+  | Production branch | `main` |
+  | Root directory | 저장소 루트(`/`, 비움) |
+  | Build command | `npm run build` |
+  | Deploy command | `npx wrangler deploy --config wrangler.jsonc` |
+  | Non-production branch deploy command | `npx wrangler versions upload --config wrangler.jsonc` |
+
+- 빌드 변수는 Settings → Build → **Variables and secrets**에 넣는다(런타임 Variables 아님, `wrangler.jsonc`의 `vars` 아님):
+  `VITE_SUPABASE_URL`·`VITE_SUPABASE_ANON_KEY`(필수), `VITE_KAKAO_MAP_KEY`·`VITE_GA_MEASUREMENT_ID`·`VITE_STT_ENDPOINT`(선택).
+  `BASE_PATH`는 넣지 않는다. 빌드 타임 상수라 값을 바꾼 뒤 다시 배포해야 적용된다.
+- 도메인(`nongsadama.app`, workers.dev)은 대시보드에서 관리한다 — `wrangler.jsonc`에 `routes`·`workers_dev`를 넣지 않는다.
+- 로컬 검증(실제 배포 없음): `npm run build` 후 `npx wrangler deploy --config wrangler.jsonc --dry-run`
+  → `Read N files from the assets directory … --dry-run: exiting now.` Workers 런타임으로 직접 보려면
+  `npx wrangler dev --config wrangler.jsonc`(로컬 전용). `--dry-run` 없는 `wrangler deploy`는 로컬 `dist`를 운영에 올리므로 쓰지 않는다.
+- 문제 해결: `The version of Vite used in the project ("5.4.x") cannot be automatically configured … at least "6.0.0"`
+  는 wrangler가 설정 파일을 찾지 못해 자동 설정(autoconfig)에 들어갔다는 뜻이다. **Vite를 올리지 말고** 실패한 빌드의
+  커밋에 `wrangler.jsonc`가 있는지(2026-08-01 이전 커밋·`40254b5`·태그 `v0.1.0`·`v0.3.0`에는 없다 — 빌드 기록의 `40254b5` 실패가 바로 이 오류이며 옛 빌드 "Retry"도 실패한다),
+  Root directory, Deploy command를 확인한다. `--config`를 명시하면 자동 설정은 실행되지 않는다.
+
 ### Vercel
 - Vercel 정적 배포. SPA 라우팅은 `vercel.json` 의 rewrite로 처리한다. base는 기본값 `/`.
 - 환경변수는 Vercel 프로젝트 설정에 등록한다.
+- 보조 배포다. 저장소에 연결된 Vercel 프로젝트가 push마다 Production 배포를 만들지만 공식 도메인은 Cloudflare다.
 
 ### GitHub Pages
 - `.github/workflows/deploy-pages.yml` 가 `main` 푸시 시 자동 빌드·배포한다.

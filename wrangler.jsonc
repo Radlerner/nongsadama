@@ -1,8 +1,19 @@
+// Cloudflare Workers 정적 자산(Static Assets) 배포 설정 — 공식 운영 https://nongsadama.app (D-038).
+// Worker 스크립트 없이 Vite 빌드 결과물(dist)만 올린다. @cloudflare/vite-plugin·Vite 6 은 필요 없다.
+//
+// 이 파일을 지우거나 이름을 바꾸지 말 것: wrangler(4.68+)는 설정 파일을 못 찾으면 "자동 설정(autoconfig)"에
+// 들어가고, Vite 5 프로젝트에서는 "The version of Vite ... cannot be automatically configured ... at least 6.0.0"
+// 오류로 배포가 실패한다. Cloudflare Deploy command 는 `npx wrangler deploy --config wrangler.jsonc` 로 명시한다.
+//
+// 넣지 말 것: routes / custom_domain / workers_dev / preview_urls(도메인은 대시보드에서 관리), main(Worker 코드),
+// vars 에 VITE_* 값(빌드 타임 값은 Cloudflare "Build variables" 로 넣어야 Vite 가 번들에 인라인한다).
 {
   "name": "nongsadama",
   "compatibility_date": "2026-08-01",
   "assets": {
+    // Vite 기본 outDir. `npm run build` 가 먼저 돌아 dist 가 있어야 한다.
     "directory": "./dist",
+    // SPA 폴백: /home, /privacy 같은 딥링크에 index.html 을 200 으로 돌려준다(react-router BrowserRouter).
     "not_found_handling": "single-page-application"
   }
 }

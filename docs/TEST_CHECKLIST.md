@@ -534,3 +534,20 @@ Supabase 프로젝트 **nongsadama**(`ikusdwursvbdrznbcjtw`, ap-northeast-2)에 
 | `neighbor_profiles`: 정의에 단계 기반 키(`vr.level = 'town'`) 포함, `security_barrier=true`, 권한 authenticated SELECT만(anon 조회 permission denied) | ✅ |
 | life_info 정정: 범위·접미·잘못된 지역번호 전화 0건(남은 비표준 4건은 `1422-xx` 공식 시청 콜센터), 시·군 없는 주소 0건, 우편번호 접두 0건, '민간' 명시 4건, 보령중앙시장 장날 문구 0건 | ✅ |
 | `LifeInfoDetail` `tel:` 링크 숫자·+만 남김(표시 원문) — typecheck·빌드 | ✅ |
+
+## Cloudflare 배포 오류 진단 — wrangler 자동 설정 / Vite 5 유지 (2026-09-20, D-038)
+실제 배포·`wrangler login`은 하지 않았다. wrangler 실행은 전부 저장소 밖 사본에서 `--dry-run`.
+| 검증 | 결과 |
+|---|---|
+| HEAD(`df30608`) 사본 + `npx wrangler@4.135.0 deploy --dry-run` → "Read 20 files from the assets directory … --dry-run: exiting now."(자동 설정 없음). 4.134.0·4.133.0·4.131.2·4.129.0, `CI=true WORKERS_CI=1`에서도 동일 | ✅ |
+| 같은 사본에서 `wrangler.jsonc`만 숨김 → "Detected Project Settings … Framework: Vite" 뒤 오너의 Vite 6 오류가 글자 그대로 재현 | ✅ 재현 |
+| 설정 없는 디렉터리 + `deploy --config wrangler.jsonc` → "Could not read file: wrangler.jsonc"(자동 설정 미실행), `--no-autoconfig` → "Missing entry-point …" | ✅ |
+| 설정 있음 + `deploy --config wrangler.jsonc --dry-run`, `versions upload --config wrangler.jsonc --dry-run` | ✅ 둘 다 통과 |
+| 주석을 추가한 `wrangler.jsonc`: 주석 제거 후 JSON이 원본과 동일, `deploy --config wrangler.jsonc --dry-run` 통과 | ✅ |
+| 빌드 타임 주입: `VITE_STT_ENDPOINT=<더미> npx vite build --outDir <사본>` → 번들에 더미 값 1건, 실제 `dist`는 무변경(mtime 동일) | ✅ |
+| 운영 실측: `nongsadama.app` = Cloudflare, 번들 버전 `1.3`, `/home`·`/privacy` 200. `df30608`(v1.3) 빌드 성공(2026-09-19T23:08:57Z) | ✅ |
+| GitHub 체크 "Workers Builds: nongsadama" 전 커밋 조회: 실패 2건 — `40254b5`("Delete wrangler.jsonc", 2026-08-01, Build `a2cca8e7…`, 설정 파일 없음 + 당시 wrangler 4.118.0 = 오너 오류와 조건 일치), `80a6d7e`(`v0/figma-ui-refresh`, 2026-09-12, Build `41082f6a…`, 설정 파일 있음·원인 미확인). 2026-09-12 이후 실패 0 | ✅ 확인 |
+| 로컬 Workers 런타임(`npx wrangler dev --config wrangler.jsonc`): `/`·`/home`·`/privacy`·`/board/123`·`/delete-account` 200 text/html(SPA 폴백), 해시 자산 200 text/javascript, `sw.js`·manifest·robots·sitemap 정상 MIME, `/privacy` 딥링크 렌더·콘솔 오류 0 | ✅ |
+| 독립 검증 워크플로(소스 감사·웹 조사·설정 검토 + 반박): 설정 파일이 있는데 자동 설정이 도는 경로 미발견(깨진·빈 설정도 폴백 안 함, 4.118.0·4.131.1 동일), 동일 오류 이슈는 workers-sdk #14541(설정 파일 없는 저장소) 1건. 반박 단계가 "GitHub에 실패 기록 없음"이라는 최초 진단을 정정 | ✅ |
+| `npm run typecheck`·`npm run build` | ✅(기능 코드 무변경) |
+| 미확인: 오너가 본 실패 화면이 Build `a2cca8e7…`(`40254b5`)인지(대시보드 로그 필요), `80a6d7e` 실패 원인, Cloudflare 실제 빌드에서의 `VITE_STT_ENDPOINT` 인라인 | 오너 확인 |
