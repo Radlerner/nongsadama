@@ -8,9 +8,11 @@ const harness = { client: null }
 globalThis.integrationHarness = harness
 registerHooks({
   resolve(specifier, context, nextResolve) {
-    if (context.parentURL?.endsWith('/src/lib/nativeOAuth.ts') || context.parentURL?.endsWith('/src/lib/speech.ts')) {
+    if (context.parentURL?.endsWith('/src/lib/nativeOAuth.ts')
+      || context.parentURL?.endsWith('/src/lib/speech.ts')
+      || context.parentURL?.endsWith('/src/lib/kakaoMap.ts')) {
       if (specifier === './supabase') {
-        return { url: 'data:text/javascript,export const getSupabaseClient = () => globalThis.integrationHarness.client', shortCircuit: true }
+        return { url: 'data:text/javascript,export const isSupabaseConfigured = true; export const getSupabaseClient = () => globalThis.integrationHarness.client', shortCircuit: true }
       }
       if (specifier === '../config/app') {
         return { url: 'data:text/javascript,export const speechLangTags = { ko: "ko-KR", en: "en-US" }', shortCircuit: true }
@@ -19,8 +21,10 @@ registerHooks({
     return nextResolve(specifier, context)
   },
   load(url, context, nextLoad) {
-    if (url.endsWith('/src/lib/nativeOAuth.ts') || url.endsWith('/src/lib/speech.ts')) {
-      const source = readFileSync(new URL(url), 'utf8').replaceAll('import.meta.env.VITE_STT_ENDPOINT', JSON.stringify('https://stt.test'))
+    if (url.endsWith('/src/lib/nativeOAuth.ts') || url.endsWith('/src/lib/speech.ts') || url.endsWith('/src/lib/kakaoMap.ts')) {
+      const source = readFileSync(new URL(url), 'utf8')
+        .replaceAll('import.meta.env.VITE_STT_ENDPOINT', JSON.stringify('https://stt.test'))
+        .replaceAll('import.meta.env.VITE_KAKAO_MAP_KEY', 'undefined')
       return {
         format: 'module', shortCircuit: true,
         source: ts.transpileModule(source, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } }).outputText,
@@ -31,6 +35,33 @@ registerHooks({
 })
 const { readNativeOAuthCode, completeNativeOAuth } = await import('../src/lib/nativeOAuth.ts')
 const { listenOnce } = await import('../src/lib/speech.ts')
+const { getKakaoMapKey } = await import('../src/lib/kakaoMap.ts')
+
+test('Kakao map key falls back to read-only Supabase config', async () => {
+  harness.client = {
+    from(table) {
+      assert.equal(table, 'map_config')
+      return {
+        select(columns) {
+          assert.equal(columns, 'kakao_javascript_key')
+          return {
+            eq(column, value) {
+              assert.equal(column, 'id')
+              assert.equal(value, true)
+              return {
+                maybeSingle: async () => ({
+                  data: { kakao_javascript_key: '0123456789abcdef0123456789abcdef' },
+                  error: null,
+                }),
+              }
+            },
+          }
+        },
+      }
+    },
+  }
+  assert.equal(await getKakaoMapKey(), '0123456789abcdef0123456789abcdef')
+})
 
 test('native callback only accepts the exact route and one authorization code', () => {
   for (const value of ['invalid', 'https://auth/callback?code=x', 'com.nongsadama.myapp://evil/callback?code=x',

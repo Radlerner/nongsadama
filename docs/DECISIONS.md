@@ -491,3 +491,9 @@ PRD_v1_3.md를 기준으로 한 기술·제품 의사결정과 이유를 남긴�
   (`/assets/index-OLD.js`)에도 200 text/html이 응답되고 `sw.js`가 상태·MIME 검사 없이 캐시하는 것은 기존 동작이다(새로고침으로
   복구) — 별도 버전에서 검토. unpinned `npx wrangler`는 매 빌드 latest를 받으므로 동작이 다시 바뀌면 Deploy command에
   `wrangler@<버전>`을 지정한다.
+
+### D-039. Kakao 지도 공개 설정을 Supabase에서 읽기 (2026-09-20)
+- **문제**: 운영 웹·GitHub Pages·Android 빌드에 `VITE_KAKAO_MAP_KEY`가 없으면 Vite가 Kakao 경로를 제거하고 OSM만 남긴다. 배포 채널마다 같은 공개 키를 반복 등록해야 했다.
+- **결정**: `map_config`에 Kakao Maps JavaScript 키 1개를 저장하고 anon·authenticated에는 SELECT만 허용한다. 일반 사용자의 쓰기는 테이블 권한과 RLS로 차단한다. JavaScript 키는 브라우저 SDK 요청에 노출되는 공개 식별자이며 Kakao Web 플랫폼 허용 도메인으로 사용처를 제한한다.
+- **클라이언트**: `VITE_KAKAO_MAP_KEY`가 유효하면 우선 사용하고, 없으면 Supabase에서 설정을 1회 읽어 캐시한다. 조회 실패·행 없음·형식 오류면 기존 OSM 폴백을 유지한다.
+- **운영**: 키 값은 migration이나 저장소에 넣지 않고 운영 DB에서 등록한다. 키 교체는 웹·Android 재빌드 없이 다음 앱 실행부터 반영된다.

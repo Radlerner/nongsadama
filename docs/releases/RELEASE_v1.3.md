@@ -18,11 +18,11 @@
 | # | 항목 | 확인 방법 |
 |---|---|---|
 | 1 | **의존성 설치** | PR 병합 후 `npm install`을 먼저 실행. `node_modules/@capacitor/app`·`@capacitor/browser`가 없으면 typecheck가 실패하고, 그 상태의 `npx cap sync android`는 `android/app/capacitor.build.gradle`·`android/capacitor.settings.gradle`에서 플러그인 줄을 지운다(이번 작업 중 재현). 지워졌다면 `npm install` 후 다시 sync |
-| 2 | 웹 빌드가 v1.3인지 | 운영 변수 설정 후 `npm run build:release`. 누락 시 빌드가 실패해야 하며, 성공한 `dist`에는 STT 주소와 Kakao SDK 주소가 모두 있어야 함 |
+| 2 | 웹 빌드가 v1.3인지 | 운영 변수 설정 후 `npm run build:release`. 누락 시 빌드가 실패해야 하며 성공한 `dist`에는 STT 주소가 있어야 함. Kakao 키는 실행 중 Supabase에서 읽음 |
 | 3 | Capacitor 동기화 | `npx cap sync android` 출력에 `Found 2 Capacitor plugins for android` — `@capacitor/app@8.1.1`, `@capacitor/browser@8.0.4`. `android/app/src/main/assets/public/index.html`이 `dist/index.html`과 동일, `android/app/src/main/assets/capacitor.plugins.json`에 `AppPlugin`·`BrowserPlugin` 등록(빠지면 앱 로그인 화면에 오류 배너가 뜨고 콜백이 동작하지 않음). sync 뒤 `android/app/capacitor.build.gradle`·`android/capacitor.settings.gradle`이 `M`으로 보여도 `git diff`가 비어 있으면 줄바꿈(LF/CRLF) 차이뿐이다 — `git checkout --`로 되돌리고 커밋에 넣지 않는다 |
 | 4 | 버전 | `android/app/build.gradle` 10~11행 `versionCode 4`, `versionName "1.3"` |
 | 5 | AndroidManifest | `com.nongsadama.myapp` scheme · `auth` host · `/callback` path intent-filter 존재, `RECORD_AUDIO`·`MODIFY_AUDIO_SETTINGS` 권한 존재 |
-| 6 | 라이브 DB | 마이그레이션 `20260918000000`·`000100`·`000200` 적용 완료(2026-09-19). `countries` 7행, `profiles.preferred_locale_explicit` 존재, `stt_try_consume` EXECUTE는 service_role만 — 2026-09-20 읽기 전용 확인 |
+| 6 | 라이브 DB | 기존 3개 migration과 `20260920000000_map_config` 적용. `countries` 7행, `profiles.preferred_locale_explicit` 존재, `stt_try_consume` EXECUTE는 service_role만, `map_config`는 공개 읽기·일반 사용자 쓰기 차단 |
 | 7 | Edge Function | `stt` ACTIVE(`verify_jwt=false`, 함수 내부 검증). 토큰 없는 POST → 401 `unauthorized` 확인. secret은 §3 |
 | 8 | 앱에 STT를 넣을지 | AAB에는 빌드 PC의 `.env.local` 값이 들어간다. 앱에서 음성 입력을 쓰려면 빌드 **전에** `.env.local`에 `VITE_STT_ENDPOINT`를 넣는다(§3의 전제 완료 후). 비우면 앱은 v1.2와 같은 음성 동작. **기본은 `.env.local`에 `VITE_STT_ENDPOINT` 없이 1.3 (4)를 빌드하는 것**이다 — `v1.3` 태그 소스의 앱 내 `/privacy`는 아직 OpenAI 전송을 고지하지 않는다 |
 | 9 | 서명 키·JDK | `nongsadama-release-key.jks`는 작업 트리 루트에 있고 `.gitignore`의 `*.jks`로만 추적에서 제외된다(공개 저장소). `git add -A`·`git add -f`는 쓰지 않고 §4의 경로 지정 `git add`만 쓰며, 커밋 전 `git status --short`에 `.jks`가 없는지 확인한다. `local.properties`·keystore·`.env*`는 이번 작업에서 손대지 않았다 |

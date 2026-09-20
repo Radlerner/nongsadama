@@ -15,13 +15,9 @@ export default defineConfig(({ mode }) => {
       'VITE_SUPABASE_URL',
       'VITE_SUPABASE_ANON_KEY',
       'VITE_STT_ENDPOINT',
-      'VITE_KAKAO_MAP_KEY',
     ]
     const missing = required.filter((key) => !env[key]?.trim())
     if (missing.length > 0) throw new Error(`Release build requires: ${missing.join(', ')}`)
-    if (!/^[0-9a-f]{32}$/i.test(env.VITE_KAKAO_MAP_KEY!)) {
-      throw new Error('VITE_KAKAO_MAP_KEY must be a Kakao JavaScript key')
-    }
     const sttUrl = new URL(env.VITE_STT_ENDPOINT!)
     if (sttUrl.protocol !== 'https:' || !sttUrl.pathname.endsWith('/functions/v1/stt')) {
       throw new Error('VITE_STT_ENDPOINT must be the HTTPS STT Edge Function URL')

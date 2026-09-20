@@ -18,6 +18,21 @@ export type Database = {
   }
   public: {
     Tables: {
+      map_config: {
+        Row: {
+          id: boolean
+          kakao_javascript_key: string
+        }
+        Insert: {
+          id?: boolean
+          kakao_javascript_key: string
+        }
+        Update: {
+          id?: boolean
+          kakao_javascript_key?: string
+        }
+        Relationships: []
+      }
       farm_tips: {
         Row: {
           created_at: string
