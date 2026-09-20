@@ -482,7 +482,7 @@ PRD_v1_3.md를 기준으로 한 기술·제품 의사결정과 이유를 남긴�
 - **저장소 변경(동작 무변경)**: `wrangler.jsonc`에 설명 주석(키·값 동일 — 주석 제거 후 JSON 동일성 검증), `.gitignore`에
   `.wrangler/`, README "배포"에 Cloudflare 절(대시보드 값·빌드 변수·로컬 검증·문제 해결). wrangler를 devDependency로
   넣지 않았다 — lockfile이 바뀌고 Vercel·GitHub Pages·Capacitor의 `npm ci`에 workerd·miniflare가 실린다.
-- **빌드 변수**: `VITE_*`는 Cloudflare "Build variables and secrets"로 넣어야 `npm run build`의 프로세스 환경으로 전달돼
+- **빌드 변수**: `VITE_*`는 Cloudflare "Build variables and secrets"로 넣어야 `npm run build:release`의 프로세스 환경으로 전달돼
   Vite가 인라인한다(로컬에서 `VITE_STT_ENDPOINT`를 환경변수로 준 `vite build`가 번들에 값을 넣는 것을 확인). 런타임
   Variables·`wrangler.jsonc`의 `vars`는 빌드에 전달되지 않는다. 등록 위치는 Cloudflare(공식)·GitHub Variables(보조 Pages)·
   Vercel 프로젝트(보조 — push마다 Production 배포가 생성되는 것을 GitHub deployments에서 확인)·빌드 PC `.env.local`(AAB).

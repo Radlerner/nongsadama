@@ -3,7 +3,8 @@
 //
 // 이 파일을 지우거나 이름을 바꾸지 말 것: wrangler(4.68+)는 설정 파일을 못 찾으면 "자동 설정(autoconfig)"에
 // 들어가고, Vite 5 프로젝트에서는 "The version of Vite ... cannot be automatically configured ... at least 6.0.0"
-// 오류로 배포가 실패한다. Cloudflare Deploy command 는 `npx wrangler deploy --config wrangler.jsonc` 로 명시한다.
+// 오류로 배포가 실패한다. Cloudflare Build command는 `npm run build:release`, Deploy command는
+// `npx wrangler deploy --config wrangler.jsonc` 로 명시한다.
 //
 // 넣지 말 것: routes / custom_domain / workers_dev / preview_urls(도메인은 대시보드에서 관리), main(Worker 코드),
 // vars 에 VITE_* 값(빌드 타임 값은 Cloudflare "Build variables" 로 넣어야 Vite 가 번들에 인라인한다).

@@ -3,8 +3,8 @@
 // - 키가 없으면 어떤 외부 요청도 발생하지 않는다(기본: Leaflet/OSM — 검증된 경로).
 // - 키 발급(운영자, 약 5분): developers.kakao.com → 내 애플리케이션 → 앱 생성 →
 //   [앱 키] JavaScript 키 복사 → [플랫폼] Web에 사이트 도메인 등록
-//   (https://radlerner.github.io, http://localhost:5173) → .env.local 및 GitHub
-//   저장소 Variables에 VITE_KAKAO_MAP_KEY 추가.
+//   (https://nongsadama.app, https://radlerner.github.io, http://localhost,
+//   http://localhost:5173) → 각 배포 Build variable 및 .env.local에 키 추가.
 
 export const kakaoMapKey: string | undefined = import.meta.env.VITE_KAKAO_MAP_KEY as
   | string

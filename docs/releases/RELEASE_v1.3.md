@@ -18,7 +18,7 @@
 | # | 항목 | 확인 방법 |
 |---|---|---|
 | 1 | **의존성 설치** | PR 병합 후 `npm install`을 먼저 실행. `node_modules/@capacitor/app`·`@capacitor/browser`가 없으면 typecheck가 실패하고, 그 상태의 `npx cap sync android`는 `android/app/capacitor.build.gradle`·`android/capacitor.settings.gradle`에서 플러그인 줄을 지운다(이번 작업 중 재현). 지워졌다면 `npm install` 후 다시 sync |
-| 2 | 웹 빌드가 v1.3인지 | `npm run build` 후 `dist/assets/index-*.js`에 `talk.micNoticeExternal` 문자열 존재, `VITE_STT_KEY` 문자열 없음 |
+| 2 | 웹 빌드가 v1.3인지 | 운영 변수 설정 후 `npm run build:release`. 누락 시 빌드가 실패해야 하며, 성공한 `dist`에는 STT 주소와 Kakao SDK 주소가 모두 있어야 함 |
 | 3 | Capacitor 동기화 | `npx cap sync android` 출력에 `Found 2 Capacitor plugins for android` — `@capacitor/app@8.1.1`, `@capacitor/browser@8.0.4`. `android/app/src/main/assets/public/index.html`이 `dist/index.html`과 동일, `android/app/src/main/assets/capacitor.plugins.json`에 `AppPlugin`·`BrowserPlugin` 등록(빠지면 앱 로그인 화면에 오류 배너가 뜨고 콜백이 동작하지 않음). sync 뒤 `android/app/capacitor.build.gradle`·`android/capacitor.settings.gradle`이 `M`으로 보여도 `git diff`가 비어 있으면 줄바꿈(LF/CRLF) 차이뿐이다 — `git checkout --`로 되돌리고 커밋에 넣지 않는다 |
 | 4 | 버전 | `android/app/build.gradle` 10~11행 `versionCode 4`, `versionName "1.3"` |
 | 5 | AndroidManifest | `com.nongsadama.myapp` scheme · `auth` host · `/callback` path intent-filter 존재, `RECORD_AUDIO`·`MODIFY_AUDIO_SETTINGS` 권한 존재 |
@@ -59,7 +59,7 @@ git tag -a v1.3 -m "NongsaDaMa v1.3 - Play closed test (versionCode 4)"
 commit·tag·push는 오너 승인 전 실행하지 않는다. `v1.0`·`v1.1`·`v1.2` 태그는 그대로 둔다.
 
 ## 5. Google Play 비공개 테스트 v1.3 AAB 재생성·업로드
-1. §2 표 확인 → `npm install` → `npm run build` → `npx cap sync android`.
+1. §2 표 확인 → `npm install` → `npm run build:release` → `npx cap sync android`.
 2. Android Studio → Build → Generate Signed App Bundle로 서명된 AAB 생성(릴리스 키 선택). 출력은 `android/app/release/app-release.aab`이며 v1.2 때 만든 같은 이름의 파일을 덮어쓰므로 수정 시각으로 새 파일인지 확인한다. `android/app/build.gradle`에는 `signingConfig`가 없어 `gradlew bundleRelease` 산출물은 미서명이고 Play Console이 거부한다 — 그 경로는 쓰지 않는다.
 3. Play Console → 테스트 → 비공개 테스트 → 새 버전 만들기 → AAB 업로드 → 버전명 `1.3 (4)` 확인.
 4. 출시 노트(§7)를 붙여 저장 → 검토 → 출시 시작.

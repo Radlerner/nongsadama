@@ -53,7 +53,8 @@ npm run dev
 | 명령 | 설명 |
 | --- | --- |
 | `npm run dev` | 로컬 개발 서버 |
-| `npm run build` | 타입 검사 후 프로덕션 빌드 |
+| `npm run build` | 타입 검사 후 로컬 프로덕션 빌드 |
+| `npm run build:release` | 필수 운영 환경변수 확인 후 배포용 빌드 |
 | `npm run typecheck` | TypeScript 검사 (`tsc --noEmit`) |
 | `npm run preview` | 빌드 결과 미리보기 |
 
@@ -129,12 +130,12 @@ supabase db push
   | --- | --- |
   | Production branch | `main` |
   | Root directory | 저장소 루트(`/`, 비움) |
-  | Build command | `npm run build` |
+  | Build command | `npm run build:release` |
   | Deploy command | `npx wrangler deploy --config wrangler.jsonc` |
   | Non-production branch deploy command | `npx wrangler versions upload --config wrangler.jsonc` |
 
 - 빌드 변수는 Settings → Build → **Variables and secrets**에 넣는다(런타임 Variables 아님, `wrangler.jsonc`의 `vars` 아님):
-  `VITE_SUPABASE_URL`·`VITE_SUPABASE_ANON_KEY`(필수), `VITE_KAKAO_MAP_KEY`·`VITE_GA_MEASUREMENT_ID`·`VITE_STT_ENDPOINT`(선택).
+  `VITE_SUPABASE_URL`·`VITE_SUPABASE_ANON_KEY`·`VITE_KAKAO_MAP_KEY`·`VITE_STT_ENDPOINT`(필수), `VITE_GA_MEASUREMENT_ID`(선택).
   `BASE_PATH`는 넣지 않는다. 빌드 타임 상수라 값을 바꾼 뒤 다시 배포해야 적용된다.
 - 도메인(`nongsadama.app`, workers.dev)은 대시보드에서 관리한다 — `wrangler.jsonc`에 `routes`·`workers_dev`를 넣지 않는다.
 - 로컬 검증(실제 배포 없음): `npm run build` 후 `npx wrangler deploy --config wrangler.jsonc --dry-run`
