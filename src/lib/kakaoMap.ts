@@ -1,19 +1,36 @@
-// 카카오맵 JS SDK 로더·어댑터 (환경변수 게이트)
-// - VITE_KAKAO_MAP_KEY 가 설정된 경우에만 SDK를 로드하고 지도 제공자를 kakao로 전환한다.
-// - 키가 없으면 어떤 외부 요청도 발생하지 않는다(기본: Leaflet/OSM — 검증된 경로).
+// 카카오맵 JS SDK 로더·어댑터
+// - VITE_KAKAO_MAP_KEY가 있으면 우선 사용하고, 없으면 Supabase map_config에서 읽는다.
+// - 유효한 키가 없으면 어떤 외부 요청도 발생하지 않는다(기본: Leaflet/OSM — 검증된 경로).
 // - 키 발급(운영자, 약 5분): developers.kakao.com → 내 애플리케이션 → 앱 생성 →
 //   [앱 키] JavaScript 키 복사 → [플랫폼] Web에 사이트 도메인 등록
-//   (https://radlerner.github.io, http://localhost:5173) → .env.local 및 GitHub
-//   저장소 Variables에 VITE_KAKAO_MAP_KEY 추가.
+//   (https://nongsadama.app, https://radlerner.github.io, http://localhost,
+//   http://localhost:5173) → Supabase map_config에 JavaScript 키 등록.
 
-export const kakaoMapKey: string | undefined = import.meta.env.VITE_KAKAO_MAP_KEY as
-  | string
-  | undefined
+import { getSupabaseClient, isSupabaseConfigured } from './supabase'
+
+const envKakaoMapKey = (import.meta.env.VITE_KAKAO_MAP_KEY as string | undefined)?.trim()
+let kakaoMapKeyPromise: Promise<string | undefined> | null = null
+
+export function getKakaoMapKey(): Promise<string | undefined> {
+  if (/^[0-9a-f]{32}$/i.test(envKakaoMapKey ?? '')) return Promise.resolve(envKakaoMapKey)
+  if (!isSupabaseConfigured) return Promise.resolve(undefined)
+  if (kakaoMapKeyPromise) return kakaoMapKeyPromise
+  const query = getSupabaseClient()
+    .from('map_config')
+    .select('kakao_javascript_key')
+    .eq('id', true)
+    .maybeSingle()
+  kakaoMapKeyPromise = Promise.resolve(query).then(({ data, error }) => {
+    const key = data?.kakao_javascript_key?.trim()
+    return !error && /^[0-9a-f]{32}$/i.test(key ?? '') ? key : undefined
+  })
+  return kakaoMapKeyPromise
+}
 
 export type MapProvider = 'kakao' | 'osm'
 
-export function mapProvider(): MapProvider {
-  return kakaoMapKey ? 'kakao' : 'osm'
+export async function mapProvider(): Promise<MapProvider> {
+  return (await getKakaoMapKey()) ? 'kakao' : 'osm'
 }
 
 // SDK 최소 타입(공식 @types 부재)
@@ -53,9 +70,10 @@ declare global {
 let loadPromise: Promise<KakaoMapsNs> | null = null
 
 /** SDK를 1회 로드한다(autoload=false → load 콜백에서 준비 완료). */
-export function loadKakaoMaps(): Promise<KakaoMapsNs> {
-  if (!kakaoMapKey) return Promise.reject(new Error('kakao-key-missing'))
+export async function loadKakaoMaps(): Promise<KakaoMapsNs> {
   if (loadPromise) return loadPromise
+  const kakaoMapKey = await getKakaoMapKey()
+  if (!kakaoMapKey) throw new Error('kakao-key-missing')
   loadPromise = new Promise((resolve, reject) => {
     if (window.kakao?.maps) {
       window.kakao.maps.load(() => resolve(window.kakao!.maps))

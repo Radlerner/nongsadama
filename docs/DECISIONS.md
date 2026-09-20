@@ -482,7 +482,7 @@ PRD_v1_3.md를 기준으로 한 기술·제품 의사결정과 이유를 남긴�
 - **저장소 변경(동작 무변경)**: `wrangler.jsonc`에 설명 주석(키·값 동일 — 주석 제거 후 JSON 동일성 검증), `.gitignore`에
   `.wrangler/`, README "배포"에 Cloudflare 절(대시보드 값·빌드 변수·로컬 검증·문제 해결). wrangler를 devDependency로
   넣지 않았다 — lockfile이 바뀌고 Vercel·GitHub Pages·Capacitor의 `npm ci`에 workerd·miniflare가 실린다.
-- **빌드 변수**: `VITE_*`는 Cloudflare "Build variables and secrets"로 넣어야 `npm run build`의 프로세스 환경으로 전달돼
+- **빌드 변수**: `VITE_*`는 Cloudflare "Build variables and secrets"로 넣어야 `npm run build:release`의 프로세스 환경으로 전달돼
   Vite가 인라인한다(로컬에서 `VITE_STT_ENDPOINT`를 환경변수로 준 `vite build`가 번들에 값을 넣는 것을 확인). 런타임
   Variables·`wrangler.jsonc`의 `vars`는 빌드에 전달되지 않는다. 등록 위치는 Cloudflare(공식)·GitHub Variables(보조 Pages)·
   Vercel 프로젝트(보조 — push마다 Production 배포가 생성되는 것을 GitHub deployments에서 확인)·빌드 PC `.env.local`(AAB).
@@ -491,3 +491,9 @@ PRD_v1_3.md를 기준으로 한 기술·제품 의사결정과 이유를 남긴�
   (`/assets/index-OLD.js`)에도 200 text/html이 응답되고 `sw.js`가 상태·MIME 검사 없이 캐시하는 것은 기존 동작이다(새로고침으로
   복구) — 별도 버전에서 검토. unpinned `npx wrangler`는 매 빌드 latest를 받으므로 동작이 다시 바뀌면 Deploy command에
   `wrangler@<버전>`을 지정한다.
+
+### D-039. Kakao 지도 공개 설정을 Supabase에서 읽기 (2026-09-20)
+- **문제**: 운영 웹·GitHub Pages·Android 빌드에 `VITE_KAKAO_MAP_KEY`가 없으면 Vite가 Kakao 경로를 제거하고 OSM만 남긴다. 배포 채널마다 같은 공개 키를 반복 등록해야 했다.
+- **결정**: `map_config`에 Kakao Maps JavaScript 키 1개를 저장하고 anon·authenticated에는 SELECT만 허용한다. 일반 사용자의 쓰기는 테이블 권한과 RLS로 차단한다. JavaScript 키는 브라우저 SDK 요청에 노출되는 공개 식별자이며 Kakao Web 플랫폼 허용 도메인으로 사용처를 제한한다.
+- **클라이언트**: `VITE_KAKAO_MAP_KEY`가 유효하면 우선 사용하고, 없으면 Supabase에서 설정을 1회 읽어 캐시한다. 조회 실패·행 없음·형식 오류면 기존 OSM 폴백을 유지한다.
+- **운영**: 키 값은 migration이나 저장소에 넣지 않고 운영 DB에서 등록한다. 키 교체는 웹·Android 재빌드 없이 다음 앱 실행부터 반영된다.

@@ -35,7 +35,7 @@ jobs:
         run: npm ci
 
       - name: Build (Tailwind CSS는 이 단계에서 생성됨)
-        run: npm run build
+        run: npm run build:release
         env:
           # GitHub Pages는 https://<user>.github.io/nongsadama/ 하위 경로로 서빙된다.
           BASE_PATH: /nongsadama/

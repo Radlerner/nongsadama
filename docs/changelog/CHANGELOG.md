@@ -28,6 +28,11 @@ PR 본문의 "v1.4" 표기는 릴리스 버전이 아니며 이 병합본의 릴
 - GitHub Pages(보조 배포) 워크플로 `deploy-pages.yml`이 저장소 Variable `VITE_STT_ENDPOINT`를 빌드에 주입한다(비어 있으면 브라우저 Web Speech 사용). 공식 `nongsadama.app`은 Cloudflare 빌드라 이 워크플로와 무관하며 Cloudflare 빌드 변수에 따로 등록해야 한다 — RELEASE_v1.3 §3. 엔드포인트를 켜면 음성 입력은 로그인 사용자 전용이 된다.
 - `capacitor.config.ts` `loggingBehavior: 'none'`. 루트 `.gitignore`에 Supabase CLI 로컬 상태(`supabase/.temp/`)·에이전트 도구 폴더 추가, `android/.gitignore`의 키스토어 패턴(`*.jks`·`*.keystore`) 주석 해제(루트 `.gitignore`에는 이전부터 있음).
 - Android `versionName 1.3` / `versionCode 4`, `package.json` 1.3.0.
+- 배포용 빌드는 Supabase·STT 필수 환경변수가 없으면 실패해 브라우저 음성 입력으로 조용히 대체된 릴리스가 배포되지 않게 한다.
+- Kakao Maps JavaScript 키는 공개 읽기 전용 Supabase `map_config`에서 실행 중에 가져오며 `VITE_KAKAO_MAP_KEY`는 선택적 폴백으로 유지한다.
+
+### Fixed
+- 로그인 전에 직접 고른 언어가 기존 계정 프로필에 저장되지 않던 문제.
 
 ### Removed
 - `VITE_STT_KEY` 환경변수(정적 STT 키를 클라이언트 번들에 싣던 경로). OpenAI 키는 저장소·번들에 없고 Supabase secret에만 둔다.

@@ -149,8 +149,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const processedLocaleSelection = useRef(localeSelection)
   useEffect(() => {
     if (processedLocaleSelection.current === localeSelection) return
-    processedLocaleSelection.current = localeSelection
     if (!session?.user) return
+    processedLocaleSelection.current = localeSelection
     const userId = session.user.id
     void getSupabaseClient().from('profiles')
       .update({ preferred_locale: locale, preferred_locale_explicit: true })

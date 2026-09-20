@@ -32,6 +32,7 @@ import {
   mapProvider,
   loadKakaoMaps,
   emojiMarkerEl,
+  type MapProvider,
   type KakaoMap,
   type KakaoMapsNs,
   type KakaoOverlay,
@@ -111,7 +112,7 @@ export default function MapHome() {
   } | null>(null)
 
   // 'kakao'(키 존재 시) | 'osm'. 카카오 SDK 로드 실패 시 OSM으로 자동 폴백한다(§4 폴백 원칙).
-  const [provider, setProvider] = useState(mapProvider())
+  const [provider, setProvider] = useState<MapProvider | null>(null)
   const mapRef = useRef<L.Map | null>(null)
   const layerRef = useRef<L.LayerGroup | null>(null)
   const userMarkerRef = useRef<L.Marker | null>(null)
@@ -121,6 +122,16 @@ export default function MapHome() {
   const kakaoOverlaysRef = useRef<KakaoOverlay[]>([])
   const kakaoUserOverlayRef = useRef<KakaoOverlay | null>(null)
   const [kakaoError, setKakaoError] = useState(false)
+
+  useEffect(() => {
+    let active = true
+    void mapProvider().then((value) => {
+      if (active) setProvider(value)
+    })
+    return () => {
+      active = false
+    }
+  }, [])
 
   const regionsById = useMemo(
     () => new Map((regions ?? []).map((r) => [r.id, r])),
