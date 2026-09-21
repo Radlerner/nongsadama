@@ -48,6 +48,7 @@
   "landing.enter": "시작하기",
   "select.title": "언어와 지역 선택",
   "select.language": "언어",
+  "select.recommended": "기기 언어 추천",
   "select.region": "지역",
   "select.regionEmpty": "보여드릴 지역이 없어요.",
   "select.regionOther": "기타 지역",

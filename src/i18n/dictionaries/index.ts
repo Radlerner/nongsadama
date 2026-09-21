@@ -1,6 +1,13 @@
 import type { Locale } from '../../config/app'
 import ko from './ko.json'
 import en from './en.json'
+import vi from './vi.json'
+import km from './km.json'
+import th from './th.json'
+import ne from './ne.json'
+import mn from './mn.json'
+import uz from './uz.json'
+import ru from './ru.json'
 
 export type Dictionary = Record<string, string>
 
@@ -10,4 +17,11 @@ export type Dictionary = Record<string, string>
 export const dictionaries: Record<Locale, Dictionary> = {
   ko,
   en,
+  vi,
+  km,
+  th,
+  ne,
+  mn,
+  uz,
+  ru,
 }

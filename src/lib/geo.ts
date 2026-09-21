@@ -1,6 +1,8 @@
 import { haversineKm } from './matching'
 import { regionConfig } from '../config/app'
 import type { Tables } from '../types/database'
+import { Capacitor } from '@capacitor/core'
+import { Geolocation } from '@capacitor/geolocation'
 
 type Region = Tables<'regions'>
 
@@ -9,6 +11,10 @@ type Region = Tables<'regions'>
  * 좌표는 기기 내 계산에만 쓰고 저장·전송하지 않는다(불변 원칙).
  */
 export function getCurrentPosition(): Promise<{ lat: number; lng: number }> {
+  if (Capacitor.isNativePlatform()) {
+    return Geolocation.getCurrentPosition({ enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 })
+      .then((pos) => ({ lat: pos.coords.latitude, lng: pos.coords.longitude }))
+  }
   return new Promise((resolve, reject) => {
     if (typeof navigator === 'undefined' || !navigator.geolocation) {
       reject(new Error('geolocation-unavailable'))

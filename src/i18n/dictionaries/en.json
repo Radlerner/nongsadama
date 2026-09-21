@@ -48,6 +48,7 @@
   "landing.enter": "Get started",
   "select.title": "Choose language and region",
   "select.language": "Language",
+  "select.recommended": "Recommended for this device",
   "select.region": "Region",
   "select.regionEmpty": "No regions to show.",
   "select.regionOther": "Other areas",

@@ -6,7 +6,7 @@ import {
   useState,
   type ReactNode,
 } from 'react'
-import { appConfig, type Locale } from '../config/app'
+import { appConfig, deviceLocale, type Locale } from '../config/app'
 import { dictionaries } from './dictionaries'
 
 const STORAGE_KEY = 'nongsadama.locale'
@@ -30,13 +30,16 @@ function resolveInitialLocale(): Locale {
       return stored
     }
   }
-  return appConfig.defaultLocale
+  return typeof navigator !== 'undefined'
+    ? deviceLocale(navigator.languages?.length ? navigator.languages : [navigator.language])
+    : appConfig.defaultLocale
 }
 
 export function I18nProvider({ children }: { children: ReactNode }) {
   const [locale, setLocaleState] = useState<Locale>(resolveInitialLocale)
   const [localeExplicit, setLocaleExplicit] = useState(() =>
-    typeof window !== 'undefined' && Boolean(window.localStorage.getItem(STORAGE_KEY))
+    typeof window !== 'undefined'
+      && appConfig.supportedLocales.includes(window.localStorage.getItem(STORAGE_KEY) ?? '')
       && window.localStorage.getItem(EXPLICIT_KEY) !== 'false',
   )
   const [localeSelection, setLocaleSelection] = useState(0)

@@ -16,11 +16,19 @@ export interface AppConfig {
 }
 
 export const appConfig: AppConfig = {
-  supportedLocales: ['ko', 'en'],
+  supportedLocales: ['ko', 'en', 'vi', 'km', 'th', 'ne', 'mn', 'uz', 'ru'],
   // 임시 기본값. 대상 사용자(한국어 미숙 외국인 근로자)를 고려하면 최종값이 아니며,
   // 파일럿 검증 언어(PRD 14장 미확정) 확정 시 교체한다. 사용자가 선택 화면에서
   // 언어를 고르면 이 값 대신 선택값이 사용된다. (docs/DECISIONS.md 참고)
   defaultLocale: 'ko',
+}
+
+export function deviceLocale(languages: readonly string[]): Locale {
+  for (const language of languages) {
+    const code = language.toLowerCase().split(/[-_]/, 1)[0]
+    if (appConfig.supportedLocales.includes(code)) return code
+  }
+  return 'en'
 }
 
 // 각 언어를 그 언어 자체 이름(endonym)으로 표시하기 위한 라벨.
@@ -29,6 +37,13 @@ export const appConfig: AppConfig = {
 export const localeLabels: Record<Locale, string> = {
   ko: '한국어',
   en: 'English',
+  vi: 'Tiếng Việt',
+  km: 'ភាសាខ្មែរ',
+  th: 'ภาษาไทย',
+  ne: 'नेपाली',
+  mn: 'Монгол',
+  uz: 'Oʻzbekcha',
+  ru: 'Русский',
 }
 
 export function getLocaleLabel(code: Locale): string {
@@ -86,4 +101,11 @@ export const regionConfig = {
 export const speechLangTags: Record<Locale, string> = {
   ko: 'ko-KR',
   en: 'en-US',
+  vi: 'vi-VN',
+  km: 'km-KH',
+  th: 'th-TH',
+  ne: 'ne-NP',
+  mn: 'mn-MN',
+  uz: 'uz-UZ',
+  ru: 'ru-RU',
 }

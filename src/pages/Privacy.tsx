@@ -11,7 +11,7 @@ import { useDocumentTitle } from '../hooks/useDocumentTitle'
  * (개인정보 보호법 §30 — 변경 시 시행일·사유 공개, 재검수 D-032).
  */
 const EFFECTIVE_DATE = '2026-08-27'
-const REVISED_DATE = '2026-09-10'
+const REVISED_DATE = '2026-09-21'
 
 export function Privacy() {
   useDocumentTitle('농사다마 개인정보처리방침 / NongsaDaMa Privacy Policy')
@@ -55,6 +55,8 @@ export function Privacy() {
           <ul className="mt-1 list-disc pl-5 text-gray-700">
             <li>Supabase(데이터베이스·인증, 서울 리전) — 계정·게시글 저장</li>
             <li>카카오(지도, 간편로그인)</li>
+            <li>내 위치로 농사 도움 지역을 찾을 때: 카카오 지역 조회에 약 11km 단위로 반올림한
+              좌표를 전송하며 정확한 좌표는 보내지 않습니다.</li>
             <li>OpenStreetMap(지도 타일 — 카카오맵 대체 시)</li>
             <li>Google Analytics 4, Microsoft Clarity(익명 이용 통계·화면 사용성 분석)</li>
             <li>AddToAny(공유 버튼)</li>
@@ -126,9 +128,10 @@ export function Privacy() {
               연결 해제 안내), §5 문의처 개정
             </li>
             <li>
-              {REVISED_DATE} §1 지역 항목 단위 명확화(읍·면 또는 시·군 — 서비스 지역을 충남 15개
+              2026-09-10 §1 지역 항목 단위 명확화(읍·면 또는 시·군 — 서비스 지역을 충남 15개
               시·군으로 확대하며 시·군 단위 선택 추가), 영문 표기 NongsaDaMa 통일
             </li>
+            <li>2026-09-21 §3 카카오 지역 조회에 전송하는 대략 좌표 안내 추가</li>
           </ul>
         </div>
 
@@ -141,7 +144,8 @@ export function Privacy() {
             parties: Supabase (Seoul), Kakao, OpenStreetMap, Google Analytics 4, Microsoft
             Clarity, AddToAny, and your browser vendor for voice input. Hosting and analytics run
             on overseas servers (US); account and post data are stored in Supabase&apos;s Seoul
-            region. Delete your account anytime in Profile → Delete account → Permanently delete —
+            region. Kakao receives coordinates rounded to roughly 11 km when identifying your area
+            from My Location. Delete your account anytime in Profile → Delete account → Permanently delete —
             this permanently removes your account, profile and all posts — or request deletion by
             email: {deletionRequestEmail} (see /delete-account); we act within 10 days of your
             request. Data that laws require us to keep is retained separately for the legal period

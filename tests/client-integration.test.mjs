@@ -35,7 +35,7 @@ registerHooks({
 })
 const { readNativeOAuthCode, completeNativeOAuth } = await import('../src/lib/nativeOAuth.ts')
 const { listenOnce } = await import('../src/lib/speech.ts')
-const { getKakaoMapKey } = await import('../src/lib/kakaoMap.ts')
+const { getKakaoMapKey, coordToRegion } = await import('../src/lib/kakaoMap.ts')
 
 test('Kakao map key falls back to read-only Supabase config', async () => {
   harness.client = {
@@ -61,6 +61,29 @@ test('Kakao map key falls back to read-only Supabase config', async () => {
     },
   }
   assert.equal(await getKakaoMapKey(), '0123456789abcdef0123456789abcdef')
+})
+
+test('Kakao region lookup only receives rounded coordinates', async (t) => {
+  const originalWindow = globalThis.window
+  t.after(() => { globalThis.window = originalWindow })
+  globalThis.window = {
+    kakao: {
+      maps: {
+        load(callback) { callback() },
+        services: {
+          Status: { OK: 'OK' },
+          Geocoder: class {
+            coord2RegionCode(lng, lat, callback) {
+              assert.equal(lng, 127.8)
+              assert.equal(lat, 36.4)
+              callback([{ region_type: 'H', region_1depth_name: 'Test', region_2depth_name: 'Test district' }], 'OK')
+            }
+          },
+        },
+      },
+    },
+  }
+  assert.deepEqual(await coordToRegion(36.36789, 127.81234), { sido: 'Test', sigungu: 'Test' })
 })
 
 test('native callback only accepts the exact route and one authorization code', () => {
