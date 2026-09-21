@@ -36,9 +36,9 @@ export function Privacy() {
             <li>자동 수집: 서비스 이용 기록(하단 3항의 분석 도구)</li>
           </ul>
           <p className="mt-1 text-gray-700">
-            <strong>수집하지 않는 것</strong>: 전화번호, 정확한 위치, 실명, 농장명, 숙소 위치.
+            <strong>수집하지 않는 것</strong>: 전화번호, 실명, 농장명, 숙소 위치.
             GPS 좌표는 지도 표시와 날씨·지역정보 조회에만 쓰이며, 조회 시에는 약 11km 단위로
-            뭉뚱그린 대략 위치만 전송되고 계정과 연결해 저장하지 않습니다.
+            뭉뚱그린 대략 위치만 전송됩니다. 정확한 위치는 저장하거나 공유하지 않습니다.
           </p>
         </div>
 
@@ -140,7 +140,7 @@ export function Privacy() {
           <p className="mt-1 text-gray-700">
             NongsaDaMa collects: email, nickname, optional language/town- or county-level region/nationality
             code/crop, and your posts. Kakao sign-in shares your Kakao nickname, email (optional)
-            and profile image. We never collect phone numbers or exact GPS locations. Third
+            and profile image. We never collect phone numbers or store exact GPS locations. Third
             parties: Supabase (Seoul), Kakao, OpenStreetMap, Google Analytics 4, Microsoft
             Clarity, AddToAny, and your browser vendor for voice input. Hosting and analytics run
             on overseas servers (US); account and post data are stored in Supabase&apos;s Seoul

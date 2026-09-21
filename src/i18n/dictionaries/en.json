@@ -79,7 +79,7 @@
   "neighbors.consentCta": "Set profile visibility",
   "neighbors.sameTown": "Same area",
   "neighbors.aboutKm": "~{n} km",
-  "neighbors.privacyNote": "Distances are approximate, based on area centers (town or city/county). Exact locations are never collected.",
+  "neighbors.privacyNote": "Distances are approximate, based on area centers (town or city/county). Exact locations are not stored or shared.",
   "neighbors.viewPosts": "See this neighbor's posts",
   "neighbors.regionRequired": "Set your region to see neighbors in the same city or county.",
   "neighbors.regionCta": "Set my region",
