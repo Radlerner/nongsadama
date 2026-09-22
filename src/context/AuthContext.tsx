@@ -100,7 +100,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { error: insertError } = await supabase.from('profiles').insert({
       id: u.id,
       nickname,
-      ...(localeExplicitRef.current ? { preferred_locale: localeRef.current, preferred_locale_explicit: true } : {}),
+      preferred_locale: localeRef.current,
+      preferred_locale_explicit: localeExplicitRef.current,
       region_id: regionRef.current,
       auth_provider: provider,
     })

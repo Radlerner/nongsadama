@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { getLocaleLabel } from '../config/app'
+import { deviceLocale, getLocaleLabel } from '../config/app'
 import { useTranslation } from '../i18n/useTranslation'
 import { MapPin } from '../components/ui/icons'
 import {
@@ -21,6 +21,7 @@ import { getCurrentPosition, nearestServiceRegion, OUT_OF_AREA_KM } from '../lib
  */
 export function Select() {
   const { t, locale, setLocale, supportedLocales } = useTranslation()
+  const recommended = deviceLocale(navigator.languages?.length ? navigator.languages : [navigator.language])
 
   return (
     <div className="mx-auto flex min-h-screen max-w-screen-sm flex-col bg-brand-cream px-6 py-6 text-gray-900">
@@ -44,7 +45,8 @@ export function Select() {
                       : 'border-gray-300 bg-white text-gray-700',
                   ].join(' ')}
                 >
-                  {getLocaleLabel(code)}
+                  <span className="flex-1">{getLocaleLabel(code)}</span>
+                  {code === recommended ? <span className="text-sm">{t('select.recommended')}</span> : null}
                 </button>
               </li>
             )

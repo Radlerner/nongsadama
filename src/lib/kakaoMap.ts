@@ -109,7 +109,7 @@ export async function coordToRegion(
     if (!ns.services) return null
     const geocoder = new ns.services.Geocoder()
     return await new Promise((resolve) => {
-      geocoder.coord2RegionCode(lng, lat, (result, status) => {
+      geocoder.coord2RegionCode(Math.round(lng * 10) / 10, Math.round(lat * 10) / 10, (result, status) => {
         if (status !== ns.services!.Status.OK) return resolve(null)
         const r = result.find((x) => x.region_type === 'H') ?? result[0]
         if (!r) return resolve(null)

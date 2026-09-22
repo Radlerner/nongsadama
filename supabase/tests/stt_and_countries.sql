@@ -162,7 +162,8 @@ end $$;
 
 insert into auth.users (id) values
   ('a3333333-3333-3333-3333-333333333333'),
-  ('a4444444-4444-4444-4444-444444444444');
+  ('a4444444-4444-4444-4444-444444444444'),
+  ('a5555555-5555-5555-5555-555555555555');
 
 set local role authenticated;
 set local request.jwt.claims = '{"sub":"a3333333-3333-3333-3333-333333333333","role":"authenticated"}';
@@ -198,6 +199,20 @@ exception when insufficient_privilege then null;
 end $$;
 reset role;
 set local request.jwt.claims = '{}';
+insert into public.profiles (id, nickname, preferred_locale, preferred_locale_explicit)
+values ('a5555555-5555-5555-5555-555555555555', 'E', 'vi', false);
+do $$ begin
+  assert (select preferred_locale = 'vi' and not preferred_locale_explicit
+          from public.profiles where id = 'a5555555-5555-5555-5555-555555555555'),
+    'Device locale remains automatic before country selection';
+end $$;
+update public.profiles set country_code = 'KR'
+where id = 'a5555555-5555-5555-5555-555555555555';
+do $$ begin
+  assert (select preferred_locale = 'ko' and not preferred_locale_explicit
+          from public.profiles where id = 'a5555555-5555-5555-5555-555555555555'),
+    'Country default replaces automatic device locale';
+end $$;
 insert into public.profiles (id, nickname)
 values ('a4444444-4444-4444-4444-444444444444', 'D');
 do $$ begin
