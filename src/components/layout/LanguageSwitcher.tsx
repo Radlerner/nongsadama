@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import { getLocaleLabel } from '../../config/app'
 import { useTranslation } from '../../i18n/useTranslation'
 import { LanguageSheet } from '../LanguageSheet'
@@ -12,6 +13,9 @@ export function LanguageSwitcher() {
   const { locale, t } = useTranslation()
   const [open, setOpen] = useState(false)
   const current = getLocaleLabel(locale)
+  // 헤더는 화면이 바뀌어도 남아 있다 — 창이 열린 채로 화면이 바뀌면(기기 뒤로 가기 등) 창을 닫는다.
+  const { pathname } = useLocation()
+  useEffect(() => setOpen(false), [pathname])
 
   return (
     <>
