@@ -15,6 +15,7 @@ import { ChevronRight } from './icons'
  * - 열려 있는 동안 본문 스크롤을 막고, 닫히면 원래 값으로 되돌린다.
  * - 열리면 첫 버튼에 포커스, Escape 로 닫힘, Tab 은 창 안에서만 돈다(aria-modal).
  * - 닫히면 열기 전에 포커스가 있던 요소로 되돌린다. 다른 요소가 이미 포커스를 받았으면 뺏지 않는다.
+ * - 열려 있는 동안 포커스를 가진 요소가 사라지면(예: "다시 시도" 버튼) 포커스를 창으로 되돌린다.
  */
 interface BottomSheetProps {
   open: boolean
@@ -31,6 +32,11 @@ interface BottomSheetProps {
    * 도착해도 이 버튼들의 화면 위치는 변하지 않는다(누르려던 자리에 다른 줄이 들어오지 않는다).
    */
   footer?: ReactNode
+  /**
+   * 창 높이를 최대 높이로 고정한다. 본문이 늦게 도착하는 창에 쓴다 — 창이 위로 자라면서 어두운 배경이던
+   * 자리(닫으려고 누르는 곳)에 줄이 들어오지 않게 한다.
+   */
+  fill?: boolean
   children: ReactNode
 }
 
@@ -48,6 +54,7 @@ export function BottomSheet({
   descriptionId,
   closeLabel,
   footer,
+  fill = false,
   children,
 }: BottomSheetProps) {
   const generatedId = useId()
@@ -117,6 +124,13 @@ export function BottomSheet({
     }
   }, [open])
 
+  // 포커스를 가진 요소가 본문에서 사라지면 포커스가 창 밖(body)으로 떨어진다 — 창으로 되돌린다.
+  useEffect(() => {
+    if (!open) return
+    const current = document.activeElement
+    if (!current || current === document.body) panelRef.current?.focus()
+  })
+
   if (!open) {
     return shield
       ? createPortal(<div aria-hidden className="fixed inset-0 z-[1000]" />, document.body)
@@ -139,7 +153,10 @@ export function BottomSheet({
         aria-labelledby={labelId}
         aria-describedby={descriptionId}
         tabIndex={-1}
-        className="nsd-sheet-panel absolute inset-x-0 bottom-0 mx-auto flex max-h-[78vh] max-w-screen-sm flex-col rounded-t-card bg-white px-4 pt-2 text-gray-900 outline-none"
+        className={[
+          'nsd-sheet-panel absolute inset-x-0 bottom-0 mx-auto flex max-w-screen-sm flex-col rounded-t-card bg-white px-4 pt-2 text-gray-900 outline-none',
+          fill ? 'h-[78vh]' : 'max-h-[78vh]',
+        ].join(' ')}
         style={{ paddingBottom: 'calc(16px + env(safe-area-inset-bottom))' }}
       >
         <div aria-hidden className="mx-auto h-1 w-9 shrink-0 rounded-full bg-gray-300" />
