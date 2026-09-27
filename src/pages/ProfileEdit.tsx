@@ -58,6 +58,8 @@ export function ProfileEdit() {
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
+    // 국적 입력칸은 필요할 때만 그리므로(등록되지 않은 채로 제출될 수 있다) 빈 기본값을 둔다.
+    defaultValues: { country_code: '' },
     values: profile
       ? {
           nickname: profile.nickname,
@@ -97,9 +99,9 @@ export function ProfileEdit() {
   // 목록에 없는 코드가 이미 저장돼 있으면(다른 국적 사용자) 직접 입력칸을 처음부터 보여 준다.
   const showManualCountry =
     manualCountry || (countryValue !== '' && countries !== undefined && !pickedCountry)
-  const applyCountry = (code: string, manual: boolean) => {
+  const applyCountry = (code: string) => {
     setValue('country_code', code, { shouldDirty: true, shouldValidate: true })
-    setManualCountry(manual)
+    setManualCountry(false)
     setCountryOpen(false)
   }
   /** 국적 기본 언어 따르기를 그만두고 언어 칸을 프로필 값으로 되돌린다(국적 지우기·직접 입력). */
@@ -108,7 +110,7 @@ export function ProfileEdit() {
     setLocaleFollow(null)
   }
   const pickCountry = (country: Country) => {
-    applyCountry(country.iso_code, false)
+    applyCountry(country.iso_code)
     // 이 화면에서 언어를 이미 직접 골랐으면 그 선택을 지킨다.
     if (localeChosen) return
     const picked = pickLocaleForCountry(country, appConfig.supportedLocales)
@@ -189,6 +191,8 @@ export function ProfileEdit() {
                   ? pickedCountry.name_native
                   : null
               }
+              valueLang={pickedCountry ? 'ko' : undefined}
+              secondaryLang={pickedCountry?.default_locale}
               placeholder={t('profileEdit.countryPick')}
               onClick={() => setCountryOpen(true)}
             />
@@ -201,7 +205,7 @@ export function ProfileEdit() {
                 aria-labelledby="profile-country-label"
                 placeholder={t('profileEdit.countryPlaceholder')}
                 className={`${inputClass} font-normal`}
-                {...register('country_code')}
+                {...register('country_code', { onChange: () => setManualCountry(true) })}
               />
               <span className="font-normal text-xs text-gray-500">{t('profileEdit.countryHelp')}</span>
             </>
@@ -321,7 +325,7 @@ export function ProfileEdit() {
         noneLabel={t('profileEdit.countryClear')}
         onNone={() => {
           stopLocaleFollow()
-          applyCountry('', false)
+          applyCountry('')
         }}
       />
     </section>

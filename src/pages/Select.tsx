@@ -38,8 +38,8 @@ export function Select() {
   const [languageOpen, setLanguageOpen] = useState(false)
   // 국적 선택 직후에만 보이는 안내. 문구 대신 상태로 두고 렌더 때 번역한다(언어가 바뀌어도 문구가 따라온다).
   const [langNotice, setLangNotice] = useState<{ matched: boolean; locale: Locale } | null>(null)
-  // 저장된 국적이 있을 때만 이름을 보여 주려고 목록을 읽는다(창을 열면 창이 직접 읽는다).
-  const { data: countries } = useCountries({ enabled: Boolean(countryCode) })
+  // 화면에 들어올 때 미리 읽는다(7건, 1시간 보관) — 느린 망에서도 국적 창을 열면 목록이 바로 보이게.
+  const { data: countries } = useCountries()
   const country = countryCode ? (countries ?? []).find((row) => row.iso_code === countryCode) : undefined
 
   const chooseCountry = (next: Country) => {
@@ -78,6 +78,8 @@ export function Select() {
             labelId="select-nationality-label"
             value={country ? country.name_ko : countryCode}
             secondary={country && country.name_native !== country.name_ko ? country.name_native : null}
+            valueLang={country ? 'ko' : undefined}
+            secondaryLang={country?.default_locale}
             placeholder={t('select.nationalityPlaceholder')}
             onClick={() => setCountryOpen(true)}
           />

@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { BottomSheet } from './ui/BottomSheet'
 import { Check } from './ui/icons'
 import { useCountries } from '../hooks/useCountries'
@@ -32,6 +33,11 @@ export function LanguageSheet({ open, onClose, countryCode, onPicked }: Language
         ? navigator.languages
         : [navigator.language],
   )
+  // 창이 열린 채로 국적 언어가 도착해도 아래 "전체 언어" 줄이 밀리지 않게, 불러오는 동안 차지한
+  // 높이(언어 3줄)를 이번에 열려 있는 동안은 그대로 둔다(렌더 중 상태 갱신 패턴).
+  const [reserved, setReserved] = useState(false)
+  if (open && isLoading && !reserved) setReserved(true)
+  if (!open && reserved) setReserved(false)
   const countryRow = country ? (countries ?? []).find((row) => row.iso_code === country) : undefined
   const pinned = countryRow ? pinnedLocalesForCountry(countryRow, supportedLocales) : []
 
@@ -72,10 +78,16 @@ export function LanguageSheet({ open, onClose, countryCode, onPicked }: Language
 
   const sectionLabel = 'mb-2 text-sm font-semibold text-gray-700'
   // 국적은 골랐는데 고정할 언어가 없으면(목록에 없는 국적 등) 구역을 통째로 숨긴다.
-  const showPinnedSection = !country || isLoading || isError || pinned.length > 0
+  // 받아 둔 목록이 있으면(pinned) 다시 읽기에 실패해도 목록을 먼저 보여 준다.
+  const showPinnedSection = !country || pinned.length > 0 || isLoading || isError
 
   return (
-    <BottomSheet open={open} onClose={onClose} title={t('select.language')}>
+    <BottomSheet
+      open={open}
+      onClose={onClose}
+      title={t('select.language')}
+      closeLabel={t('common.close')}
+    >
       {showPinnedSection ? (
         <section className="mb-4">
           <h3 className={sectionLabel}>{t('select.languagePinned')}</h3>
@@ -83,8 +95,15 @@ export function LanguageSheet({ open, onClose, countryCode, onPicked }: Language
             <p className="rounded-card bg-gray-50 px-4 py-3 text-sm text-gray-600">
               {t('select.languagePinHint')}
             </p>
+          ) : pinned.length > 0 ? (
+            <ul className={['flex flex-col gap-2', reserved ? 'min-h-[148px]' : ''].join(' ')}>
+              {pinned.map((code) => renderLocale(code, 'pinned', false))}
+            </ul>
           ) : isLoading ? (
-            <p role="status" className="rounded-card bg-gray-50 px-4 py-3 text-sm text-gray-500">
+            <p
+              role="status"
+              className="flex min-h-[148px] items-center justify-center rounded-card bg-gray-50 px-4 py-3 text-center text-sm text-gray-500"
+            >
               {t('select.countryLoading')}
             </p>
           ) : isError ? (
@@ -99,11 +118,7 @@ export function LanguageSheet({ open, onClose, countryCode, onPicked }: Language
                 {t('common.retry')}
               </button>
             </div>
-          ) : (
-            <ul className="flex flex-col gap-2">
-              {pinned.map((code) => renderLocale(code, 'pinned', false))}
-            </ul>
-          )}
+          ) : null}
         </section>
       ) : null}
 
