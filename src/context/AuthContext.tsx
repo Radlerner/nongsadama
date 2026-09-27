@@ -15,6 +15,7 @@ import { Capacitor } from '@capacitor/core'
 import { App as CapacitorApp } from '@capacitor/app'
 import { Browser } from '@capacitor/browser'
 import { completeNativeOAuth, NATIVE_OAUTH_REDIRECT } from '../lib/nativeOAuth'
+import { readStoredCountry } from '../lib/country'
 import type { OAuthProvider } from '../config/app'
 import { useTranslation } from '../i18n/useTranslation'
 import { useSelectedRegion } from '../context/SelectedRegionContext'
@@ -103,6 +104,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       preferred_locale: localeRef.current,
       preferred_locale_explicit: localeExplicitRef.current,
       region_id: regionRef.current,
+      country_code: readStoredCountry(),
       auth_provider: provider,
     })
     if (!insertError || insertError.code === '23505') {
