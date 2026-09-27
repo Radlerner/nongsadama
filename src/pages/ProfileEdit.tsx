@@ -10,11 +10,12 @@ import { useSelectedRegion } from '../context/SelectedRegionContext'
 import { useRegions, groupSelectableByProvince } from '../hooks/useRegions'
 import { getSupabaseClient } from '../lib/supabase'
 import { useOwnProfile } from '../hooks/useOwnProfile'
-import { appConfig, getLocaleLabel } from '../config/app'
+import { appConfig, getLocaleLabel, type Locale } from '../config/app'
 import { regionLabel } from '../lib/regionName'
 import { PickerRow } from '../components/ui/BottomSheet'
 import { CountrySheet } from '../components/CountrySheet'
-import { useCountries } from '../hooks/useCountries'
+import { useCountries, type Country } from '../hooks/useCountries'
+import { pickLocaleForCountry } from '../lib/country'
 
 // zod 메시지는 번역 키(PRD 6.1). 국가 코드는 ISO alpha-2/3 형식만 검사(특정 국가 하드코딩 없음).
 const schema = z.object({
@@ -43,6 +44,8 @@ export function ProfileEdit() {
   // v1.4(PRD_v1.4 §3.2 화면 4): 국적은 창에서 고른다. 목록에 없는 나라만 코드를 직접 적는다.
   const [countryOpen, setCountryOpen] = useState(false)
   const [manualCountry, setManualCountry] = useState(false)
+  // 창에서 국적을 골라 언어가 국적 기본 언어를 따르는 중인가(P1). 사용자가 언어를 직접 바꾸면 풀린다.
+  const [localeFollow, setLocaleFollow] = useState<{ locale: Locale; matched: boolean } | null>(null)
 
   const { data: profile, isLoading } = useOwnProfile(user?.id)
   const { data: countries } = useCountries({ enabled: Boolean(user) })
@@ -99,6 +102,19 @@ export function ProfileEdit() {
     setManualCountry(manual)
     setCountryOpen(false)
   }
+  /** 국적 기본 언어 따르기를 그만두고 언어 칸을 프로필 값으로 되돌린다(국적 지우기·직접 입력). */
+  const stopLocaleFollow = () => {
+    if (localeFollow && profile) setValue('preferred_locale', profile.preferred_locale)
+    setLocaleFollow(null)
+  }
+  const pickCountry = (country: Country) => {
+    applyCountry(country.iso_code, false)
+    // 이 화면에서 언어를 이미 직접 골랐으면 그 선택을 지킨다.
+    if (localeChosen) return
+    const picked = pickLocaleForCountry(country, appConfig.supportedLocales)
+    setValue('preferred_locale', picked.locale, { shouldDirty: true })
+    setLocaleFollow(picked)
+  }
 
   // v1.2(D-035): 시·도별 optgroup — 읍·면이 있으면 "시·군 읍·면", 없으면 시·군·구 자체(Select와 같은 규칙·순서).
   const provinceGroups = groupSelectableByProvince(regions ?? [])
@@ -112,7 +128,14 @@ export function ProfileEdit() {
       nickname: values.nickname.trim(),
       country_code: countryCode === '' ? null : countryCode,
       crop_type: cropType === '' ? null : cropType,
-      ...(localeChosen ? { preferred_locale: values.preferred_locale, preferred_locale_explicit: true } : {}),
+      // 직접 고른 언어는 그대로 저장(1.3.2). 국적을 따르는 중이면 explicit=false 만 보내 트리거
+      // (profiles_apply_country_locale)가 국적 기본 언어를 채우게 한다 — 언어 값까지 보내면 이미
+      // explicit=false 인 프로필에서 트리거가 "직접 고른 언어"로 되돌려 버린다.
+      ...(localeChosen
+        ? { preferred_locale: values.preferred_locale, preferred_locale_explicit: true }
+        : localeFollow
+          ? { preferred_locale_explicit: false }
+          : {}),
       region_id: regionIdValue,
       is_matching_visible: values.is_matching_visible,
     }
@@ -126,8 +149,13 @@ export function ProfileEdit() {
       return
     }
     // 프로필의 언어·지역 선택을 앱 상태에도 반영한다(PRD P0-10).
-    if (localeChosen || saved.preferred_locale !== locale) {
-      setLocale(saved.preferred_locale, saved.preferred_locale_explicit)
+    if (localeChosen || localeFollow || saved.preferred_locale !== locale) {
+      // 서버가 정한 언어가 앱에 없으면(국가 추가 대비) 화면에 보여 준 언어로 둔다.
+      const next =
+        localeFollow && !appConfig.supportedLocales.includes(saved.preferred_locale)
+          ? localeFollow.locale
+          : saved.preferred_locale
+      setLocale(next, saved.preferred_locale_explicit)
     }
     setRegionId(regionIdValue)
     await queryClient.invalidateQueries({ queryKey: ['profiles', 'own', user.id] })
@@ -169,6 +197,7 @@ export function ProfileEdit() {
             <>
               <input
                 type="text"
+                autoFocus={manualCountry}
                 aria-labelledby="profile-country-label"
                 placeholder={t('profileEdit.countryPlaceholder')}
                 className={`${inputClass} font-normal`}
@@ -197,13 +226,28 @@ export function ProfileEdit() {
 
         <label className="flex flex-col gap-1 text-sm font-semibold text-gray-700">
           {t('profile.localeLabel')}
-          <select className={inputClass} {...register('preferred_locale', { onChange: () => setLocaleChosen(true) })}>
+          <select
+            className={inputClass}
+            {...register('preferred_locale', {
+              onChange: () => {
+                setLocaleChosen(true)
+                setLocaleFollow(null)
+              },
+            })}
+          >
             {appConfig.supportedLocales.map((code) => (
               <option key={code} value={code}>
                 {getLocaleLabel(code)}
               </option>
             ))}
           </select>
+          {localeFollow ? (
+            <span role="status" className="rounded-card bg-green-50 px-3 py-2 text-sm font-normal leading-relaxed text-green-800">
+              {localeFollow.matched
+                ? t('select.nationalityLangSet').replace('{lang}', getLocaleLabel(localeFollow.locale))
+                : t('select.nationalityLangEnglish')}
+            </span>
+          ) : null}
         </label>
 
         <label className="flex flex-col gap-1 text-sm font-semibold text-gray-700">
@@ -267,14 +311,18 @@ export function ProfileEdit() {
         open={countryOpen}
         onClose={() => setCountryOpen(false)}
         selected={pickedCountry ? pickedCountry.iso_code : null}
-        onSelect={(country) => applyCountry(country.iso_code, false)}
+        onSelect={pickCountry}
         otherLabel={t('profileEdit.countryOther')}
         onOther={() => {
+          stopLocaleFollow()
           setManualCountry(true)
           setCountryOpen(false)
         }}
         noneLabel={t('profileEdit.countryClear')}
-        onNone={() => applyCountry('', false)}
+        onNone={() => {
+          stopLocaleFollow()
+          applyCountry('', false)
+        }}
       />
     </section>
   )
