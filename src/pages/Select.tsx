@@ -1,8 +1,18 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { deviceLocale, getLocaleLabel } from '../config/app'
+import { getLocaleLabel, type Locale } from '../config/app'
 import { useTranslation } from '../i18n/useTranslation'
 import { MapPin } from '../components/ui/icons'
+import { PickerRow } from '../components/ui/BottomSheet'
+import { CountrySheet } from '../components/CountrySheet'
+import { LanguageSheet } from '../components/LanguageSheet'
+import { useCountries, type Country } from '../hooks/useCountries'
+import {
+  clearStoredCountry,
+  pickLocaleForCountry,
+  readStoredCountry,
+  writeStoredCountry,
+} from '../lib/country'
 import {
   useRegions,
   splitRegionGroups,
@@ -16,43 +26,94 @@ import { getCurrentPosition, nearestServiceRegion, OUT_OF_AREA_KM } from '../lib
 
 /**
  * 언어·지역 선택 화면(PRD 5 IA, 4.1 흐름).
- * 언어는 즉시 전환, 지역은 Supabase regions(활성)에서 시/읍·면을 불러와 선택한다.
+ * v1.4(PRD_v1.4 §3.2): 국적(선택)을 고르면 그 나라 기본 언어로 앱 언어를 맞춘다. 언어 9개 세로 목록은
+ * 아래에서 올라오는 창으로 옮겨 지역 선택과 "계속"이 아래로 밀리지 않게 했다.
+ * 지역은 Supabase regions(활성)에서 시/읍·면을 불러와 선택한다.
  * 선택 지역은 컨텍스트+localStorage에 저장되어 이후 목록 화면이 소비한다.
  */
 export function Select() {
   const { t, locale, setLocale, supportedLocales } = useTranslation()
-  const recommended = deviceLocale(navigator.languages?.length ? navigator.languages : [navigator.language])
+  const [countryCode, setCountryCode] = useState<string | null>(() => readStoredCountry())
+  const [countryOpen, setCountryOpen] = useState(false)
+  const [languageOpen, setLanguageOpen] = useState(false)
+  // 국적 선택 직후에만 보이는 안내. 문구 대신 상태로 두고 렌더 때 번역한다(언어가 바뀌어도 문구가 따라온다).
+  const [langNotice, setLangNotice] = useState<{ matched: boolean; locale: Locale } | null>(null)
+  // 저장된 국적이 있을 때만 이름을 보여 주려고 목록을 읽는다(창을 열면 창이 직접 읽는다).
+  const { data: countries } = useCountries({ enabled: Boolean(countryCode) })
+  const country = countryCode ? (countries ?? []).find((row) => row.iso_code === countryCode) : undefined
+
+  const chooseCountry = (next: Country) => {
+    writeStoredCountry(next.iso_code)
+    setCountryCode(next.iso_code)
+    // explicit=false: 가입 때 프로필 언어가 국적 기본 언어를 따라갈 수 있게 "직접 고른 언어"로 표시하지 않는다.
+    const picked = pickLocaleForCountry(next, supportedLocales)
+    setLocale(picked.locale, false)
+    setLangNotice(picked)
+    setCountryOpen(false)
+  }
+
+  const skipCountry = () => {
+    clearStoredCountry()
+    setCountryCode(null)
+    setLangNotice(null)
+    setCountryOpen(false)
+  }
+
+  const noticeText = langNotice
+    ? langNotice.matched
+      ? t('select.nationalityLangSet').replace('{lang}', getLocaleLabel(langNotice.locale))
+      : t('select.nationalityLangEnglish')
+    : null
 
   return (
     <div className="mx-auto flex min-h-screen max-w-screen-sm flex-col bg-brand-cream px-6 py-6 text-gray-900">
       <h1 className="text-xl font-extrabold tracking-tight text-green-700">{t('select.title')}</h1>
 
-      <section className="mt-6">
-        <h2 className="mb-2 text-sm font-semibold text-gray-700">{t('select.language')}</h2>
-        <ul className="flex flex-col gap-2">
-          {supportedLocales.map((code) => {
-            const active = locale === code
-            return (
-              <li key={code}>
-                <button
-                  type="button"
-                  onClick={() => setLocale(code)}
-                  aria-pressed={active}
-                  className={[
-                    'flex min-h-[44px] w-full items-center rounded-md border px-4 text-left text-base',
-                    active
-                      ? 'border-green-700 bg-green-50 font-semibold text-green-700'
-                      : 'border-gray-300 bg-white text-gray-700',
-                  ].join(' ')}
-                >
-                  <span className="flex-1">{getLocaleLabel(code)}</span>
-                  {code === recommended ? <span className="text-sm">{t('select.recommended')}</span> : null}
-                </button>
-              </li>
-            )
-          })}
-        </ul>
+      <section className="mt-6 flex flex-col gap-4">
+        <div>
+          <h2 id="select-nationality-label" className="mb-2 text-sm font-semibold text-gray-700">
+            {t('select.nationality')}
+          </h2>
+          <PickerRow
+            labelId="select-nationality-label"
+            value={country ? country.name_ko : countryCode}
+            secondary={country && country.name_native !== country.name_ko ? country.name_native : null}
+            placeholder={t('select.nationalityPlaceholder')}
+            onClick={() => setCountryOpen(true)}
+          />
+        </div>
+        <div>
+          <h2 id="select-language-label" className="mb-2 text-sm font-semibold text-gray-700">
+            {t('select.language')}
+          </h2>
+          <PickerRow
+            labelId="select-language-label"
+            value={getLocaleLabel(locale)}
+            placeholder={t('select.language')}
+            onClick={() => setLanguageOpen(true)}
+          />
+        </div>
+        {noticeText ? (
+          <p role="status" className="rounded-card bg-green-50 px-4 py-3 text-sm leading-relaxed text-green-800">
+            {noticeText}
+          </p>
+        ) : null}
       </section>
+
+      <CountrySheet
+        open={countryOpen}
+        onClose={() => setCountryOpen(false)}
+        selected={countryCode}
+        onSelect={chooseCountry}
+        noneLabel={t('select.nationalityNone')}
+        onNone={skipCountry}
+      />
+      <LanguageSheet
+        open={languageOpen}
+        onClose={() => setLanguageOpen(false)}
+        countryCode={countryCode}
+        onPicked={() => setLangNotice(null)}
+      />
 
       <section className="mt-6">
         <h2 className="mb-2 text-sm font-semibold text-gray-700">{t('select.region')}</h2>

@@ -12,6 +12,9 @@ import { getSupabaseClient } from '../lib/supabase'
 import { useOwnProfile } from '../hooks/useOwnProfile'
 import { appConfig, getLocaleLabel } from '../config/app'
 import { regionLabel } from '../lib/regionName'
+import { PickerRow } from '../components/ui/BottomSheet'
+import { CountrySheet } from '../components/CountrySheet'
+import { useCountries } from '../hooks/useCountries'
 
 // zod 메시지는 번역 키(PRD 6.1). 국가 코드는 ISO alpha-2/3 형식만 검사(특정 국가 하드코딩 없음).
 const schema = z.object({
@@ -37,12 +40,18 @@ export function ProfileEdit() {
   const [submitError, setSubmitError] = useState<string | null>(null)
 
   const [localeChosen, setLocaleChosen] = useState(false)
+  // v1.4(PRD_v1.4 §3.2 화면 4): 국적은 창에서 고른다. 목록에 없는 나라만 코드를 직접 적는다.
+  const [countryOpen, setCountryOpen] = useState(false)
+  const [manualCountry, setManualCountry] = useState(false)
 
   const { data: profile, isLoading } = useOwnProfile(user?.id)
+  const { data: countries } = useCountries({ enabled: Boolean(user) })
 
   const {
     register,
     handleSubmit,
+    setValue,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -77,6 +86,18 @@ export function ProfileEdit() {
         </Link>
       </section>
     )
+  }
+
+  // 국적 표시: 폼 값(country_code)이 유일한 기준 — 저장 로직·zod 검사·DB 컬럼은 1.3.2 그대로다.
+  const countryValue = (watch('country_code') ?? '').trim().toUpperCase()
+  const pickedCountry = (countries ?? []).find((row) => row.iso_code === countryValue)
+  // 목록에 없는 코드가 이미 저장돼 있으면(다른 국적 사용자) 직접 입력칸을 처음부터 보여 준다.
+  const showManualCountry =
+    manualCountry || (countryValue !== '' && countries !== undefined && !pickedCountry)
+  const applyCountry = (code: string, manual: boolean) => {
+    setValue('country_code', code, { shouldDirty: true, shouldValidate: true })
+    setManualCountry(manual)
+    setCountryOpen(false)
   }
 
   // v1.2(D-035): 시·도별 optgroup — 읍·면이 있으면 "시·군 읍·면", 없으면 시·군·구 자체(Select와 같은 규칙·순서).
@@ -129,19 +150,37 @@ export function ProfileEdit() {
           ) : null}
         </label>
 
-        <label className="flex flex-col gap-1 text-sm font-semibold text-gray-700">
-          {t('profileEdit.country')}
-          <input
-            type="text"
-            placeholder={t('profileEdit.countryPlaceholder')}
-            className={inputClass}
-            {...register('country_code')}
-          />
-          <span className="font-normal text-xs text-gray-500">{t('profileEdit.countryHelp')}</span>
+        <div className="flex flex-col gap-1 text-sm font-semibold text-gray-700">
+          <span id="profile-country-label">{t('profileEdit.country')}</span>
+          <div className="font-normal">
+            <PickerRow
+              labelId="profile-country-label"
+              value={pickedCountry ? pickedCountry.name_ko : countryValue || null}
+              secondary={
+                pickedCountry && pickedCountry.name_native !== pickedCountry.name_ko
+                  ? pickedCountry.name_native
+                  : null
+              }
+              placeholder={t('profileEdit.countryPick')}
+              onClick={() => setCountryOpen(true)}
+            />
+          </div>
+          {showManualCountry ? (
+            <>
+              <input
+                type="text"
+                aria-labelledby="profile-country-label"
+                placeholder={t('profileEdit.countryPlaceholder')}
+                className={`${inputClass} font-normal`}
+                {...register('country_code')}
+              />
+              <span className="font-normal text-xs text-gray-500">{t('profileEdit.countryHelp')}</span>
+            </>
+          ) : null}
           {errors.country_code?.message ? (
             <span className="font-normal text-red-700">{t(errors.country_code.message)}</span>
           ) : null}
-        </label>
+        </div>
 
         <label className="flex flex-col gap-1 text-sm font-semibold text-gray-700">
           {t('profileEdit.crop')}
@@ -222,6 +261,21 @@ export function ProfileEdit() {
       <Link to="/profile" className="mt-4 inline-block text-sm text-gray-500 underline">
         {t('profileEdit.cancel')}
       </Link>
+
+      {/* 폼 밖에 둔다 — 창 안 버튼이 폼 제출·라벨 동작에 섞이지 않게 */}
+      <CountrySheet
+        open={countryOpen}
+        onClose={() => setCountryOpen(false)}
+        selected={pickedCountry ? pickedCountry.iso_code : null}
+        onSelect={(country) => applyCountry(country.iso_code, false)}
+        otherLabel={t('profileEdit.countryOther')}
+        onOther={() => {
+          setManualCountry(true)
+          setCountryOpen(false)
+        }}
+        noneLabel={t('profileEdit.countryClear')}
+        onNone={() => applyCountry('', false)}
+      />
     </section>
   )
 }

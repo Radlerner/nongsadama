@@ -63,6 +63,30 @@ export type Database = {
         }
         Relationships: []
       }
+      countries: {
+        Row: {
+          default_locale: string
+          iso_code: string
+          name_ko: string
+          name_native: string
+          supported_locales: string[]
+        }
+        Insert: {
+          default_locale: string
+          iso_code: string
+          name_ko: string
+          name_native: string
+          supported_locales: string[]
+        }
+        Update: {
+          default_locale?: string
+          iso_code?: string
+          name_ko?: string
+          name_native?: string
+          supported_locales?: string[]
+        }
+        Relationships: []
+      }
       blocks: {
         Row: {
           blocked_id: string
