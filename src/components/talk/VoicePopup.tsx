@@ -12,7 +12,8 @@ import { useTranslation } from '../../i18n/useTranslation'
  *
  * 탭 처리:
  * - 바깥 탭은 원과 카드를 뺀 화면 어디서나 통한다(내용 열은 탭을 통과시키고 원·카드만 받는다).
- * - 열린 직후 TAP_GUARD_MS 안의 바깥 탭은 무시한다("말로 하기"를 두 번 누른 경우 바로 취소되지 않게).
+ * - 덮개가 열리거나 상태가 바뀐 직후 TAP_GUARD_MS 안의 탭(바깥·버튼)은 무시한다. "말로 하기"·"알겠어요, 말하기"·
+ *   "다시 말하기"를 두 번 누르면 둘째 탭이 방금 나타난 "그만하기"에 닿아 바로 취소되기 때문이다.
  * - 닫히는 동안에도 덮개가 탭을 삼킨다(닫기·그만하기를 두 번 눌러도 아래 화면의 전화 링크·카드가 눌리지 않게).
  */
 export type VoicePhase = 'idle' | 'notice' | 'listening' | 'done' | 'error'
@@ -48,7 +49,7 @@ export function VoicePopup({
   const statusId = useId()
   const noticeId = useId()
   const overlayRef = useRef<HTMLDivElement>(null)
-  const openedAtRef = useRef(0)
+  const changedAtRef = useRef(0)
   // 덮개는 닫힐 때 사라지는 모션(200ms)을 보여 주고, 그 뒤에도 잠깐 투명하게 남아 탭을 삼킨 다음 없어진다.
   const [shown, setShown] = useState<{ phase: OverlayPhase; closing: boolean } | null>(null)
   const active = phase === 'listening' || phase === 'done' || phase === 'error'
@@ -56,7 +57,9 @@ export function VoicePopup({
   useEffect(() => {
     if (phase === 'listening' || phase === 'done' || phase === 'error') {
       setShown((previous) => {
-        if (!previous || previous.closing) openedAtRef.current = performance.now()
+        if (!previous || previous.closing || previous.phase !== phase) {
+          changedAtRef.current = performance.now()
+        }
         return { phase, closing: false }
       })
       return
@@ -125,13 +128,18 @@ export function VoicePopup({
     overlayRef.current?.querySelector<HTMLElement>('button:not([disabled])')?.focus()
   }, [shown])
 
-  /** 덮개 바깥 탭: 듣는 중이면 그만하기, 오류면 닫기. 완료 표시 중·닫히는 중·열린 직후에는 무시한다. */
-  const onOutsideTap = () => {
+  /** 덮개가 열리거나 상태가 바뀐 직후의 탭은 앞 화면을 두 번 누른 것의 둘째 탭으로 보고 무시한다. */
+  const guarded = (action: () => void) => () => {
     if (!shown || shown.closing) return
-    if (performance.now() - openedAtRef.current < TAP_GUARD_MS) return
-    if (shown.phase === 'listening') onStop()
-    else if (shown.phase === 'error') onClose()
+    if (performance.now() - changedAtRef.current < TAP_GUARD_MS) return
+    action()
   }
+
+  /** 덮개 바깥 탭: 듣는 중이면 그만하기, 오류면 닫기. 완료 표시 중·닫히는 중·바뀐 직후에는 무시한다. */
+  const onOutsideTap = guarded(() => {
+    if (shown?.phase === 'listening') onStop()
+    else if (shown?.phase === 'error') onClose()
+  })
 
   const overlay = shown
     ? createPortal(
@@ -215,7 +223,7 @@ export function VoicePopup({
               {shown.phase === 'listening' ? (
                 <button
                   type="button"
-                  onClick={onStop}
+                  onClick={guarded(onStop)}
                   disabled={shown.closing}
                   className="mt-4 min-h-[56px] w-full rounded-full border border-gray-300 px-6 py-2 text-base font-semibold text-gray-700 active:bg-gray-50"
                 >
@@ -226,7 +234,7 @@ export function VoicePopup({
                 <div className="mt-4 flex flex-col gap-2">
                   <button
                     type="button"
-                    onClick={onRetry}
+                    onClick={guarded(onRetry)}
                     disabled={shown.closing}
                     className="min-h-[56px] w-full rounded-full bg-brand-greenDark px-6 py-2 text-base font-semibold text-white"
                   >
@@ -234,7 +242,7 @@ export function VoicePopup({
                   </button>
                   <button
                     type="button"
-                    onClick={onClose}
+                    onClick={guarded(onClose)}
                     disabled={shown.closing}
                     className="min-h-[44px] w-full rounded-full border border-gray-300 px-6 py-2 text-base text-gray-700 active:bg-gray-50"
                   >
