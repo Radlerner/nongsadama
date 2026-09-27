@@ -41,6 +41,7 @@ export function Talk() {
   // 회차가 달라 버려진다(인식 자체는 침묵 또는 5초 뒤 스스로 끝난다 — speech.ts 무변경).
   const runRef = useRef(0)
   const doneTimerRef = useRef<number | null>(null)
+  const micButtonRef = useRef<HTMLButtonElement>(null)
 
   useEffect(
     () => () => {
@@ -121,6 +122,7 @@ export function Talk() {
       {isSpeechAvailable() ? (
         <div className="rounded-card border border-gray-100 bg-white shadow-card px-4 py-3">
           <button
+            ref={micButtonRef}
             type="button"
             onClick={() => (noticeAccepted ? void startListening() : setPhase('notice'))}
             disabled={phase !== 'idle'}
@@ -145,6 +147,7 @@ export function Talk() {
             onStop={stopListening}
             onRetry={() => void startListening()}
             onClose={stopListening}
+            returnFocusRef={micButtonRef}
           />
         </div>
       ) : null}

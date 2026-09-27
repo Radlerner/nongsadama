@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState, type RefObject } from 'react'
 import { createPortal } from 'react-dom'
 import { BottomSheet } from '../ui/BottomSheet'
 import { AlertCircle, Check, Mic } from '../ui/icons'
@@ -24,6 +24,8 @@ interface VoicePopupProps {
   onStop: () => void
   onRetry: () => void
   onClose: () => void
+  /** 덮개가 닫히면 포커스를 돌려줄 요소(말로 하기 버튼). */
+  returnFocusRef?: RefObject<HTMLElement>
 }
 
 const EXIT_MS = 200
@@ -45,6 +47,7 @@ export function VoicePopup({
   onStop,
   onRetry,
   onClose,
+  returnFocusRef,
 }: VoicePopupProps) {
   const { t } = useTranslation()
   const statusId = useId()
@@ -104,6 +107,17 @@ export function VoicePopup({
       document.body.style.overflow = previousOverflow
     }
   }, [active, phase])
+
+  // 덮개가 닫히면(취소·완료·닫기) 포커스를 말로 하기 버튼으로 돌려준다.
+  useEffect(() => {
+    if (!active) return
+    return () => {
+      const current = document.activeElement
+      if (!current || current === document.body || overlayRef.current?.contains(current)) {
+        returnFocusRef?.current?.focus()
+      }
+    }
+  }, [active, returnFocusRef])
 
   // 상태가 바뀌면 그 상태의 첫 버튼에 포커스(듣는 중=그만하기, 오류=다시 말하기).
   useEffect(() => {
