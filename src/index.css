@@ -156,6 +156,12 @@ body {
     animation: none;
   }
 
+  .nsd-voice-backdrop-out,
+  .nsd-voice-exit,
+  .nsd-voice-fade-out {
+    opacity: 0;
+  }
+
   .nsd-voice-ring {
     animation: none;
     opacity: 0.35;

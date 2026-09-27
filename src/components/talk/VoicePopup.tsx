@@ -1,6 +1,6 @@
 import { useEffect, useId, useRef, useState, type RefObject } from 'react'
 import { createPortal } from 'react-dom'
-import { BottomSheet } from '../ui/BottomSheet'
+import { BottomSheet, TAP_GUARD_MS } from '../ui/BottomSheet'
 import { AlertCircle, Check, Mic } from '../ui/icons'
 import { useTranslation } from '../../i18n/useTranslation'
 
@@ -9,6 +9,11 @@ import { useTranslation } from '../../i18n/useTranslation'
  * 상태는 Talk.tsx 가 관리하고 여기서는 그리기만 한다: 고지(아래 창) · 듣는 중 · 완료 · 오류(화면 덮개).
  * 음성 라이브러리(speech.ts)는 건드리지 않으므로 파형은 음성 크기와 무관하게 일정하게 번진다.
  * 모션은 전부 CSS(src/index.css) — 감속 모션 설정이면 파형은 정지, 전이는 즉시.
+ *
+ * 탭 처리:
+ * - 바깥 탭은 원과 카드를 뺀 화면 어디서나 통한다(내용 열은 탭을 통과시키고 원·카드만 받는다).
+ * - 열린 직후 TAP_GUARD_MS 안의 바깥 탭은 무시한다("말로 하기"를 두 번 누른 경우 바로 취소되지 않게).
+ * - 닫히는 동안에도 덮개가 탭을 삼킨다(닫기·그만하기를 두 번 눌러도 아래 화면의 전화 링크·카드가 눌리지 않게).
  */
 export type VoicePhase = 'idle' | 'notice' | 'listening' | 'done' | 'error'
 type OverlayPhase = 'listening' | 'done' | 'error'
@@ -28,16 +33,6 @@ interface VoicePopupProps {
   returnFocusRef?: RefObject<HTMLElement>
 }
 
-const EXIT_MS = 200
-
-function prefersReducedMotion(): boolean {
-  return (
-    typeof window !== 'undefined' &&
-    typeof window.matchMedia === 'function' &&
-    window.matchMedia('(prefers-reduced-motion: reduce)').matches
-  )
-}
-
 export function VoicePopup({
   phase,
   noticeKey,
@@ -51,18 +46,23 @@ export function VoicePopup({
 }: VoicePopupProps) {
   const { t } = useTranslation()
   const statusId = useId()
+  const noticeId = useId()
   const overlayRef = useRef<HTMLDivElement>(null)
-  // 덮개는 닫힐 때 200ms 동안 사라지는 모션을 보여 준 뒤 없앤다(취소·완료·닫기 공통).
+  const openedAtRef = useRef(0)
+  // 덮개는 닫힐 때 사라지는 모션(200ms)을 보여 주고, 그 뒤에도 잠깐 투명하게 남아 탭을 삼킨 다음 없어진다.
   const [shown, setShown] = useState<{ phase: OverlayPhase; closing: boolean } | null>(null)
   const active = phase === 'listening' || phase === 'done' || phase === 'error'
 
   useEffect(() => {
     if (phase === 'listening' || phase === 'done' || phase === 'error') {
-      setShown({ phase, closing: false })
+      setShown((previous) => {
+        if (!previous || previous.closing) openedAtRef.current = performance.now()
+        return { phase, closing: false }
+      })
       return
     }
     setShown((previous) => (previous ? { ...previous, closing: true } : previous))
-    const timer = window.setTimeout(() => setShown(null), prefersReducedMotion() ? 0 : EXIT_MS)
+    const timer = window.setTimeout(() => setShown(null), TAP_GUARD_MS)
     return () => window.clearTimeout(timer)
   }, [phase])
 
@@ -125,6 +125,14 @@ export function VoicePopup({
     overlayRef.current?.querySelector<HTMLElement>('button:not([disabled])')?.focus()
   }, [shown])
 
+  /** 덮개 바깥 탭: 듣는 중이면 그만하기, 오류면 닫기. 완료 표시 중·닫히는 중·열린 직후에는 무시한다. */
+  const onOutsideTap = () => {
+    if (!shown || shown.closing) return
+    if (performance.now() - openedAtRef.current < TAP_GUARD_MS) return
+    if (shown.phase === 'listening') onStop()
+    else if (shown.phase === 'error') onClose()
+  }
+
   const overlay = shown
     ? createPortal(
         <div
@@ -132,10 +140,7 @@ export function VoicePopup({
           role="dialog"
           aria-modal="true"
           aria-labelledby={statusId}
-          className={[
-            'fixed inset-0 z-50 flex flex-col items-center justify-end',
-            shown.closing ? 'pointer-events-none' : '',
-          ].join(' ')}
+          className="fixed inset-0 z-[1000] flex flex-col items-center justify-end"
         >
           <div
             aria-hidden
@@ -143,24 +148,16 @@ export function VoicePopup({
               'absolute inset-0',
               shown.closing ? 'nsd-voice-backdrop-out' : 'nsd-voice-backdrop',
             ].join(' ')}
-            onClick={
-              shown.closing
-                ? undefined
-                : shown.phase === 'listening'
-                  ? onStop
-                  : shown.phase === 'error'
-                    ? onClose
-                    : undefined
-            }
+            onClick={onOutsideTap}
           />
-          {/* 버튼은 하단 탭 위쪽 엄지 범위에 둔다(화면 아래에서 64px 이상 위). */}
+          {/* 버튼은 하단 탭 위쪽 엄지 범위에 둔다(화면 아래에서 64px 이상 위). 빈 곳의 탭은 덮개로 통과시킨다. */}
           <div
-            className="relative flex w-full max-w-screen-sm flex-col items-center gap-8 px-6"
+            className="pointer-events-none relative flex w-full max-w-screen-sm flex-col items-center gap-8 px-6"
             style={{ paddingBottom: 'calc(96px + env(safe-area-inset-bottom))' }}
           >
             <div
               className={[
-                'relative h-24 w-24',
+                'pointer-events-auto relative h-24 w-24',
                 shown.closing ? 'nsd-voice-exit' : 'nsd-voice-enter',
               ].join(' ')}
             >
@@ -169,7 +166,7 @@ export function VoicePopup({
                     <span
                       key={delay}
                       aria-hidden
-                      className="nsd-voice-ring absolute inset-0 rounded-full"
+                      className="nsd-voice-ring pointer-events-none absolute inset-0 rounded-full"
                       style={{ animationDelay: `${delay}ms` }}
                     />
                   ))
@@ -196,7 +193,7 @@ export function VoicePopup({
 
             <div
               className={[
-                'w-full rounded-card border border-gray-100 bg-white px-4 py-4 text-center shadow-card',
+                'pointer-events-auto w-full rounded-card border border-gray-100 bg-white px-4 py-4 text-center shadow-card',
                 shown.closing ? 'nsd-voice-fade-out' : 'nsd-voice-fade-in',
               ].join(' ')}
             >
@@ -219,6 +216,7 @@ export function VoicePopup({
                 <button
                   type="button"
                   onClick={onStop}
+                  disabled={shown.closing}
                   className="mt-4 min-h-[56px] w-full rounded-full border border-gray-300 px-6 py-2 text-base font-semibold text-gray-700 active:bg-gray-50"
                 >
                   {t('talk.popupStop')}
@@ -229,6 +227,7 @@ export function VoicePopup({
                   <button
                     type="button"
                     onClick={onRetry}
+                    disabled={shown.closing}
                     className="min-h-[56px] w-full rounded-full bg-brand-greenDark px-6 py-2 text-base font-semibold text-white"
                   >
                     {t('talk.popupRetry')}
@@ -236,6 +235,7 @@ export function VoicePopup({
                   <button
                     type="button"
                     onClick={onClose}
+                    disabled={shown.closing}
                     className="min-h-[44px] w-full rounded-full border border-gray-300 px-6 py-2 text-base text-gray-700 active:bg-gray-50"
                   >
                     {t('common.close')}
@@ -251,8 +251,15 @@ export function VoicePopup({
 
   return (
     <>
-      <BottomSheet open={phase === 'notice'} onClose={onDecline} title={t('talk.sheetTitle')}>
-        <p className="text-base leading-relaxed text-gray-800">{t(noticeKey)}</p>
+      <BottomSheet
+        open={phase === 'notice'}
+        onClose={onDecline}
+        title={t('talk.sheetTitle')}
+        descriptionId={noticeId}
+      >
+        <p id={noticeId} className="text-base leading-relaxed text-gray-800">
+          {t(noticeKey)}
+        </p>
         <div className="mt-4 flex flex-col gap-2">
           <button
             type="button"
