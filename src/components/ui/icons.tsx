@@ -39,6 +39,9 @@ import {
   School,
   Share2,
   Puzzle,
+  ChevronRight,
+  Check,
+  AlertCircle,
 } from 'lucide-react'
 
 /** 하단 5탭(nav) — BottomNav 전용 */
@@ -94,5 +97,8 @@ export {
   Thermometer,
   Puzzle,
   MessagesSquare,
+  ChevronRight,
+  Check,
+  AlertCircle,
 }
 export type { LucideIcon }
