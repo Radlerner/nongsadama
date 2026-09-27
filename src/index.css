@@ -40,10 +40,129 @@ body {
   animation: nsd-fade-in 200ms ease-out both;
 }
 
-/* 감속 모션 설정: 전이는 즉시 */
+/* 말하기 팝업(VoicePopup) */
+@keyframes nsd-fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes nsd-voice-in {
+  from {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes nsd-voice-out {
+  from {
+    transform: scale(1);
+    opacity: 1;
+  }
+  to {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+}
+
+@keyframes nsd-voice-ring {
+  from {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+  to {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+}
+
+@keyframes nsd-voice-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20%,
+  60% {
+    transform: translateX(-6px);
+  }
+  40%,
+  80% {
+    transform: translateX(6px);
+  }
+}
+
+.nsd-voice-backdrop,
+.nsd-voice-backdrop-out {
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.nsd-voice-backdrop {
+  animation: nsd-fade-in 250ms ease-out both;
+}
+
+.nsd-voice-backdrop-out {
+  animation: nsd-fade-out 200ms ease-in both;
+}
+
+.nsd-voice-enter {
+  animation: nsd-voice-in 250ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.nsd-voice-exit {
+  animation: nsd-voice-out 200ms ease-in both;
+}
+
+.nsd-voice-fade-in {
+  animation: nsd-fade-in 250ms ease-out both;
+}
+
+.nsd-voice-fade-out {
+  animation: nsd-fade-out 200ms ease-in both;
+}
+
+/* 파형: 음성 크기와 무관하게 일정한 간격으로 번진다(3겹, 0·400·800ms 지연은 요소에서 지정) */
+.nsd-voice-ring {
+  background: rgba(21, 128, 61, 0.38);
+  animation: nsd-voice-ring 1200ms ease-out infinite both;
+}
+
+.nsd-voice-shake {
+  animation: nsd-voice-shake 400ms ease-in-out 1;
+}
+
+.nsd-voice-icon {
+  animation: nsd-fade-in 150ms ease-out both;
+}
+
+/* 감속 모션 설정: 전이는 즉시, 파형은 정지된 1겹 */
 @media (prefers-reduced-motion: reduce) {
   .nsd-sheet-panel,
-  .nsd-sheet-backdrop {
+  .nsd-sheet-backdrop,
+  .nsd-voice-backdrop,
+  .nsd-voice-backdrop-out,
+  .nsd-voice-enter,
+  .nsd-voice-exit,
+  .nsd-voice-fade-in,
+  .nsd-voice-fade-out,
+  .nsd-voice-shake,
+  .nsd-voice-icon {
     animation: none;
+  }
+
+  .nsd-voice-ring {
+    animation: none;
+    opacity: 0.35;
+    transform: scale(1.3);
+  }
+
+  .nsd-voice-ring ~ .nsd-voice-ring {
+    display: none;
   }
 }
