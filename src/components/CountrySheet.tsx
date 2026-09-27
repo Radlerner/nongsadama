@@ -6,8 +6,8 @@ import { useTranslation } from '../i18n/useTranslation'
 /**
  * 국적 선택 창(PRD v1.4 §3.2 화면 3). 목록은 DB(countries) 그대로 — 화면 코드에 국가 코드를 적지 않는다.
  * 국기는 쓰지 않는다(이미지 자산·이모지 금지). 선택 표시는 원형 라디오 모양(CSS).
- * 보조 버튼(다른 나라·고르지 않기·닫기)은 창 바닥에 고정한다 — 느린 망에서 목록이 늦게 도착해도
- * 누르려던 버튼 자리에 나라 줄이 들어와 언어가 바뀌는 일이 없게 한다.
+ * 보조 버튼(다른 나라·고르지 않기·닫기)은 창 바닥에 고정하고 창 높이도 고정한다 — 느린 망에서 목록이
+ * 늦게 도착해도 누르려던 자리(바닥 버튼, 창 위 어두운 배경)에 나라 줄이 들어와 언어가 바뀌는 일이 없게 한다.
  */
 interface CountrySheetProps {
   open: boolean
@@ -40,11 +40,22 @@ export function CountrySheet({
   const footerRef = useRef<HTMLDivElement>(null)
   const hasList = Boolean(countries && countries.length > 0)
 
-  // 창을 연 뒤에 목록이 도착했으면 초점이 바닥 버튼에 남아 있다 — 목록(고른 나라가 있으면 그 줄)으로 옮긴다.
+  // 창이 열릴 때 BottomSheet 가 자동으로 초점을 둔 요소(자식의 효과가 먼저 실행된다).
+  const autoFocusedRef = useRef<Element | null>(null)
+  useEffect(() => {
+    autoFocusedRef.current = open ? document.activeElement : null
+  }, [open])
+
+  // 창을 연 뒤에 목록이 도착했으면 목록(고른 나라가 있으면 그 줄)으로 초점을 옮긴다.
+  // 자동으로 놓인 바닥 버튼이나 창 자체에 초점이 있을 때만 — 사용자가 직접 옮겨 둔 초점은 건드리지 않는다.
   useEffect(() => {
     if (!open || !hasList) return
-    if (!footerRef.current?.contains(document.activeElement)) return
+    const current = document.activeElement
     const list = listRef.current
+    const onAutoFocused =
+      current === autoFocusedRef.current && Boolean(footerRef.current?.contains(current))
+    const onPanel = current === list?.closest('[role="dialog"]')
+    if (!onAutoFocused && !onPanel && current !== document.body) return
     const target =
       list?.querySelector<HTMLElement>('button[aria-pressed="true"]') ??
       list?.querySelector<HTMLElement>('button')
@@ -60,6 +71,7 @@ export function CountrySheet({
       onClose={onClose}
       title={t('select.nationalitySheetTitle')}
       descriptionId={helpId}
+      fill
       footer={
         <div ref={footerRef} className="flex flex-col gap-2">
           {otherLabel && onOther ? (

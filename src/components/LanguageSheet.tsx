@@ -33,10 +33,10 @@ export function LanguageSheet({ open, onClose, countryCode, onPicked }: Language
         ? navigator.languages
         : [navigator.language],
   )
-  // 창이 열린 채로 국적 언어가 도착해도 아래 "전체 언어" 줄이 밀리지 않게, 불러오는 동안 차지한
-  // 높이(언어 3줄)를 이번에 열려 있는 동안은 그대로 둔다(렌더 중 상태 갱신 패턴).
+  // 창이 열린 채로 국적 언어가 도착하거나 읽기에 실패해도 아래 "전체 언어" 줄이 밀리지 않게, 목록 없이
+  // 열렸으면 이번에 열려 있는 동안은 "내 국적 언어" 자리(언어 3줄 높이)를 그대로 둔다(렌더 중 상태 갱신 패턴).
   const [reserved, setReserved] = useState(false)
-  if (open && isLoading && !reserved) setReserved(true)
+  if (open && country && !countries && !reserved) setReserved(true)
   if (!open && reserved) setReserved(false)
   const countryRow = country ? (countries ?? []).find((row) => row.iso_code === country) : undefined
   const pinned = countryRow ? pinnedLocalesForCountry(countryRow, supportedLocales) : []
@@ -79,7 +79,7 @@ export function LanguageSheet({ open, onClose, countryCode, onPicked }: Language
   const sectionLabel = 'mb-2 text-sm font-semibold text-gray-700'
   // 국적은 골랐는데 고정할 언어가 없으면(목록에 없는 국적 등) 구역을 통째로 숨긴다.
   // 받아 둔 목록이 있으면(pinned) 다시 읽기에 실패해도 목록을 먼저 보여 준다.
-  const showPinnedSection = !country || pinned.length > 0 || isLoading || isError
+  const showPinnedSection = !country || pinned.length > 0 || isLoading || isError || reserved
 
   return (
     <BottomSheet
@@ -95,30 +95,34 @@ export function LanguageSheet({ open, onClose, countryCode, onPicked }: Language
             <p className="rounded-card bg-gray-50 px-4 py-3 text-sm text-gray-600">
               {t('select.languagePinHint')}
             </p>
-          ) : pinned.length > 0 ? (
-            <ul className={['flex flex-col gap-2', reserved ? 'min-h-[148px]' : ''].join(' ')}>
-              {pinned.map((code) => renderLocale(code, 'pinned', false))}
-            </ul>
-          ) : isLoading ? (
-            <p
-              role="status"
-              className="flex min-h-[148px] items-center justify-center rounded-card bg-gray-50 px-4 py-3 text-center text-sm text-gray-500"
-            >
-              {t('select.countryLoading')}
-            </p>
-          ) : isError ? (
-            <div role="alert" className="rounded-card bg-red-50 px-4 py-3 text-sm text-red-700">
-              <p className="mb-2">{t('select.countryError')}</p>
-              <button
-                type="button"
-                onClick={() => void refetch()}
-                disabled={isFetching}
-                className="min-h-[44px] rounded-full border border-red-300 px-4 text-red-700 disabled:opacity-50"
-              >
-                {t('common.retry')}
-              </button>
+          ) : (
+            <div className={reserved ? 'flex min-h-[148px] flex-col' : undefined}>
+              {pinned.length > 0 ? (
+                <ul className="flex flex-col gap-2">
+                  {pinned.map((code) => renderLocale(code, 'pinned', false))}
+                </ul>
+              ) : isLoading ? (
+                <p
+                  role="status"
+                  className="flex flex-1 items-center justify-center rounded-card bg-gray-50 px-4 py-3 text-center text-sm text-gray-500"
+                >
+                  {t('select.countryLoading')}
+                </p>
+              ) : isError ? (
+                <div role="alert" className="rounded-card bg-red-50 px-4 py-3 text-sm text-red-700">
+                  <p className="mb-2">{t('select.countryError')}</p>
+                  <button
+                    type="button"
+                    onClick={() => void refetch()}
+                    disabled={isFetching}
+                    className="min-h-[44px] rounded-full border border-red-300 px-4 text-red-700 disabled:opacity-50"
+                  >
+                    {t('common.retry')}
+                  </button>
+                </div>
+              ) : null}
             </div>
-          ) : null}
+          )}
         </section>
       ) : null}
 
