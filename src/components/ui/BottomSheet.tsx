@@ -11,6 +11,7 @@ import { ChevronRight } from './icons'
  *   뒤따르는 하단 탭(z-10)에 가려지기 때문이다(PRD 는 포털 불필요로 가정 — 헤더 언어 버튼에서 반례).
  * - 열려 있는 동안 본문 스크롤을 막고, 닫히면 원래 값으로 되돌린다.
  * - 열리면 첫 버튼에 포커스, Escape 로 닫힘, Tab 은 창 안에서만 돈다(aria-modal).
+ * - 닫히면 열기 전에 포커스가 있던 요소로 되돌린다. 다른 요소가 이미 포커스를 받았으면 뺏지 않는다.
  */
 interface BottomSheetProps {
   open: boolean
@@ -34,6 +35,7 @@ export function BottomSheet({ open, onClose, title, titleId, children }: BottomS
 
   useEffect(() => {
     if (!open) return
+    const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null
     const previousOverflow = document.body.style.overflow
     document.body.style.overflow = 'hidden'
 
@@ -71,6 +73,9 @@ export function BottomSheet({ open, onClose, title, titleId, children }: BottomS
     return () => {
       document.removeEventListener('keydown', onKeyDown)
       document.body.style.overflow = previousOverflow
+      // 창이 사라져 포커스가 갈 곳을 잃었을 때만 되돌린다(창 안에서 새로 나타난 입력칸 등이 받았으면 그대로 둔다).
+      const current = document.activeElement
+      if (opener && opener.isConnected && (!current || current === document.body)) opener.focus()
     }
   }, [open])
 
