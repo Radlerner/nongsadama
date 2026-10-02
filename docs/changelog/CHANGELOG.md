@@ -4,6 +4,18 @@
 버전 번호는 Google Play `versionName`·`src/config/version.ts`의 `APP_VERSION`과 같다.
 릴리스별 상세는 `docs/prd/PRD_v<버전>.md`(요구·영향·롤백)와 `docs/releases/RELEASE_v<버전>.md`(빌드·업로드 절차)에 있다.
 
+## [1.4.1] - 2026-10-03
+
+Android 아이콘만 고친 릴리스. 웹 코드는 버전 상수 말고 바뀐 것이 없다. 절차는 [RELEASE_v1.4.1](../releases/RELEASE_v1.4.1.md), 결정은 DECISIONS D-041.
+
+### Fixed
+
+- Play로 설치한 앱의 런처 아이콘이 농사다마 로고가 아니라 Capacitor 템플릿 기본 그림(흰 바탕 + 파란 X)이던 문제. v1.1에서 `android/` 폴더가 들어온 뒤 한 번도 로고로 바뀐 적이 없었다. 퍼즐 로고(`public/icons/icon-512.png`)로 5개 해상도 × 3종(`ic_launcher`, `ic_launcher_round`, `ic_launcher_foreground`)을 다시 만들고, 적응형 아이콘 배경을 흰색에서 크림(`#F5F1E8`)으로 바꿨다.
+
+### Changed
+
+- Android `versionName 1.4.1` / `versionCode 8`, `package.json` 1.4.1.
+
 ## [1.4] - 2026-09-27
 
 v1.3.2에 대한 프론트엔드(`src/`) 한정 UI/UX 업데이트. 데이터베이스·Edge Function·Android 권한·플러그인·의존성·법적 페이지는 바꾸지 않았다.

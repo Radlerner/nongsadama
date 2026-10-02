@@ -552,6 +552,16 @@ Supabase 프로젝트 **nongsadama**(`ikusdwursvbdrznbcjtw`, ap-northeast-2)에 
 | `npm run typecheck`·`npm run build` | ✅(기능 코드 무변경) |
 | 미확인: 오너가 본 실패 화면이 Build `a2cca8e7…`(`40254b5`)인지(대시보드 로그 필요), `80a6d7e` 실패 원인, Cloudflare 실제 빌드에서의 `VITE_STT_ENDPOINT` 인라인 | 오너 확인 |
 
+## v1.4.1 — Android 런처 아이콘 (2026-10-03, D-041)
+| 검증 | 결과 |
+|---|---|
+| 출시한 1.4 AAB(`android/app/release/app-release.aab`, 2026-09-27 17:23)를 풀어 아이콘 리소스 확인: `mipmap-*-v4/ic_launcher*.png` 15개 전부 유효한 PNG(48~432px), 그러나 Capacitor 템플릿 기본 그림. 적응형 XML은 `@mipmap/ic_launcher_foreground`·`@color/ic_launcher_background`(#FFFFFF) 참조, Manifest는 `@mipmap/ic_launcher`·`@mipmap/ic_launcher_round` | ✅ 원인 확정(빈 그림 아님, 로고가 들어간 적 없음) |
+| 새 아이콘 생성(헤드리스 Chrome canvas, 새 의존성 없음): `icon-512.png` 바깥 바탕 플러드필 143,178픽셀 제거, 퍼즐 경계 상자 371×335 → 15개 PNG. 원·squircle·둥근 사각형 마스크 미리보기에서 퍼즐이 잘리지 않음(앞면 긴 변 50dp, 안전 영역 66dp 원 안) | ✅ |
+| `android/gradlew :app:processReleaseResources --offline`(aapt2 컴파일·링크): 성공(exit 0), 링크 결과 `.ap_`에 새 아이콘 15개 포함 | ✅ |
+| `npm run typecheck` 0 · `node --test` 12건 · `npm run build` 성공 · `npx cap sync android` 플러그인 3개, android 자산 = dist · `git status --short`에 `.jks`·`.env*` 없음 | ✅ |
+| 아이콘 커밋 `4cad1a4` 단독 되돌리기 가능(파일 16개, 다른 커밋과 겹치지 않음) | ✅ |
+| 미실측: 실기기 런처 표시, Play 업로드, Android 13 테마 아이콘 | 오너 확인 — RELEASE_v1.4.1 §6 |
+
 ## v1.4 — 말하기 음성 입력 팝업 · 국적 기반 언어 (2026-09-27, D-040)
 기준: [PRD_v1.4 §10](prd/PRD_v1.4.md). 화면 검증은 사람이 손으로 누른 것이 아니라 헤드리스 Chrome(375×812, 일부 360×640)에 **실제 입력 이벤트**를 보내는 스크립트로 했다(누르기 전에 그 자리가 다른 요소에 가려져 있지 않은지 검사). 개발 서버 4개를 썼다: 이 PC의 `.env.local` 그대로(5173 — 국적·언어·프로필·회귀), `VITE_STT_ENDPOINT`를 비운 것(5178 — 브라우저 Web Speech 경로의 말하기), 가짜 엔드포인트 `http://127.0.0.1:9/functions/v1/stt`를 넣은 것(5176 — 외부 음성 인식 경로), 비교용 `v1.3.2`(5177). 음성 인식은 대역(stub)으로 바꿔 결과·오류·침묵·지연을 만들었고, 로그인과 프로필 쓰기는 브라우저 단에서 가로챈 모의 응답이다. **라이브 Supabase에는 읽기(GET)만 나갔다** — GET이 아닌 요청은 전부 모의 응답하거나 차단했고, 차단된 쓰기 시도는 0건이다. 화면 갈무리는 저장소 밖 `C:\Users\Dongmin Kim\Documents\nongsadama-screenshots\v1.4\`(커밋하지 않음).
 
