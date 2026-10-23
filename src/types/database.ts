@@ -201,6 +201,7 @@ export type Database = {
           created_at: string
           embedding: string | null
           id: string
+          image_paths: string[]
           region_id: string
           source_locale: string
           status: string
@@ -214,6 +215,7 @@ export type Database = {
           created_at?: string
           embedding?: string | null
           id?: string
+          image_paths?: string[]
           region_id: string
           source_locale: string
           status?: string
@@ -227,6 +229,7 @@ export type Database = {
           created_at?: string
           embedding?: string | null
           id?: string
+          image_paths?: string[]
           region_id?: string
           source_locale?: string
           status?: string

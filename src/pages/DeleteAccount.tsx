@@ -10,7 +10,7 @@ import { useDocumentTitle } from '../hooks/useDocumentTitle'
  * 문안을 고치면 EFFECTIVE_DATE도 같은 날짜로 올린다(재검수 D-032 — 게시일보다 앞선 날짜 금지).
  * 처리 기한은 개인정보 보호법 시행령 제43조③(요구를 받은 날부터 10일 이내, 역일)을 따른다.
  */
-const EFFECTIVE_DATE = '2026-09-10'
+const EFFECTIVE_DATE = '2026-10-23'
 const PAGE_TITLE = 'NongsaDaMa 계정 삭제 안내 / Account Deletion'
 
 function EmailLink() {
@@ -40,9 +40,10 @@ export function DeleteAccount() {
           <h3 className="font-bold">1. 계정 삭제를 요청하는 방법</h3>
           <ol className="mt-2 list-decimal space-y-2 pl-5 text-gray-700">
             <li>
-              <strong>앱 안에서(즉시 삭제)</strong>: 로그인 → <strong>내 정보</strong> →
-              <strong> 계정 삭제</strong> → <strong>영구 삭제 확정</strong>. 확인 즉시 계정과 데이터가
-              삭제되며 되돌릴 수 없어요.
+              <strong>앱 안에서(즉시 삭제)</strong>: 로그인 → <strong>내 정보</strong> → 화면 맨 아래
+              <strong> 계정 설정</strong>의 <strong>회원탈퇴</strong> → <strong>계정 삭제</strong> → 본인 확인(이메일 가입은 비밀번호, 카카오 가입은
+              화면의 숫자 4개 입력) → <strong>영구 삭제 확정</strong>. 확인 즉시 계정과 데이터가 삭제되며 되돌릴 수 없어요.
+              (1.5 이전 앱: 내 정보 → 계정 삭제 → 영구 삭제 확정)
             </li>
             <li>
               <strong>이메일로(앱 밖에서)</strong>: <EmailLink />로{' '}
@@ -61,7 +62,7 @@ export function DeleteAccount() {
               닉네임·프로필 이미지 주소 포함)
             </li>
             <li>프로필: 닉네임, 언어, 지역(읍·면 또는 시·군 단위), 국적 코드, 재배 작목, 이웃 공개 동의</li>
-            <li>작성 콘텐츠: 내가 쓴 게시글 전체</li>
+            <li>작성 콘텐츠: 내가 쓴 게시글 전체(올린 사진 포함)</li>
             <li>차단 목록, 신고 기록 중 내 계정에 연결된 부분</li>
           </ul>
           <p className="mt-2 text-gray-700">
@@ -105,9 +106,11 @@ export function DeleteAccount() {
           <h3 className="font-bold">1. How to request account deletion</h3>
           <ol className="mt-2 list-decimal space-y-2 pl-5 text-gray-700">
             <li>
-              <strong>In the app (immediate)</strong>: Sign in → <strong>Profile</strong> →
-              <strong> Delete account</strong> → <strong>Permanently delete</strong>. Your account and
-              data are deleted right away and cannot be recovered.
+              <strong>In the app (immediate)</strong>: Sign in → <strong>Profile</strong> → scroll to
+              <strong> Account settings</strong> at the bottom → <strong>Close my account</strong> → <strong>Delete account</strong> → confirm it is you
+              (your password for email accounts, or the 4 numbers shown on screen for Kakao accounts) →
+              <strong> Permanently delete</strong>. Your account and data are deleted right away and cannot be recovered.
+              (App versions before 1.5: Profile → Delete account → Permanently delete.)
             </li>
             <li>
               <strong>By email (outside the app)</strong>: Send "Account deletion request" to{' '}
@@ -127,7 +130,7 @@ export function DeleteAccount() {
               nickname and profile-image URL Kakao provided)
             </li>
             <li>Profile: nickname, language, region (town or city/county level), nationality code, crop, neighbor-visibility consent</li>
-            <li>Your content: all posts you wrote</li>
+            <li>Your content: all posts you wrote, including photos</li>
             <li>Your block list and the parts of report records tied to your account</li>
           </ul>
           <p className="mt-2 text-gray-700">

@@ -15,15 +15,18 @@ export function Card({ children, className = '' }: { children: ReactNode; classN
 
 export function CardLink({
   to,
+  state,
   children,
   className = '',
 }: {
   to: string
+  /** 라우터 상태(예: 게시판 거르기 값을 상세의 "돌아가기"까지 넘김) */
+  state?: unknown
   children: ReactNode
   className?: string
 }) {
   return (
-    <Link to={to} className={`block ${BASE} active:bg-gray-50 ${className}`}>
+    <Link to={to} state={state} className={`block ${BASE} active:bg-gray-50 ${className}`}>
       {children}
     </Link>
   )

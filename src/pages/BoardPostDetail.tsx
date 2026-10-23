@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useTranslation } from '../i18n/useTranslation'
 import { useAuth } from '../context/AuthContext'
 import {
@@ -9,6 +9,9 @@ import {
   postCategoryLabelKey,
 } from '../hooks/usePosts'
 import { useRegions } from '../hooks/useRegions'
+import { useBoardGate } from '../hooks/useBoardGate'
+import { inScope } from '../lib/regionGate'
+import { imageSize, imageUrl } from '../lib/postImages'
 import { useSelectedRegion } from '../context/SelectedRegionContext'
 import {
   useBlockedIds,
@@ -32,6 +35,9 @@ export function BoardPostDetail() {
   const [confirmingDelete, setConfirmingDelete] = useState(false)
   const { data: blockedIds } = useBlockedIds(user?.id)
   const unblock = useUnblockUser(user?.id)
+  // 게시판에서 고른 거르기(?category= 등)를 지켜 돌아간다(CardLink state)
+  const boardSearch = (useLocation().state as { boardSearch?: string } | null)?.boardSearch ?? ''
+  const boardHref = `/board${boardSearch.startsWith('?') ? boardSearch : ''}`
 
   if (isLoading) {
     return (
@@ -63,7 +69,7 @@ export function BoardPostDetail() {
         <p className="rounded-card bg-white/70 px-4 py-8 text-sm text-gray-500">
           {t('postDetail.empty')}
         </p>
-        <Link to="/board" className="mt-4 inline-block text-green-700 underline">
+        <Link to={boardHref} className="mt-4 inline-block text-green-700 underline">
           {t('postDetail.back')}
         </Link>
       </div>
@@ -100,7 +106,7 @@ export function BoardPostDetail() {
           {t('block.unblock')}
         </button>
         <br />
-        <Link to="/board" className="mt-2 inline-block text-sm text-gray-500 underline">
+        <Link to={boardHref} className="mt-2 inline-block text-sm text-gray-500 underline">
           {t('postDetail.back')}
         </Link>
       </div>
@@ -125,10 +131,19 @@ export function BoardPostDetail() {
 
       <p className="whitespace-pre-line text-sm text-gray-800">{post.body}</p>
 
+      <PostPhotos paths={post.image_paths ?? []} />
+
       {post.category === 'help' ? (
         <div className="rounded-md bg-amber-50 px-4 py-3 text-xs text-amber-900">
           {/* v1.5 §5 데모 완료 조건: 만남 안전 문구 */}
           <p>{t('postDetail.helpSafety')}</p>
+        </div>
+      ) : null}
+
+      {post.category === 'recommend' ? (
+        <div className="rounded-md bg-gray-50 px-4 py-3 text-xs text-gray-700">
+          {/* 이용자가 쓴 추천은 농사다마가 확인한 생활정보와 다르다(D-043) */}
+          <p>{t('postDetail.recommendNote')}</p>
         </div>
       ) : null}
 
@@ -139,6 +154,7 @@ export function BoardPostDetail() {
         <div className="flex gap-2">
           <Link
             to={`/board/${post.id}/edit`}
+            state={{ boardSearch }}
             className="inline-flex min-h-[44px] flex-1 items-center justify-center rounded-full border border-gray-300 text-sm font-semibold text-gray-700"
           >
             {t('postDetail.edit')}
@@ -149,7 +165,10 @@ export function BoardPostDetail() {
                 type="button"
                 disabled={deletePost.isPending}
                 onClick={() =>
-                  deletePost.mutate(post.id, { onSuccess: () => navigate('/board') })
+                  deletePost.mutate(
+                    { id: post.id, imagePaths: post.image_paths ?? [] },
+                    { onSuccess: () => navigate(boardHref) },
+                  )
                 }
                 className="min-h-[44px] flex-1 rounded-full bg-red-600 text-sm font-semibold text-white disabled:opacity-50"
               >
@@ -181,7 +200,7 @@ export function BoardPostDetail() {
 
       <SimilarPosts postId={post.id} />
 
-      <Link to="/board" className="text-green-700 underline">
+      <Link to={boardHref} className="text-green-700 underline">
         {t('postDetail.back')}
       </Link>
     </article>
@@ -302,8 +321,14 @@ function SimilarPosts({ postId }: { postId: string }) {
   const { user } = useAuth()
   const { data: raw, isLoading, isError } = useSimilarPosts(postId)
   const { data: blockedIds } = useBlockedIds(user?.id)
-  const data = (raw ?? []).filter((s) => !blockedIds?.has(s.author_id))
-  if (isLoading || isError) return null
+  // 다른 지역 글은 아직 열리지 않은 사람에게 보이지 않는다(D-045) — 목록과 같은 규칙
+  const gate = useBoardGate()
+  const data = (raw ?? [])
+    .filter((s) => !blockedIds?.has(s.author_id))
+    .filter((s) => gate.unlocked || inScope(gate.ownScope, s.region_id))
+  // 지역·글 수를 아직 모르면 "비슷한 글이 없어요"라고 잘못 말하지 않게 섹션을 숨긴다
+  const gateUnknown = gate.pending || gate.countPending || (!gate.unlocked && !gate.ownScope)
+  if (isLoading || isError || gateUnknown) return null
   return (
     <section className="rounded-card border border-gray-100 bg-white shadow-card px-4 py-3">
       <p className="mb-2 text-xs font-semibold text-gray-500">{t('postDetail.similar')}</p>
@@ -323,5 +348,33 @@ function SimilarPosts({ postId }: { postId: string }) {
       </ul>
       )}
     </section>
+  )
+}
+
+/**
+ * 글에 붙은 사진(D-044). 이름에 적힌 가로·세로로 자리를 먼저 잡아 그림이 늦게 와도 아래 버튼이 밀리지 않는다.
+ * 비율은 1:3 ~ 3:1로 묶는다 — 이름의 크기는 올린 사람이 정하므로, 이상한 값으로 신고·차단 버튼을 화면 밖으로 밀지 못하게.
+ * 링크를 걸지 않는다(Android 앱에서 누르면 앱을 떠나 같은 그림을 다시 받는다). 이미 화면 폭 전체로 보인다.
+ */
+function PostPhotos({ paths }: { paths: string[] }) {
+  const { t } = useTranslation()
+  if (paths.length === 0) return null
+  return (
+    <div className="flex flex-col gap-2">
+      {paths.map((path, i) => {
+        const size = imageSize(path)
+        return (
+          <img
+            key={path}
+            src={imageUrl(path)}
+            alt={t('postDetail.photo').replace('{n}', String(i + 1))}
+            loading="lazy"
+            decoding="async"
+            style={{ aspectRatio: size ? String(Math.min(3, Math.max(1 / 3, size.width / size.height))) : '4 / 3' }}
+            className="block h-auto w-full rounded-md bg-gray-100 object-contain"
+          />
+        )
+      })}
+    </div>
   )
 }

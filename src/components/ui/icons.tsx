@@ -42,6 +42,9 @@ import {
   ChevronRight,
   Check,
   AlertCircle,
+  Lock,
+  ImagePlus,
+  X,
 } from 'lucide-react'
 
 /** 하단 5탭(nav) — BottomNav 전용 */
@@ -100,5 +103,8 @@ export {
   ChevronRight,
   Check,
   AlertCircle,
+  Lock,
+  ImagePlus,
+  X,
 }
 export type { LucideIcon }

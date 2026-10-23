@@ -23,7 +23,16 @@ const providerIcon: Record<OAuthProvider, LucideIcon> = {
 const schema = z.object({
   email: z.string().email('auth.error.emailInvalid'),
   password: z.string().min(6, 'auth.error.passwordMin'),
+  // 회원가입에서만 쓴다(D-046): 비밀번호를 두 번 넣어 오타로 못 들어오는 일을 막는다. 로그인에서는 칸이 없다.
+  passwordConfirm: z.string().optional(),
   nickname: z.string().max(40, 'auth.error.nicknameLong').optional(),
+})
+
+// 회원가입 검사: 두 비밀번호가 같아야 한다. 규칙을 스키마에 두어, 첫 제출 뒤 칸을 고칠 때마다 안내가 맞게 바뀐다.
+const signupSchema = schema.superRefine((v, ctx) => {
+  if ((v.passwordConfirm ?? '') !== v.password) {
+    ctx.addIssue({ code: 'custom', path: ['passwordConfirm'], message: 'auth.error.passwordMismatch' })
+  }
 })
 
 type FormValues = z.infer<typeof schema>
@@ -79,7 +88,7 @@ export function Login() {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm<FormValues>({ resolver: zodResolver(schema) })
+  } = useForm<FormValues>({ resolver: zodResolver(mode === 'signup' ? signupSchema : schema) })
 
   const onSubmit = handleSubmit(async (values) => {
     setSubmitError(null)
@@ -193,6 +202,21 @@ export function Login() {
             <span className="font-normal text-red-700">{t(errors.password.message)}</span>
           ) : null}
         </label>
+
+        {mode === 'signup' ? (
+          <label className="flex flex-col gap-1 text-sm font-semibold text-gray-700">
+            {t('auth.passwordConfirm')}
+            <input
+              type="password"
+              autoComplete="new-password"
+              className={inputClass}
+              {...register('passwordConfirm')}
+            />
+            {errors.passwordConfirm?.message ? (
+              <span className="font-normal text-red-700">{t(errors.passwordConfirm.message)}</span>
+            ) : null}
+          </label>
+        ) : null}
 
         {mode === 'signup' ? (
           <label className="flex flex-col gap-1 text-sm font-semibold text-gray-700">

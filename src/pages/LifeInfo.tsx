@@ -10,7 +10,7 @@ import {
   categoryLabelKey,
 } from '../lib/categories'
 import { IconTile } from '../components/ui/IconTile'
-import { CATEGORY_ICONS, Info } from '../components/ui/icons'
+import { CATEGORY_ICONS, Info, MapPin } from '../components/ui/icons'
 import { localizedContent } from '../lib/localizedContent'
 import { regionLabel } from '../lib/regionName'
 import { FreshnessBadge } from '../components/FreshnessBadge'
@@ -101,6 +101,19 @@ export function LifeInfo() {
           <SafetyBanner />
         </div>
       ) : null}
+
+      {/* 공식 정보가 없는 지역에서도 갈 곳이 있게: 이웃이 쓴 우리 동네 추천(게시판, D-043).
+          목록 위에 고정 — 목록이 늦게 와도 이 칸이 움직이지 않는다(v1.4 패턴).
+          상담·도움 길(말하기 "힘들어요" 포함)에서는 안전 안내 바로 아래에 공식 도움 목록이 오도록 숨긴다. */}
+      {category === 'support' || fromTalk ? null : (
+        <CardLink to="/board?category=recommend" className="mb-4 flex items-center gap-3 px-4 py-3">
+          <IconTile icon={MapPin} />
+          <div className="min-w-0 flex-1">
+            <p className="font-semibold text-gray-900">{t('lifeInfo.neighborTips')}</p>
+            <p className="mt-1 text-xs text-gray-500">{t('lifeInfo.neighborTipsHint')}</p>
+          </div>
+        </CardLink>
+      )}
 
       {loading ? (
         <LoadingBox text={t('lifeInfo.loading')} />

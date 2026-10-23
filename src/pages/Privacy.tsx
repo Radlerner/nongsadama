@@ -11,7 +11,7 @@ import { useDocumentTitle } from '../hooks/useDocumentTitle'
  * (개인정보 보호법 §30 — 변경 시 시행일·사유 공개, 재검수 D-032).
  */
 const EFFECTIVE_DATE = '2026-08-27'
-const REVISED_DATE = '2026-09-21'
+const REVISED_DATE = '2026-10-23'
 
 export function Privacy() {
   useDocumentTitle('농사다마 개인정보처리방침 / NongsaDaMa Privacy Policy')
@@ -32,7 +32,10 @@ export function Privacy() {
             <li>계정: 이메일 주소, 닉네임, 비밀번호(암호화 저장, Supabase Auth)</li>
             <li>카카오 간편로그인 시: 카카오가 제공하는 닉네임·이메일(선택 동의)·프로필 이미지</li>
             <li>선택 입력: 언어, 지역(읍·면 또는 시·군 단위), 국적 코드, 재배 작목 — 모두 입력하지 않아도 이용 가능</li>
-            <li>작성 콘텐츠: 게시글(제목·본문)</li>
+            <li>
+              작성 콘텐츠: 게시글(제목·본문·사진). 사진은 올리기 전에 기기에서 줄여 다시 저장하므로 촬영
+              위치(GPS)·기기 정보 같은 사진 속 부가 정보는 저장하지 않습니다. 사진은 게시글처럼 누구나 볼 수 있습니다.
+            </li>
             <li>자동 수집: 서비스 이용 기록(하단 3항의 분석 도구)</li>
           </ul>
           <p className="mt-1 text-gray-700">
@@ -80,7 +83,8 @@ export function Privacy() {
         <div id="delete" className="rounded-md border border-green-200 bg-green-50 px-4 py-3">
           <h2 className="font-bold">4. 계정 및 데이터 삭제</h2>
           <p className="mt-1 text-gray-700">
-            <strong>앱 안에서</strong>: 내 정보 → 계정 삭제 버튼으로 즉시 영구 삭제할 수 있습니다.
+            <strong>앱 안에서</strong>: 내 정보 → 맨 아래 계정 설정 → 회원탈퇴 → 계정 삭제 → 본인 확인(비밀번호 또는 화면의 숫자 4개) →
+            영구 삭제 확정으로 즉시 영구 삭제할 수 있습니다.
             <br />
             <strong>앱 밖에서(웹 요청)</strong>: 이메일{' '}
             <a className="underline" href={deletionRequestMailto}>
@@ -96,7 +100,7 @@ export function Privacy() {
           <p className="mt-2 text-gray-700">
             <strong>삭제되는 데이터(전부)</strong>: 계정(이메일·비밀번호·카카오 연결 정보와 카카오가
             전달한 닉네임·프로필 이미지 주소), 프로필(닉네임·언어·지역·국적·작목·공개 동의), 작성한
-            게시글 전체, 차단 목록. 카카오 계정 쪽 연결은 카카오톡 → 설정 → 카카오계정 → 연결된
+            게시글 전체(사진 포함), 차단 목록. 카카오 계정 쪽 연결은 카카오톡 → 설정 → 카카오계정 → 연결된
             서비스 관리에서 직접 해제할 수 있습니다.
             <br />
             <strong>일정 기간 보관될 수 있는 데이터</strong>: 관계 법령이 보관을 요구하는 정보(예:
@@ -104,8 +108,8 @@ export function Privacy() {
             백업 주기에 따라 순차 삭제됩니다. 익명 통계(GA4·Clarity)는 계정과 연결되지 않은
             상태로만 남습니다.
             <br />
-            개별 게시글을 삭제한 경우 공개 목록에서 즉시 제외되며, 계정 삭제 시 함께 완전
-            파기됩니다.
+            개별 게시글을 삭제한 경우 공개 목록에서 즉시 제외되고 그 글의 사진 파일도 함께 지웁니다(바로 지우지 못하고
+            남은 사진 파일은 정기 점검 때 지웁니다). 계정 삭제 시 게시글과 사진은 함께 완전 파기됩니다.
           </p>
         </div>
 
@@ -132,6 +136,7 @@ export function Privacy() {
               시·군으로 확대하며 시·군 단위 선택 추가), 영문 표기 NongsaDaMa 통일
             </li>
             <li>2026-09-21 §3 카카오 지역 조회에 전송하는 대략 좌표 안내 추가</li>
+            <li>2026-10-23 §1 게시글 사진(올리기 전 위치 정보 제거) 추가, §4 사진 삭제 안내·앱 안 계정 삭제 경로(본인 확인 단계)</li>
           </ul>
         </div>
 
@@ -139,14 +144,16 @@ export function Privacy() {
           <h2 className="font-bold">English summary</h2>
           <p className="mt-1 text-gray-700">
             NongsaDaMa collects: email, nickname, optional language/town- or county-level region/nationality
-            code/crop, and your posts. Kakao sign-in shares your Kakao nickname, email (optional)
+            code/crop, and your posts (text and photos — photos are re-saved on your device before
+            upload, so GPS location and other photo metadata are not kept). Kakao sign-in shares your Kakao nickname, email (optional)
             and profile image. We never collect phone numbers or store exact GPS locations. Third
             parties: Supabase (Seoul), Kakao, OpenStreetMap, Google Analytics 4, Microsoft
             Clarity, AddToAny, and your browser vendor for voice input. Hosting and analytics run
             on overseas servers (US); account and post data are stored in Supabase&apos;s Seoul
             region. Kakao receives coordinates rounded to roughly 11 km when identifying your area
-            from My Location. Delete your account anytime in Profile → Delete account → Permanently delete —
-            this permanently removes your account, profile and all posts — or request deletion by
+            from My Location. Delete your account anytime in Profile → Account settings (bottom) → Close my account → Delete account →
+            confirm it is you → Permanently delete —
+            this permanently removes your account, profile and all posts and photos — or request deletion by
             email: {deletionRequestEmail} (see /delete-account); we act within 10 days of your
             request. Data that laws require us to keep is retained separately for the legal period
             only; backup copies are removed within 30 days. You can change or withdraw optional
