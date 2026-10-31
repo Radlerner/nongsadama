@@ -1,28 +1,20 @@
-import { useEffect, useState } from 'react'
 import { useTranslation } from '../i18n/useTranslation'
+import { Icon } from './ui/Icon'
+import { useOnline } from './ui/hooks/useOnline'
 
-/** 오프라인 안내 배너(D-024) — 농촌 통신 환경 대응. 온라인 복귀 시 자동 소멸. */
+/** 오프라인 안내 배너(D-024, 키트 4.17) — 농촌 통신 환경 대응. 온라인 복귀 시 자동 소멸. 헤더 안에 붙어 있다. */
 export function OfflineBanner() {
   const { t } = useTranslation()
-  const [offline, setOffline] = useState(
-    typeof navigator !== 'undefined' ? !navigator.onLine : false,
-  )
+  const online = useOnline()
 
-  useEffect(() => {
-    const on = () => setOffline(false)
-    const off = () => setOffline(true)
-    window.addEventListener('online', on)
-    window.addEventListener('offline', off)
-    return () => {
-      window.removeEventListener('online', on)
-      window.removeEventListener('offline', off)
-    }
-  }, [])
-
-  if (!offline) return null
+  if (online) return null
   return (
-    <p role="status" className="bg-amber-100 px-4 py-2 text-center text-xs font-semibold text-amber-900">
-      {t('common.offline')}
+    <p
+      role="status"
+      className="flex min-h-[44px] items-center gap-2.5 bg-surface-2 px-5 py-2.5 text-small text-ink"
+    >
+      <Icon name="wifi-off" size={20} className="text-ink-body" />
+      <span>{t('common.offline')}</span>
     </p>
   )
 }

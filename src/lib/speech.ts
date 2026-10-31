@@ -45,7 +45,7 @@ export function isSpeechAvailable(): boolean {
 
 const EXTERNAL_RECORD_MS = 5000
 
-async function listenViaExternal(locale: Locale): Promise<string> {
+async function listenViaExternal(locale: Locale, onProcessing?: () => void): Promise<string> {
   const supabase = getSupabaseClient()
   const initial = await supabase.auth.getSession()
   if (initial.error || !initial.data.session || initial.data.session.user.is_anonymous) {
@@ -73,6 +73,8 @@ async function listenViaExternal(locale: Locale): Promise<string> {
     } finally {
       clearTimeout(timer)
     }
+    // 녹음이 끝났다 → 지금부터는 '알아듣는 중'(권한 창·마이크 준비 시간과 무관하게 정확한 시점)
+    onProcessing?.()
     const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
     if (sessionError || !sessionData.session || sessionData.session.user.is_anonymous) {
       throw new Error('stt-login-required')
@@ -97,12 +99,13 @@ async function listenViaExternal(locale: Locale): Promise<string> {
 
 /**
  * 한 번 듣고 최종 텍스트를 돌려준다.
+ * opts.onProcessing: 녹음이 끝나 글자로 바꾸기 시작할 때 한 번 불린다(외부 STT). Web Speech 경로는 부르지 않는다.
  * 주의: Web Speech API는 음성을 브라우저 제공사 서버로 전송해 인식한다(기기 내 처리가 아님).
  * 호출 전 UI에서 이 사실을 고지해야 한다(PRD v1.5 §3.2-4). 우리 서버에는 아무것도 저장하지 않는다.
  */
-export function listenOnce(locale: Locale): Promise<string> {
+export function listenOnce(locale: Locale, opts?: { onProcessing?: () => void }): Promise<string> {
   if (sttProvider() === 'external') {
-    return listenViaExternal(locale)
+    return listenViaExternal(locale, opts?.onProcessing)
   }
   return new Promise((resolve, reject) => {
     const Ctor = getCtor()

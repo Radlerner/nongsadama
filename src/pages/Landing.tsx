@@ -2,14 +2,14 @@ import { useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useTranslation } from '../i18n/useTranslation'
-import { LanguageSwitcher } from '../components/layout/LanguageSwitcher'
+import { EntryHeader } from '../components/layout/EntryHeader'
 import { useSelectedRegion } from '../context/SelectedRegionContext'
-import { Map as MapIcon, MessagesSquare, Mic, type LucideIcon } from '../components/ui/icons'
+import { buttonClasses, LogoMark, Wordmark } from '../components/ui'
 
 export function Landing() {
   const { t } = useTranslation()
   const { regionId } = useSelectedRegion()
-  const { initializing } = useAuth()
+  const { initializing, session } = useAuth()
   const navigate = useNavigate()
 
   // 복귀 사용자: 지역이 이미 저장돼 있으면 온보딩을 건너뛰고 바로 홈으로(M-10).
@@ -21,54 +21,38 @@ export function Landing() {
     if (!initializing && regionId) navigate('/home', { replace: true })
   }, [initializing, regionId, navigate])
 
-  // 기능 미리보기 3칩(디자인 v0) — 아이콘·라벨은 하단 탭과 동일한 어휘를 재사용해 학습 비용 0
-  const previews = [
-    { icon: MapIcon as LucideIcon, key: 'nav.home' },
-    { icon: MessagesSquare as LucideIcon, key: 'nav.board' },
-    { icon: Mic as LucideIcon, key: 'nav.talk' },
-  ] as const
-
+  // 디자인 v5: 흰 바탕 + 원본 로고(크게) + 워드마크 + 한 줄 + 주 버튼 하나(시작하기) + 조용한 로그인 링크.
+  // (v1.x의 기능 미리보기 3칩은 모두 /select로 가는 링크였다 — 같은 길인 '시작하기' 하나로 합쳤다.)
   return (
-    <div className="mx-auto flex min-h-screen max-w-screen-sm flex-col bg-brand-cream px-6 text-gray-900">
-      <div className="flex justify-end py-3">
-        <LanguageSwitcher />
-      </div>
-      <div className="flex flex-1 flex-col items-center justify-center gap-6 pb-12 text-center">
-        <img
-          src={`${import.meta.env.BASE_URL}icons/icon-192.png`}
-          alt=""
-          aria-hidden
-          className="h-28 w-28 rounded-card shadow-card"
-        />
-        <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-green-800">{t('landing.title')}</h1>
-          <p className="mt-2 text-sm text-gray-600">{t('landing.subtitle')}</p>
-        </div>
-        <Link
-          to="/select"
-          className="inline-flex min-h-[56px] w-full max-w-xs items-center justify-center rounded-full bg-brand-greenDark px-6 py-3 text-base font-semibold text-white shadow-card"
-        >
+    <div className="mx-auto flex min-h-app max-w-screen-sm flex-col bg-white text-ink">
+      <EntryHeader logo={false} />
+      <main className="flex flex-1 flex-col items-center justify-center px-5 pb-6 text-center">
+        <LogoMark size="large" />
+        <h1 className="mt-6">
+          {/* 워드마크는 글자색 3개로 된 그림 같은 표기(aria-hidden) — 읽기는 아래 sr-only 이름으로 */}
+          <Wordmark className="!text-[34px] !leading-[42px] !tracking-[-0.6px]" />
+          <span className="sr-only">{t('landing.title')}</span>
+        </h1>
+        <p className="mt-3 max-w-[300px] text-body text-ink-body">{t('landing.value')}</p>
+      </main>
+      <div className="px-5 pb-[calc(16px+var(--safe-bottom))]">
+        <Link to="/select" className={buttonClasses({ fullWidth: true })}>
           {t('landing.enter')}
         </Link>
-        {/* 기능 3칩은 탭 가능(재검수 P1-2) — 오인 클릭이 정답 동작(/select)이 되게 Link 승격 */}
-        <ul className="flex gap-3">
-          {previews.map((p) => (
-            <li key={p.key}>
-              <Link
-                to="/select"
-                className="flex min-h-[44px] min-w-[88px] flex-col items-center gap-1 rounded-card bg-white px-4 py-3 shadow-card active:bg-gray-50"
-              >
-                <p.icon aria-hidden size={24} strokeWidth={2} className="text-green-800" />
-                <span className="text-xs font-semibold text-gray-700">{t(p.key)}</span>
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </div>
-      <div className="pb-4 text-center">
-        <Link to="/privacy" className="text-xs text-gray-400 underline">
-          {t('common.privacy')}
-        </Link>
+        {/* 이미 로그인한 사람(예: 카카오 로그인 뒤 지역 없이 돌아옴)에게는 로그인을 다시 권하지 않는다. 시작하기가 /select로 이어 준다 */}
+        {!session ? (
+          <Link to="/login" className={buttonClasses({ variant: 'ghost', fullWidth: true, className: 'mt-2' })}>
+            {t('landing.login')}
+          </Link>
+        ) : null}
+        <div className="mt-2 flex justify-center">
+          <Link
+            to="/privacy"
+            className="inline-flex min-h-11 items-center px-3 text-caption text-ink-muted underline underline-offset-2"
+          >
+            {t('common.privacy')}
+          </Link>
+        </div>
       </div>
     </div>
   )

@@ -4,6 +4,24 @@
 버전 번호는 Google Play `versionName`·`src/config/version.ts`의 `APP_VERSION`과 같다.
 릴리스별 상세는 `docs/prd/PRD_v<버전>.md`(요구·영향·롤백)와 `docs/releases/RELEASE_v<버전>.md`(빌드·업로드 절차)에 있다.
 
+## [Unreleased]
+
+디자인 v5(D-047)와 공개 프로필 국적 제거(D-048). 버전 번호는 다음 릴리스 때 정한다.
+
+### Changed
+
+- 화면 전체를 디자인 v5로: 흰 바탕, 원래 로고 + 3색 글자 로고, 나눔스퀘어라운드, 로고 3색(홈 초록·게시판 보라·이웃 황토), 둥근 말하기 버튼, 선 아이콘.
+- 기다리는 곳마다 상태 표시: 불러오는 중·8초 뒤 느림 안내·오프라인이면 연결 대기·실패 시 다시 시도와 다른 길·빈 화면 행동 하나.
+- 홈 지도를 화면 끝까지, 지도 불러오는 중/오류 표시, 핀 묶음, 카카오가 멈추면 OSM으로.
+- 게시판 사진 카드·넘기는 갤러리·사진 먼저 글쓰기(사진별 올리기·진행 표시·실패한 사진만 다시).
+- 오프라인 쓰기는 기다리지 않고 바로 안내한다.
+- 게시판에서 작성자 국적을 보이지 않는다. 동의 고지문 수정(9개 언어).
+
+### Removed
+
+- DB: `public_profiles.country_code`(2026-10-29 적용, 마이그레이션 `20261029160405_public_profiles_drop_country`).
+- 랜딩의 기능 미리보기 칩, 옛 공용 컴포넌트(Card·IconTile·StateBoxes·icons.tsx·pinIcons.tsx).
+
 ## [1.5] - 2026-10-23
 
 게시판 기능 릴리스. 요구사항은 [PRD_v1.5](../prd/PRD_v1.5.md), 빌드·업로드 절차는 [RELEASE_v1.5](../releases/RELEASE_v1.5.md), 결정은 DECISIONS D-043·D-044·D-045.

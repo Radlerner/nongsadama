@@ -10,7 +10,13 @@ import { getSupabaseClient, isSupabaseConfigured } from './supabase'
 
 const envKakaoMapKey = (import.meta.env.VITE_KAKAO_MAP_KEY as string | undefined)?.trim()
 let kakaoMapKeyPromise: Promise<string | undefined> | null = null
+/** map_config 조회를 기다리는 최대 시간. 지도 덮개의 8초 느림 안내·'그만 기다리기'가 먼저 보이도록 그보다 길게 둔다. */
+const MAP_CONFIG_TIMEOUT_MS = 12_000
 
+/**
+ * 카카오 JavaScript 키. 확답(행 있음/없음)만 기억한다: 조회 오류·실패·시간 초과는 undefined(= OSM)로
+ * 답하되 기억하지 않아, 다음 지도 화면에서 다시 묻는다(멈춘 조회를 계속 붙들지 않게).
+ */
 export function getKakaoMapKey(): Promise<string | undefined> {
   if (/^[0-9a-f]{32}$/i.test(envKakaoMapKey ?? '')) return Promise.resolve(envKakaoMapKey)
   if (!isSupabaseConfigured) return Promise.resolve(undefined)
@@ -20,11 +26,23 @@ export function getKakaoMapKey(): Promise<string | undefined> {
     .select('kakao_javascript_key')
     .eq('id', true)
     .maybeSingle()
-  kakaoMapKeyPromise = Promise.resolve(query).then(({ data, error }) => {
-    const key = data?.kakao_javascript_key?.trim()
-    return !error && /^[0-9a-f]{32}$/i.test(key ?? '') ? key : undefined
+  let timer: ReturnType<typeof setTimeout> | undefined
+  const timeout = new Promise<'timeout'>((resolve) => {
+    timer = setTimeout(() => resolve('timeout'), MAP_CONFIG_TIMEOUT_MS)
   })
-  return kakaoMapKeyPromise
+  const forget = () => {
+    if (kakaoMapKeyPromise === promise) kakaoMapKeyPromise = null
+    return undefined
+  }
+  const promise: Promise<string | undefined> = Promise.race([Promise.resolve(query), timeout])
+    .then((res) => {
+      if (res === 'timeout' || res.error) return forget()
+      const key = res.data?.kakao_javascript_key?.trim()
+      return /^[0-9a-f]{32}$/i.test(key ?? '') ? key : undefined
+    }, forget)
+    .finally(() => clearTimeout(timer))
+  kakaoMapKeyPromise = promise
+  return promise
 }
 
 export type MapProvider = 'kakao' | 'osm'
@@ -39,6 +57,11 @@ export interface KakaoMap {
   setCenter(latlng: KakaoLatLng): void
   setLevel(level: number): void
   getLevel(): number
+  /** 화면 픽셀만큼 지도를 민다 */
+  panBy?(dx: number, dy: number): void
+  getProjection?(): { containerPointFromCoords(ll: KakaoLatLng): { x: number; y: number } }
+  /** 지도 칸 크기가 바뀐 뒤 다시 맞춘다 */
+  relayout?(): void
 }
 export interface KakaoOverlay { setMap(map: KakaoMap | null): void }
 export interface KakaoRegionCode {
@@ -50,7 +73,14 @@ export interface KakaoMapsNs {
   load(cb: () => void): void
   LatLng: new (lat: number, lng: number) => KakaoLatLng
   Map: new (el: HTMLElement, opts: { center: KakaoLatLng; level: number }) => KakaoMap
-  CustomOverlay: new (opts: { position: KakaoLatLng; content: HTMLElement; yAnchor?: number }) => KakaoOverlay
+  CustomOverlay: new (opts: {
+    position: KakaoLatLng
+    content: HTMLElement
+    yAnchor?: number
+    zIndex?: number
+  }) => KakaoOverlay
+  /** 지도 이벤트(tilesloaded·zoom_changed) */
+  event?: { addListener(target: unknown, type: string, cb: () => void): void }
   services?: {
     Geocoder: new () => {
       coord2RegionCode(
@@ -125,20 +155,11 @@ export async function coordToRegion(
 }
 
 /**
- * 핀 마커 DOM(리플릿 divIcon과 동일한 시각 언어). onClick은 호출측에서 바인딩.
- * markup은 pinIcons.tsx가 정적 렌더한 자체 SVG 문자열만 받는다(사용자 입력 아님 — innerHTML 안전).
+ * 카카오맵 길찾기 링크(도착지). 장소 좌표만 보낸다 — 내 위치는 보내지 않는다(v1.3 §4.1).
+ * 카카오는 `이름,위도,경도`로 읽으므로 이름 속 ','와 '/'는 구분자로 오해된다
+ * (예: 'Vietnam Nosang Sikdang, Naepo branch') → 공백으로 바꾼다.
  */
-export function emojiMarkerEl(markup: string, count?: number): HTMLElement {
-  const el = document.createElement('div')
-  el.style.cssText =
-    'position:relative;width:38px;height:38px;background:#fff;border:2px solid #15803d;border-radius:9999px;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 3px rgba(0,0,0,.3);cursor:pointer;'
-  el.innerHTML = markup
-  if (count && count > 1) {
-    const badge = document.createElement('span')
-    badge.style.cssText =
-      'position:absolute;top:-6px;right:-6px;background:#15803d;color:#fff;border-radius:9999px;font-size:11px;font-weight:700;min-width:18px;height:18px;line-height:18px;text-align:center;padding:0 3px;'
-    badge.textContent = String(count)
-    el.appendChild(badge)
-  }
-  return el
+export function kakaoDirectionsUrl(name: string, lat: number, lng: number): string {
+  const label = name.replace(/[,/]/g, ' ').replace(/\s+/g, ' ').trim() || '목적지'
+  return `https://map.kakao.com/link/to/${encodeURIComponent(label)},${lat},${lng}`
 }

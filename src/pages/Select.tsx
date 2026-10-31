@@ -1,11 +1,24 @@
-import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useId, useState, type KeyboardEvent } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { getLocaleLabel, type Locale } from '../config/app'
 import { useTranslation } from '../i18n/useTranslation'
-import { MapPin } from '../components/ui/icons'
-import { PickerRow } from '../components/ui/BottomSheet'
 import { CountrySheet } from '../components/CountrySheet'
 import { LanguageSheet } from '../components/LanguageSheet'
+import { EntryHeader } from '../components/layout/EntryHeader'
+import {
+  Button,
+  buttonClasses,
+  ChoiceRow,
+  cn,
+  EmptyState,
+  ErrorState,
+  Icon,
+  LoadingState,
+  PickerRow,
+  SkeletonBlock,
+  useSlow,
+  type IconName,
+} from '../components/ui'
 import { useCountries, type Country } from '../hooks/useCountries'
 import {
   clearStoredCountry,
@@ -30,9 +43,13 @@ import { getCurrentPosition, nearestServiceRegion, OUT_OF_AREA_KM } from '../lib
  * 아래에서 올라오는 창으로 옮겨 지역 선택과 "계속"이 아래로 밀리지 않게 했다.
  * 지역은 Supabase regions(활성)에서 시/읍·면을 불러와 선택한다.
  * 선택 지역은 컨텍스트+localStorage에 저장되어 이후 목록 화면이 소비한다.
+ * 디자인 v5: 흰 바탕, 입력 줄(국적·언어 → 창), 56px 라디오 줄(선택 = 2px 초록 테두리 + 체크),
+ * 화면 아래에 붙은 주 버튼 하나(계속).
  */
 export function Select() {
-  const { t, locale, setLocale, supportedLocales } = useTranslation()
+  const { t, setLocale, locale, supportedLocales } = useTranslation()
+  const navigate = useNavigate()
+  const regionHeadingId = useId()
   const [countryCode, setCountryCode] = useState<string | null>(() => readStoredCountry())
   const [countryOpen, setCountryOpen] = useState(false)
   const [languageOpen, setLanguageOpen] = useState(false)
@@ -66,79 +83,104 @@ export function Select() {
     : null
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-screen-sm flex-col bg-brand-cream px-6 py-6 text-gray-900">
-      <h1 className="text-xl font-extrabold tracking-tight text-green-700">{t('select.title')}</h1>
-
-      <section className="mt-6 flex flex-col gap-4">
-        <div>
-          <h2 id="select-nationality-label" className="mb-2 text-sm font-semibold text-gray-700">
-            {t('select.nationality')}
-          </h2>
-          <PickerRow
-            labelId="select-nationality-label"
-            value={country ? country.name_ko : countryCode}
-            secondary={country && country.name_native !== country.name_ko ? country.name_native : null}
-            valueLang={country ? 'ko' : undefined}
-            secondaryLang={country?.default_locale}
-            placeholder={t('select.nationalityPlaceholder')}
-            onClick={() => setCountryOpen(true)}
-          />
-        </div>
-        <div>
-          <h2 id="select-language-label" className="mb-2 text-sm font-semibold text-gray-700">
-            {t('select.language')}
-          </h2>
-          <PickerRow
-            labelId="select-language-label"
-            value={getLocaleLabel(locale)}
-            placeholder={t('select.language')}
-            onClick={() => setLanguageOpen(true)}
-          />
-        </div>
-        {noticeText ? (
-          <p role="status" className="rounded-card bg-green-50 px-4 py-3 text-sm leading-relaxed text-green-800">
-            {noticeText}
-          </p>
-        ) : null}
-      </section>
-
-      <CountrySheet
-        open={countryOpen}
-        onClose={() => setCountryOpen(false)}
-        selected={countryCode}
-        onSelect={chooseCountry}
-        noneLabel={t('select.nationalityNone')}
-        onNone={skipCountry}
+    <div className="mx-auto flex min-h-app max-w-screen-sm flex-col bg-white text-ink">
+      {/* 언어는 이 화면의 '언어' 줄에서 고른다 — 머리줄의 언어 버튼은 두지 않는다 */}
+      <EntryHeader
+        language={false}
+        onBack={() => (window.history.length > 1 ? navigate(-1) : navigate('/'))}
       />
-      <LanguageSheet
-        open={languageOpen}
-        onClose={() => setLanguageOpen(false)}
-        countryCode={countryCode}
-        onPicked={() => setLangNotice(null)}
-      />
+      <main className="flex-1 px-5 pb-8 pt-3">
+        <h1 className="text-title text-ink">{t('select.title')}</h1>
+        <p className="mt-1 text-body text-ink-body">{t('select.lead')}</p>
 
-      <section className="mt-6">
-        <h2 className="mb-2 text-sm font-semibold text-gray-700">{t('select.region')}</h2>
-        <RegionPicker />
-      </section>
+        <section className="mt-6 flex flex-col gap-5">
+          <div>
+            <h2 id="select-nationality-label" className="mb-2 text-label text-ink">
+              {t('select.nationality')}
+            </h2>
+            <PickerRow
+              labelId="select-nationality-label"
+              value={country ? country.name_ko : countryCode}
+              secondary={country && country.name_native !== country.name_ko ? country.name_native : null}
+              valueLang={country ? 'ko' : undefined}
+              secondaryLang={country?.default_locale}
+              placeholder={t('select.nationalityPlaceholder')}
+              onClick={() => setCountryOpen(true)}
+            />
+          </div>
+          <div>
+            <h2 id="select-language-label" className="mb-2 text-label text-ink">
+              {t('select.language')}
+            </h2>
+            <PickerRow
+              labelId="select-language-label"
+              value={getLocaleLabel(locale)}
+              valueLang={locale}
+              placeholder={t('select.language')}
+              onClick={() => setLanguageOpen(true)}
+            />
+          </div>
+        </section>
+        {/* 국적에 맞춰 언어를 바꿨다는 안내: 상태 영역은 늘 붙어 있고 안의 글만 바뀐다 */}
+        <div role="status" aria-live="polite">
+          {noticeText ? (
+            <p className="mt-3 flex items-start gap-2 rounded-xl bg-surface px-4 py-3 text-small text-ink-body">
+              <Icon name="check" size={20} className="mt-px shrink-0 text-nong-600" />
+              <span>{noticeText}</span>
+            </p>
+          ) : null}
+        </div>
 
-      <div className="mt-auto pt-8">
-        <Link
-          to="/home"
-          className="flex min-h-[56px] items-center justify-center rounded-full bg-brand-greenDark px-6 py-3 text-base font-semibold text-white"
-        >
+        <CountrySheet
+          open={countryOpen}
+          onClose={() => setCountryOpen(false)}
+          selected={countryCode}
+          onSelect={chooseCountry}
+          noneLabel={t('select.nationalityNone')}
+          onNone={skipCountry}
+        />
+        <LanguageSheet
+          open={languageOpen}
+          onClose={() => setLanguageOpen(false)}
+          countryCode={countryCode}
+          onPicked={() => setLangNotice(null)}
+        />
+
+        <section className="mt-8" aria-labelledby={regionHeadingId}>
+          <h2 id={regionHeadingId} className="text-section text-ink">
+            {t('select.region')}
+          </h2>
+          <p className="mt-1 text-small text-ink-muted">{t('select.regionHint')}</p>
+          <RegionPicker labelledBy={regionHeadingId} />
+        </section>
+      </main>
+
+      {/* 주 버튼은 화면 아래에 붙어 있어 목록이 길어도 늘 보인다(흰 바탕 + 위 1px 선, 그림자 없음). */}
+      <div className="sticky bottom-0 z-20 border-t border-line bg-white px-5 pb-[calc(12px+var(--safe-bottom))] pt-3">
+        <Link to="/home" className={buttonClasses({ fullWidth: true })}>
           {t('select.continue')}
+          <Icon name="chevron" size={20} strokeWidth={2} />
         </Link>
       </div>
     </div>
   )
 }
 
-function RegionPicker() {
+/** 위치 찾기 결과 안내의 모양(아이콘·색). 키는 main 그대로. */
+const GEO_NOTICE_LOOK: Record<string, { icon: IconName; className: string }> = {
+  'select.geoSet': { icon: 'check', className: 'text-nong-600' },
+  'select.geoFar': { icon: 'info', className: 'text-ink-muted' },
+  'select.geoNoRegion': { icon: 'info', className: 'text-ink-muted' },
+  'map.geoError': { icon: 'alert', className: 'text-danger' },
+}
+
+function RegionPicker({ labelledBy }: { labelledBy: string }) {
   const { t, locale } = useTranslation()
-  const { data: regions, isLoading, isError, refetch, isFetching } = useRegions()
+  const { data: regions, isPending, isError, refetch, isFetching } = useRegions()
   const { regionId, setRegionId } = useSelectedRegion()
   const [locating, setLocating] = useState(false)
+  // 8초 넘게 위치를 못 받으면 느린 안내 + 기다리지 않는 길. 위치는 인터넷 없이도 받을 수 있어 '연결 대기'로 바꾸지 않는다.
+  const locatingSlow = useSlow(locating)
   // 안내는 키+데이터로 저장하고 렌더 시 번역한다 — 같은 화면에서 언어를 바꿔도 문구가 따라온다(재검수 P2).
   const [geoNotice, setGeoNotice] = useState<{ key: string; region?: Region; km?: number } | null>(
     null,
@@ -147,6 +189,8 @@ function RegionPicker() {
   useStaleRegionCleanup()
   // v1.2(D-035): 시/도 → 시·군·구 두 단계. 사용자가 고른 시/도가 없으면 현재 선택 지역의 시/도를 따른다.
   const [provinceChoice, setProvinceChoice] = useState<string | null>(null)
+  // 시·군 묶음(접힘)을 사람이 직접 열고 닫았으면 그 값을 따른다. 시/도가 바뀌면 다시 기본값으로.
+  const [cityOnlyToggle, setCityOnlyToggle] = useState<{ province: string | null; open: boolean } | null>(null)
   const selectedRegion = (regions ?? []).find((r) => r.id === regionId)
   const provinces = (regions ?? []).filter((r) => r.level === 'province')
   const provinceId = provinceChoice ?? provinceOf(regions ?? [], selectedRegion)?.id ?? null
@@ -186,27 +230,47 @@ function RegionPicker() {
         .replace('{n}', geoNotice.km != null ? String(Math.max(1, Math.round(geoNotice.km))) : '')
     : null
 
-  if (isLoading) {
+  // 처음 불러오기(오프라인이라 요청이 멈춘 경우 포함 — '지역이 없어요'로 오해하지 않게 연결 대기 줄을 보인다)
+  if (isPending) {
     return (
-      <p className="rounded-card bg-white/70 px-4 py-6 text-center text-sm text-gray-500">
-        {t('select.regionLoading')}
-      </p>
+      <LoadingState
+        variant="inline"
+        label={t('select.regionLoading')}
+        offlineLabel={t('select.regionOffline')}
+        className="mt-3"
+      >
+        <div className="mt-2 flex flex-col gap-2">
+          <SkeletonBlock className="h-12 w-full rounded-xl" />
+          <SkeletonBlock className="mt-3 h-12 w-full rounded-lg" />
+          <SkeletonBlock className="mt-3 h-4 w-24 rounded-full" />
+          {[0, 1, 2].map((i) => (
+            <SkeletonBlock key={i} className="h-14 w-full rounded-xl" />
+          ))}
+        </div>
+      </LoadingState>
     )
   }
 
   if (isError) {
     return (
-      <div className="rounded-md bg-red-50 px-4 py-6 text-center text-sm text-red-700">
-        <p className="mb-3">{t('select.regionError')}</p>
-        <button
-          type="button"
-          onClick={() => void refetch()}
-          disabled={isFetching}
-          className="min-h-[44px] rounded-full border border-red-300 px-4 text-red-700 disabled:opacity-50"
-        >
-          {t('common.retry')}
-        </button>
-      </div>
+      <ErrorState
+        className="mt-3"
+        title={t('select.regionError')}
+        onRetry={() => void refetch()}
+        retrying={isFetching}
+        fallback={{ label: t('select.skipRegion'), to: '/home' }}
+      />
+    )
+  }
+
+  if ((regions ?? []).length === 0) {
+    return (
+      <EmptyState
+        className="mt-3"
+        icon="pin"
+        title={t('select.regionEmpty')}
+        action={{ label: t('select.skipRegion'), to: '/home', icon: 'home' }}
+      />
     )
   }
 
@@ -224,99 +288,152 @@ function RegionPicker() {
     members: g.members,
   }))
   // 시·군 묶음은 그 안의 지역이 선택돼 있거나 읍·면 그룹이 하나도 없을 때만 펼친 채로 시작한다.
-  const cityOnlyOpen = cityOnly.some((r) => r.id === regionId) || detailedGroups.length === 0
+  const cityOnlyDefaultOpen = cityOnly.some((r) => r.id === regionId) || detailedGroups.length === 0
+  const cityOnlyOpen =
+    cityOnlyToggle && cityOnlyToggle.province === provinceId ? cityOnlyToggle.open : cityOnlyDefaultOpen
 
   const total = detailedGroups.reduce((n, g) => n + g.members.length, 0) + cityOnly.length
-  if ((regions ?? []).length === 0) {
-    return (
-      <p className="rounded-card bg-white/70 px-4 py-6 text-center text-sm text-gray-500">
-        {t('select.regionEmpty')}
-      </p>
+
+  // 라디오 묶음 하나(role=radiogroup): Tab으로 들어오면 고른 줄(없으면 보이는 첫 줄), ↑↓←→ / Home / End로 옮기며 고른다.
+  const visible = [...detailedGroups.flatMap((g) => g.members), ...(cityOnlyOpen ? cityOnly : [])]
+  const tabStop = visible.some((r) => r.id === regionId) ? regionId : (visible[0]?.id ?? null)
+
+  const onRadioKeyDown = (e: KeyboardEvent<HTMLButtonElement>) => {
+    const step: Record<string, number> = { ArrowDown: 1, ArrowRight: 1, ArrowUp: -1, ArrowLeft: -1 }
+    if (!(e.key in step) && e.key !== 'Home' && e.key !== 'End') return
+    const group = e.currentTarget.closest('[role="radiogroup"]')
+    // 접힌 묶음(<details> 닫힘) 안의 줄은 건너뛴다(보이는 줄만)
+    const radios = Array.from(group?.querySelectorAll<HTMLButtonElement>('[role="radio"]') ?? []).filter(
+      (el) => !el.closest('details:not([open])') && el.getClientRects().length > 0,
     )
+    if (radios.length === 0) return
+    e.preventDefault()
+    const at = radios.indexOf(e.currentTarget)
+    const n = radios.length
+    const next =
+      e.key === 'Home' ? 0 : e.key === 'End' ? n - 1 : (((at < 0 ? 0 : at) + step[e.key]) % n + n) % n
+    const target = radios[next]
+    target.focus()
+    if (target.dataset.value) setRegionId(target.dataset.value)
   }
 
-  const provinceSelect =
-    provinces.length > 0 ? (
-      <label className="flex flex-col gap-1 text-sm font-semibold text-gray-700">
-        {t('select.province')}
-        <select
-          value={provinceId ?? ''}
-          onChange={(e) => setProvinceChoice(e.target.value || null)}
-          className="min-h-[44px] rounded-md border border-gray-300 bg-white px-3 text-base font-normal text-gray-900"
-        >
-          <option value="">{t('select.provincePlaceholder')}</option>
-          {provinces.map((p) => (
-            <option key={p.id} value={p.id}>
-              {regionLabel(p.id, p.names, locale)}
-            </option>
-          ))}
-        </select>
-      </label>
-    ) : null
+  const renderRegion = (region: Region) => (
+    <li key={region.id}>
+      <ChoiceRow
+        semantics="radio"
+        selected={regionId === region.id}
+        data-value={region.id}
+        tabIndex={region.id === tabStop ? 0 : -1}
+        onClick={() => setRegionId(region.id)}
+        onKeyDown={onRadioKeyDown}
+      >
+        {regionLabel(region.id, region.names, locale)}
+      </ChoiceRow>
+    </li>
+  )
 
-  const renderRegion = (region: Region) => {
-    const active = regionId === region.id
-    return (
-      <li key={region.id}>
-        <button
-          type="button"
-          onClick={() => setRegionId(region.id)}
-          aria-pressed={active}
-          className={[
-            'flex min-h-[44px] w-full items-center rounded-md border px-4 text-left text-base',
-            active
-              ? 'border-green-700 bg-green-50 font-semibold text-green-700'
-              : 'border-gray-300 bg-white text-gray-700',
-          ].join(' ')}
-        >
-          {active ? <span aria-hidden className="mr-2">✓</span> : null}
-          {regionLabel(region.id, region.names, locale)}
-        </button>
-      </li>
-    )
-  }
+  const look = geoNotice ? (GEO_NOTICE_LOOK[geoNotice.key] ?? GEO_NOTICE_LOOK['select.geoNoRegion']) : null
 
   return (
-    <div className="flex flex-col gap-4">
-      <button
-        type="button"
-        onClick={() => void suggestNearest()}
-        disabled={locating}
-        className="flex min-h-[56px] w-full items-center justify-center gap-2 rounded-full border-2 border-green-300 bg-green-50 text-base font-semibold text-green-800 disabled:opacity-60"
-      >
-        <MapPin aria-hidden size={20} strokeWidth={2.25} />
-        {locating ? t('select.geoLocating') : t('select.geoButton')}
-      </button>
-      {noticeText ? (
-        <p className="rounded-full bg-gray-50 px-3 py-2 text-xs text-gray-700">{noticeText}</p>
+    <div className="mt-3 flex flex-col gap-5">
+      <div>
+        <Button
+          variant="secondary"
+          fullWidth
+          wrap
+          icon="pin"
+          onClick={() => void suggestNearest()}
+          loading={locating}
+          loadingLabel={t('select.geoLocating')}
+        >
+          {t('select.geoButton')}
+        </Button>
+        {/* 기다림은 상태를 보여 준다: 8초가 지나면 느린 안내 + 기다리지 않는 길. 평소에는 위치를 어디에도 보내지 않는다는 한 줄 */}
+        <p role="status" aria-live="polite" className="mt-2 text-small text-ink-muted">
+          {locating && locatingSlow ? `${t('state.slow')} ${t('select.geoWayOut')}` : t('select.geoPrivacy')}
+        </p>
+        {/* 찾기 결과: 상태 영역은 늘 붙어 있고 안의 글만 바뀐다(처음부터 채워진 채 붙은 영역은 화면 읽기가 자주 건너뜀) */}
+        <div role="status" aria-live="polite">
+          {noticeText && look ? (
+            <p className="mt-2 flex items-start gap-2 rounded-xl bg-surface px-4 py-3 text-small text-ink-body">
+              <Icon name={look.icon} size={20} className={cn('mt-px shrink-0', look.className)} />
+              <span>{noticeText}</span>
+            </p>
+          ) : null}
+        </div>
+      </div>
+
+      {provinces.length > 0 ? (
+        <label className="flex flex-col gap-2">
+          <span className="text-label text-ink">{t('select.province')}</span>
+          <span className="relative block">
+            <select
+              value={provinceId ?? ''}
+              onChange={(e) => {
+                setProvinceChoice(e.target.value || null)
+                setCityOnlyToggle(null)
+              }}
+              className="h-12 w-full appearance-none rounded-lg border border-line-input bg-white pl-4 pr-11 text-body text-ink transition-colors hover:bg-surface focus:border-nong-600"
+            >
+              <option value="">{t('select.provincePlaceholder')}</option>
+              {provinces.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {regionLabel(p.id, p.names, locale)}
+                </option>
+              ))}
+            </select>
+            <Icon
+              name="chevron-down"
+              size={20}
+              className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-ink-muted"
+            />
+          </span>
+        </label>
       ) : null}
-      {provinceSelect}
+
       {provinces.length > 0 && !provinceId ? (
-        <p className="rounded-card bg-white/70 px-4 py-4 text-center text-sm text-gray-500">
-          {t('select.pickProvinceFirst')}
+        <p className="flex items-start gap-2 rounded-xl border border-line px-4 py-3 text-small text-ink-body">
+          <Icon name="info" size={20} className="mt-px shrink-0 text-ink-muted" />
+          <span>{t('select.pickProvinceFirst')}</span>
         </p>
       ) : null}
       {provinceId && total === 0 ? (
-        <p className="rounded-card bg-white/70 px-4 py-4 text-center text-sm text-gray-500">
-          {t('select.regionEmpty')}
-        </p>
+        <EmptyState icon="pin" title={t('select.regionEmpty')} />
       ) : null}
-      {detailedGroups.map((g) => (
-        <div key={g.key}>
-          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">
-            {g.label}
-          </p>
-          <ul className="flex flex-col gap-2">{g.members.map(renderRegion)}</ul>
+
+      {total > 0 ? (
+        <div role="radiogroup" aria-labelledby={labelledBy} className="flex flex-col gap-5">
+          {detailedGroups.map((g) => (
+            <div key={g.key} role="group" aria-labelledby={`${labelledBy}-${g.key}`}>
+              <p id={`${labelledBy}-${g.key}`} className="mb-2 text-small font-bold text-ink-muted">
+                {g.label}
+              </p>
+              <ul className="flex flex-col gap-2">{g.members.map(renderRegion)}</ul>
+            </div>
+          ))}
+          {cityOnly.length > 0 ? (
+            <details
+              open={cityOnlyOpen}
+              onToggle={(e) => {
+                const open = e.currentTarget.open
+                if (open !== cityOnlyOpen) setCityOnlyToggle({ province: provinceId, open })
+              }}
+              className="group"
+            >
+              <summary className="flex min-h-12 cursor-pointer list-none items-center gap-2 rounded-xl border border-line px-4 py-2 text-label text-ink transition-colors hover:bg-surface active:bg-surface-2 [&::-webkit-details-marker]:hidden">
+                <span className="min-w-0 flex-1">
+                  {t('select.regionCities')} ({cityOnly.length})
+                </span>
+                <Icon
+                  name="chevron-down"
+                  size={20}
+                  className="shrink-0 text-ink-muted transition-transform group-open:rotate-180"
+                />
+              </summary>
+              <ul className="mt-2 flex flex-col gap-2">{cityOnly.map(renderRegion)}</ul>
+            </details>
+          ) : null}
         </div>
-      ))}
-      {cityOnly.length > 0 ? (
-        <details open={cityOnlyOpen}>
-          <summary className="flex min-h-[44px] cursor-pointer list-none items-center gap-1 text-xs font-semibold uppercase tracking-wide text-gray-500">
-            <span aria-hidden>▸</span>
-            {t('select.regionCities')} ({cityOnly.length})
-          </summary>
-          <ul className="mt-1 flex flex-col gap-2">{cityOnly.map(renderRegion)}</ul>
-        </details>
       ) : null}
     </div>
   )

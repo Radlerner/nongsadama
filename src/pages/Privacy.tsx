@@ -1,6 +1,16 @@
 import { Link } from 'react-router-dom'
 import { deletionRequestEmail, deletionRequestMailto, operatorEmail } from '../config/app'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
+import { Icon } from '../components/ui'
+import {
+  LEGAL_INLINE_LINK,
+  LegalBullets,
+  LegalHomeLink,
+  LegalPage,
+  LegalSection,
+  LegalTitle,
+  Strong,
+} from '../components/legal/LegalParts'
 
 /**
  * 개인정보처리방침(PRD v1.5 §10-J, Google Play 심사 필수 URL).
@@ -9,6 +19,7 @@ import { useDocumentTitle } from '../hooks/useDocumentTitle'
  *
  * 내용을 실질 변경하면 REVISED_DATE를 올리고 하단 변경 이력에 한 줄 더한다
  * (개인정보 보호법 §30 — 변경 시 시행일·사유 공개, 재검수 D-032).
+ * 디자인 v5: 모양만 바꿨다(문안·#delete 앵커 그대로) — 읽기 좋은 긴 글, 1px 선 카드, 그림자 없음.
  */
 const EFFECTIVE_DATE = '2026-08-27'
 const REVISED_DATE = '2026-10-23'
@@ -17,93 +28,97 @@ export function Privacy() {
   useDocumentTitle('농사다마 개인정보처리방침 / NongsaDaMa Privacy Policy')
 
   return (
-    <div className="mx-auto min-h-screen max-w-screen-sm bg-white px-6 py-8 text-gray-900">
-      <h1 className="text-xl font-bold text-green-700">농사다마 개인정보처리방침</h1>
-      <p className="mt-1 text-xs text-gray-500">
-        시행일: {EFFECTIVE_DATE} · 최종 개정: {REVISED_DATE}
-        <br />
-        일반 문의: {operatorEmail} · 개인정보·계정 삭제: {deletionRequestEmail}
-      </p>
+    <LegalPage>
+      <LegalTitle
+        title="농사다마 개인정보처리방침"
+        meta={
+          <>
+            시행일: {EFFECTIVE_DATE} · 최종 개정: {REVISED_DATE}
+            <br />
+            일반 문의: {operatorEmail} · 개인정보·계정 삭제: {deletionRequestEmail}
+          </>
+        }
+      />
 
-      <section className="mt-6 space-y-4 text-sm leading-relaxed">
-        <div>
-          <h2 className="font-bold">1. 수집하는 정보</h2>
-          <ul className="mt-1 list-disc pl-5 text-gray-700">
-            <li>계정: 이메일 주소, 닉네임, 비밀번호(암호화 저장, Supabase Auth)</li>
-            <li>카카오 간편로그인 시: 카카오가 제공하는 닉네임·이메일(선택 동의)·프로필 이미지</li>
-            <li>선택 입력: 언어, 지역(읍·면 또는 시·군 단위), 국적 코드, 재배 작목 — 모두 입력하지 않아도 이용 가능</li>
-            <li>
-              작성 콘텐츠: 게시글(제목·본문·사진). 사진은 올리기 전에 기기에서 줄여 다시 저장하므로 촬영
-              위치(GPS)·기기 정보 같은 사진 속 부가 정보는 저장하지 않습니다. 사진은 게시글처럼 누구나 볼 수 있습니다.
-            </li>
-            <li>자동 수집: 서비스 이용 기록(하단 3항의 분석 도구)</li>
-          </ul>
-          <p className="mt-1 text-gray-700">
-            <strong>수집하지 않는 것</strong>: 전화번호, 실명, 농장명, 숙소 위치.
-            GPS 좌표는 지도 표시와 날씨·지역정보 조회에만 쓰이며, 조회 시에는 약 11km 단위로
-            뭉뚱그린 대략 위치만 전송됩니다. 정확한 위치는 저장하거나 공유하지 않습니다.
-          </p>
-        </div>
+      <LegalSection title="1. 수집하는 정보">
+        <LegalBullets>
+          <li>계정: 이메일 주소, 닉네임, 비밀번호(암호화 저장, Supabase Auth)</li>
+          <li>카카오 간편로그인 시: 카카오가 제공하는 닉네임·이메일(선택 동의)·프로필 이미지</li>
+          <li>선택 입력: 언어, 지역(읍·면 또는 시·군 단위), 국적 코드, 재배 작목 — 모두 입력하지 않아도 이용 가능</li>
+          <li>
+            작성 콘텐츠: 게시글(제목·본문·사진). 사진은 올리기 전에 기기에서 줄여 다시 저장하므로 촬영
+            위치(GPS)·기기 정보 같은 사진 속 부가 정보는 저장하지 않습니다. 사진은 게시글처럼 누구나 볼 수 있습니다.
+          </li>
+          <li>자동 수집: 서비스 이용 기록(하단 3항의 분석 도구)</li>
+        </LegalBullets>
+        <p>
+          <Strong>수집하지 않는 것</Strong>: 전화번호, 실명, 농장명, 숙소 위치.
+          GPS 좌표는 지도 표시와 날씨·지역정보 조회에만 쓰이며, 조회 시에는 약 11km 단위로
+          뭉뚱그린 대략 위치만 전송됩니다. 정확한 위치는 저장하거나 공유하지 않습니다.
+        </p>
+      </LegalSection>
 
-        <div>
-          <h2 className="font-bold">2. 이용 목적</h2>
-          <p className="text-gray-700">
-            지역 생활정보 제공, 게시판·이웃 연결 기능 제공, 서비스 개선(익명 통계). 이웃 찾기
-            노출은 별도 동의(opt-in)한 사용자 간에만 이루어집니다.
-          </p>
-        </div>
+      <LegalSection title="2. 이용 목적">
+        <p>
+          지역 생활정보 제공, 게시판·이웃 연결 기능 제공, 서비스 개선(익명 통계). 이웃 찾기
+          노출은 별도 동의(opt-in)한 사용자 간에만 이루어집니다.
+        </p>
+      </LegalSection>
 
-        <div>
-          <h2 className="font-bold">3. 제3자 서비스</h2>
-          <ul className="mt-1 list-disc pl-5 text-gray-700">
-            <li>Supabase(데이터베이스·인증, 서울 리전) — 계정·게시글 저장</li>
-            <li>카카오(지도, 간편로그인)</li>
-            <li>내 위치로 농사 도움 지역을 찾을 때: 카카오 지역 조회에 약 11km 단위로 반올림한
-              좌표를 전송하며 정확한 좌표는 보내지 않습니다.</li>
-            <li>OpenStreetMap(지도 타일 — 카카오맵 대체 시)</li>
-            <li>Google Analytics 4, Microsoft Clarity(익명 이용 통계·화면 사용성 분석)</li>
-            <li>AddToAny(공유 버튼)</li>
-            <li>음성 입력 사용 시: 브라우저 제공사(예: Google)의 음성 인식 서버로 음성이 전송되며
-              농사다마 서버에는 저장되지 않습니다(사용 전 안내 후 동의).</li>
-            <li>날씨 조회 시: 대략 위치(약 11km 반올림)가 날씨 제공자(koreaConnect·OpenWeather
-              계열)로 전송됩니다. 지역 교육·사업 정보는 농촌진흥청 공공데이터를 사용하며 개인
-              정보는 전송되지 않습니다.</li>
-          </ul>
-          <p className="mt-1 text-gray-700">
-            AI 크롤러의 게시판 학습 수집은 robots 정책으로 거부하고 있습니다.
-          </p>
-          <p className="mt-1 text-gray-700">
-            서비스는 Cloudflare·GitHub Pages(미국 등 국외 서버)에서 호스팅되며, 위 분석
-            도구(GA4·Clarity)와 공유 버튼(AddToAny) 이용 기록도 해당 사업자의 국외 서버로
-            전송·처리됩니다. 계정·게시글 데이터 자체는 Supabase 서울 리전에 저장됩니다.
-          </p>
-        </div>
+      <LegalSection title="3. 제3자 서비스">
+        <LegalBullets>
+          <li>Supabase(데이터베이스·인증, 서울 리전) — 계정·게시글 저장</li>
+          <li>카카오(지도, 간편로그인)</li>
+          <li>내 위치로 농사 도움 지역을 찾을 때: 카카오 지역 조회에 약 11km 단위로 반올림한
+            좌표를 전송하며 정확한 좌표는 보내지 않습니다.</li>
+          <li>OpenStreetMap(지도 타일 — 카카오맵 대체 시)</li>
+          <li>Google Analytics 4, Microsoft Clarity(익명 이용 통계·화면 사용성 분석)</li>
+          <li>AddToAny(공유 버튼)</li>
+          <li>음성 입력 사용 시: 브라우저 제공사(예: Google)의 음성 인식 서버로 음성이 전송되며
+            농사다마 서버에는 저장되지 않습니다(사용 전 안내 후 동의).</li>
+          <li>날씨 조회 시: 대략 위치(약 11km 반올림)가 날씨 제공자(koreaConnect·OpenWeather
+            계열)로 전송됩니다. 지역 교육·사업 정보는 농촌진흥청 공공데이터를 사용하며 개인
+            정보는 전송되지 않습니다.</li>
+        </LegalBullets>
+        <p>
+          AI 크롤러의 게시판 학습 수집은 robots 정책으로 거부하고 있습니다.
+        </p>
+        <p>
+          서비스는 Cloudflare·GitHub Pages(미국 등 국외 서버)에서 호스팅되며, 위 분석
+          도구(GA4·Clarity)와 공유 버튼(AddToAny) 이용 기록도 해당 사업자의 국외 서버로
+          전송·처리됩니다. 계정·게시글 데이터 자체는 Supabase 서울 리전에 저장됩니다.
+        </p>
+      </LegalSection>
 
-        {/* Play 심사 제출용 삭제 요청 리소스 — https://nongsadama.app/privacy#delete (재검수 P1-1) */}
-        <div id="delete" className="rounded-md border border-green-200 bg-green-50 px-4 py-3">
-          <h2 className="font-bold">4. 계정 및 데이터 삭제</h2>
-          <p className="mt-1 text-gray-700">
-            <strong>앱 안에서</strong>: 내 정보 → 맨 아래 계정 설정 → 회원탈퇴 → 계정 삭제 → 본인 확인(비밀번호 또는 화면의 숫자 4개) →
+      {/* Play 심사 제출용 삭제 요청 리소스 — https://nongsadama.app/privacy#delete (재검수 P1-1) */}
+      <section id="delete" className="mt-8 rounded-xl border border-line px-4 py-4">
+        <h2 className="flex items-start gap-2 text-section text-ink">
+          <Icon name="trash" size={22} className="mt-0.5 shrink-0 text-ink" />
+          <span>4. 계정 및 데이터 삭제</span>
+        </h2>
+        <div className="mt-2 flex flex-col gap-3 text-body text-ink-body">
+          <p>
+            <Strong>앱 안에서</Strong>: 내 정보 → 맨 아래 계정 설정 → 회원탈퇴 → 계정 삭제 → 본인 확인(비밀번호 또는 화면의 숫자 4개) →
             영구 삭제 확정으로 즉시 영구 삭제할 수 있습니다.
             <br />
-            <strong>앱 밖에서(웹 요청)</strong>: 이메일{' '}
-            <a className="underline" href={deletionRequestMailto}>
+            <Strong>앱 밖에서(웹 요청)</Strong>: 이메일{' '}
+            <a className={LEGAL_INLINE_LINK} href={deletionRequestMailto}>
               {deletionRequestEmail}
             </a>
             로 가입 이메일을 보내 요청하면 본인 확인 후 요청일로부터 10일 이내(개인정보 보호법
             시행령 제43조, 통상 3일 이내)에 삭제하고 결과를 회신합니다. 자세한 절차는{' '}
-            <Link to="/delete-account" className="underline">
+            <Link to="/delete-account" className={LEGAL_INLINE_LINK}>
               계정 삭제 안내 페이지
             </Link>
             에 있습니다.
           </p>
-          <p className="mt-2 text-gray-700">
-            <strong>삭제되는 데이터(전부)</strong>: 계정(이메일·비밀번호·카카오 연결 정보와 카카오가
+          <p>
+            <Strong>삭제되는 데이터(전부)</Strong>: 계정(이메일·비밀번호·카카오 연결 정보와 카카오가
             전달한 닉네임·프로필 이미지 주소), 프로필(닉네임·언어·지역·국적·작목·공개 동의), 작성한
             게시글 전체(사진 포함), 차단 목록. 카카오 계정 쪽 연결은 카카오톡 → 설정 → 카카오계정 → 연결된
             서비스 관리에서 직접 해제할 수 있습니다.
             <br />
-            <strong>일정 기간 보관될 수 있는 데이터</strong>: 관계 법령이 보관을 요구하는 정보(예:
+            <Strong>일정 기간 보관될 수 있는 데이터</Strong>: 관계 법령이 보관을 요구하는 정보(예:
             서비스 접속 기록)는 법정 기간 동안 분리 보관 후 파기합니다. 백업 사본은 최대 30일의
             백업 주기에 따라 순차 삭제됩니다. 익명 통계(GA4·Clarity)는 계정과 연결되지 않은
             상태로만 남습니다.
@@ -112,63 +127,56 @@ export function Privacy() {
             남은 사진 파일은 정기 점검 때 지웁니다). 계정 삭제 시 게시글과 사진은 함께 완전 파기됩니다.
           </p>
         </div>
-
-        <div>
-          <h2 className="font-bold">5. 이용자 권리</h2>
-          <p className="text-gray-700">
-            언제든 프로필에서 국적·작목·이웃 공개 동의를 수정·철회할 수 있습니다. 열람·정정·삭제
-            요청은 {deletionRequestEmail}로 연락 주시면 요청일로부터 10일 이내에 처리하고 결과를
-            알려 드립니다. 그 밖의 문의는 {operatorEmail}로 보내 주세요.
-          </p>
-        </div>
-
-        <div>
-          <h2 className="font-bold">6. 변경 이력</h2>
-          <ul className="mt-1 list-disc pl-5 text-gray-700">
-            <li>{EFFECTIVE_DATE} 최초 시행</li>
-            <li>
-              2026-09-09 §1 위치 정보 처리 방식(약 11km 반올림), §3 제3자(날씨 제공자·농촌진흥청
-              공공데이터·국외 호스팅), §4 계정 삭제 절차(전용 이메일·10일 기한·법정 보관 고지·카카오
-              연결 해제 안내), §5 문의처 개정
-            </li>
-            <li>
-              2026-09-10 §1 지역 항목 단위 명확화(읍·면 또는 시·군 — 서비스 지역을 충남 15개
-              시·군으로 확대하며 시·군 단위 선택 추가), 영문 표기 NongsaDaMa 통일
-            </li>
-            <li>2026-09-21 §3 카카오 지역 조회에 전송하는 대략 좌표 안내 추가</li>
-            <li>2026-10-23 §1 게시글 사진(올리기 전 위치 정보 제거) 추가, §4 사진 삭제 안내·앱 안 계정 삭제 경로(본인 확인 단계)</li>
-          </ul>
-        </div>
-
-        <div lang="en" className="rounded-card bg-white/70 px-4 py-3">
-          <h2 className="font-bold">English summary</h2>
-          <p className="mt-1 text-gray-700">
-            NongsaDaMa collects: email, nickname, optional language/town- or county-level region/nationality
-            code/crop, and your posts (text and photos — photos are re-saved on your device before
-            upload, so GPS location and other photo metadata are not kept). Kakao sign-in shares your Kakao nickname, email (optional)
-            and profile image. We never collect phone numbers or store exact GPS locations. Third
-            parties: Supabase (Seoul), Kakao, OpenStreetMap, Google Analytics 4, Microsoft
-            Clarity, AddToAny, and your browser vendor for voice input. Hosting and analytics run
-            on overseas servers (US); account and post data are stored in Supabase&apos;s Seoul
-            region. Kakao receives coordinates rounded to roughly 11 km when identifying your area
-            from My Location. Delete your account anytime in Profile → Account settings (bottom) → Close my account → Delete account →
-            confirm it is you → Permanently delete —
-            this permanently removes your account, profile and all posts and photos — or request deletion by
-            email: {deletionRequestEmail} (see /delete-account); we act within 10 days of your
-            request. Data that laws require us to keep is retained separately for the legal period
-            only; backup copies are removed within 30 days. You can change or withdraw optional
-            fields and neighbor-visibility consent anytime in your profile. Effective{' '}
-            {EFFECTIVE_DATE}, last revised {REVISED_DATE}.
-          </p>
-        </div>
       </section>
 
-      <Link
-        to="/"
-        className="mt-8 inline-flex min-h-[44px] items-center text-sm text-green-700 underline"
-      >
-        <span aria-hidden="true">← </span>홈으로 / Back to home
-      </Link>
-    </div>
+      <LegalSection title="5. 이용자 권리">
+        <p>
+          언제든 프로필에서 국적·작목·이웃 공개 동의를 수정·철회할 수 있습니다. 열람·정정·삭제
+          요청은 {deletionRequestEmail}로 연락 주시면 요청일로부터 10일 이내에 처리하고 결과를
+          알려 드립니다. 그 밖의 문의는 {operatorEmail}로 보내 주세요.
+        </p>
+      </LegalSection>
+
+      <LegalSection title="6. 변경 이력">
+        <LegalBullets>
+          <li>{EFFECTIVE_DATE} 최초 시행</li>
+          <li>
+            2026-09-09 §1 위치 정보 처리 방식(약 11km 반올림), §3 제3자(날씨 제공자·농촌진흥청
+            공공데이터·국외 호스팅), §4 계정 삭제 절차(전용 이메일·10일 기한·법정 보관 고지·카카오
+            연결 해제 안내), §5 문의처 개정
+          </li>
+          <li>
+            2026-09-10 §1 지역 항목 단위 명확화(읍·면 또는 시·군 — 서비스 지역을 충남 15개
+            시·군으로 확대하며 시·군 단위 선택 추가), 영문 표기 NongsaDaMa 통일
+          </li>
+          <li>2026-09-21 §3 카카오 지역 조회에 전송하는 대략 좌표 안내 추가</li>
+          <li>2026-10-23 §1 게시글 사진(올리기 전 위치 정보 제거) 추가, §4 사진 삭제 안내·앱 안 계정 삭제 경로(본인 확인 단계)</li>
+        </LegalBullets>
+      </LegalSection>
+
+      <section lang="en" className="mt-8 rounded-xl bg-surface px-4 py-4">
+        <h2 className="text-section text-ink">English summary</h2>
+        <p className="mt-2 text-body text-ink-body">
+          NongsaDaMa collects: email, nickname, optional language/town- or county-level region/nationality
+          code/crop, and your posts (text and photos — photos are re-saved on your device before
+          upload, so GPS location and other photo metadata are not kept). Kakao sign-in shares your Kakao nickname, email (optional)
+          and profile image. We never collect phone numbers or store exact GPS locations. Third
+          parties: Supabase (Seoul), Kakao, OpenStreetMap, Google Analytics 4, Microsoft
+          Clarity, AddToAny, and your browser vendor for voice input. Hosting and analytics run
+          on overseas servers (US); account and post data are stored in Supabase&apos;s Seoul
+          region. Kakao receives coordinates rounded to roughly 11 km when identifying your area
+          from My Location. Delete your account anytime in Profile → Account settings (bottom) → Close my account → Delete account →
+          confirm it is you → Permanently delete —
+          this permanently removes your account, profile and all posts and photos — or request deletion by
+          email: {deletionRequestEmail} (see /delete-account); we act within 10 days of your
+          request. Data that laws require us to keep is retained separately for the legal period
+          only; backup copies are removed within 30 days. You can change or withdraw optional
+          fields and neighbor-visibility consent anytime in your profile. Effective{' '}
+          {EFFECTIVE_DATE}, last revised {REVISED_DATE}.
+        </p>
+      </section>
+
+      <LegalHomeLink>홈으로 / Back to home</LegalHomeLink>
+    </LegalPage>
   )
 }

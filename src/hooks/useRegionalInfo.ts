@@ -95,7 +95,11 @@ interface WeatherPayload {
   name: string | null
 }
 
-/** 현재 날씨(서버 프록시 — 키 미노출, 30분 캐시). 실패 시 카드 숨김(부가 정보). */
+/**
+ * 현재 날씨(서버 프록시 — 키 미노출, 30분 캐시).
+ * null = 이 지역엔 날씨가 없음(503 not_configured·400 서비스 영역 밖) → 카드 숨김(부가 정보, D-036).
+ * 그 밖의 실패(500·502·네트워크)는 오류로 던져 화면이 '불러오지 못했어요 + 다시 시도'를 보인다(디자인 v5 상태 규칙).
+ */
 export function useWeather(lat: number | undefined, lon: number | undefined) {
   return useQuery({
     queryKey: ['weather', lat?.toFixed(1), lon?.toFixed(1)],
@@ -104,7 +108,8 @@ export function useWeather(lat: number | undefined, lon: number | undefined) {
       const r = await fetch(
         `${FUNCTIONS_BASE}/weather?lat=${(lat as number).toFixed(1)}&lon=${(lon as number).toFixed(1)}`,
       )
-      if (!r.ok) return null
+      if (r.status === 400 || r.status === 503) return null
+      if (!r.ok) throw new Error(`weather ${r.status}`)
       const d = await r.json()
       return d?.error ? null : (d as WeatherPayload)
     },
@@ -140,17 +145,23 @@ export function useRuralPrograms(sido: string | null, sigungu: string | null) {
       if (short) attempts.push({ sido, center: short })
       if (sido) attempts.push({ sido: null, center })
       let last: { total: number; items: RuralProgram[] } | null = null
+      // 한 번도 답을 못 받았고 서버 오류(5xx, 503 not_configured 제외)가 있었으면 '없음'이 아니라 오류다(다시 시도).
+      let failed = false
       for (const a of attempts) {
         const params = new URLSearchParams()
         if (a.sido) params.set('sido', a.sido)
         if (a.center) params.set('center', a.center)
         const r = await fetch(`${FUNCTIONS_BASE}/rural-programs?${params.toString()}`)
-        if (!r.ok) continue
+        if (!r.ok) {
+          if (r.status >= 500 && r.status !== 503) failed = true
+          continue
+        }
         const d = await r.json()
         if (d?.error) continue
         last = { total: d.total, items: d.items ?? [] }
         if (last.total > 0) return last
       }
+      if (!last && failed) throw new Error('rural-programs failed')
       return last
     },
     enabled: Boolean(sido || center),

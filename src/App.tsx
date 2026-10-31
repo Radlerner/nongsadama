@@ -2,6 +2,9 @@ import { Suspense, lazy, useEffect } from 'react'
 import { Navigate, Route, Routes, useNavigate } from 'react-router-dom'
 import { useAuth } from './context/AuthContext'
 import { AppLayout } from './components/layout/AppLayout'
+import { RouteErrorBoundary } from './components/layout/RouteErrorBoundary'
+import { LoadingState } from './components/ui/LoadingState'
+import { useTranslation } from './i18n/useTranslation'
 import { Landing } from './pages/Landing'
 import { Select } from './pages/Select'
 import { Login } from './pages/Login'
@@ -24,6 +27,14 @@ import { DeleteAccount } from './pages/DeleteAccount'
 import { ChildSafety } from './pages/ChildSafety'
 import { NotFound } from './pages/NotFound'
 
+/** 지도 청크를 받는 동안: 무엇을 기다리는지 + 8초 뒤 느린 연결 안내(오프라인이면 연결 대기) + 목록으로 보기. */
+function HomeLoading() {
+  const { t } = useTranslation()
+  return (
+    <LoadingState className="px-5" label={t('state.mapLoading')} fallback={{ label: t('map.listView'), to: '/life-info' }} />
+  )
+}
+
 export function App() {
   const { oauthCallbackStatus, clearOAuthCallbackStatus } = useAuth()
   const navigate = useNavigate()
@@ -32,6 +43,14 @@ export function App() {
     clearOAuthCallbackStatus()
     navigate(oauthCallbackStatus === 'success' ? '/home' : '/login', { replace: true })
   }, [oauthCallbackStatus, clearOAuthCallbackStatus, navigate])
+  // 첫 화면이 그려진 뒤 지도 청크를 미리 받아 둔다(서비스워커가 캐시 → 나중에 오프라인이어도 /home이 열린다).
+  // 오프라인이면 건너뛴다(실패한 모듈을 브라우저가 기억해 나중의 /home까지 막지 않게).
+  useEffect(() => {
+    const id = window.setTimeout(() => {
+      if (navigator.onLine) void import('./pages/MapHome').catch(() => undefined)
+    }, 3000)
+    return () => window.clearTimeout(id)
+  }, [])
   return (
     <Routes>
       <Route path="/" element={<Landing />} />
@@ -46,15 +65,11 @@ export function App() {
         <Route
           path="/home"
           element={
-            <Suspense
-              fallback={
-                <p className="rounded-md bg-gray-50 px-4 py-8 text-center text-sm text-gray-500">
-                  …
-                </p>
-              }
-            >
-              <MapHome />
-            </Suspense>
+            <RouteErrorBoundary>
+              <Suspense fallback={<HomeLoading />}>
+                <MapHome />
+              </Suspense>
+            </RouteErrorBoundary>
           }
         />
         <Route path="/board" element={<Board />} />

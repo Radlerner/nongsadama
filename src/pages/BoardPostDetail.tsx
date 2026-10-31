@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState, type RefObject } from 'react'
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useTranslation } from '../i18n/useTranslation'
 import { useAuth } from '../context/AuthContext'
@@ -11,7 +11,6 @@ import {
 import { useRegions } from '../hooks/useRegions'
 import { useBoardGate } from '../hooks/useBoardGate'
 import { inScope } from '../lib/regionGate'
-import { imageSize, imageUrl } from '../lib/postImages'
 import { useSelectedRegion } from '../context/SelectedRegionContext'
 import {
   useBlockedIds,
@@ -20,59 +19,92 @@ import {
   useReportPost,
 } from '../hooks/useModeration'
 import { regionLabel } from '../lib/regionName'
-import { Ban, Flag, MessagesSquare } from '../components/ui/icons'
-import { regionDistanceKm } from '../lib/matching'
+import { FROM_DETAIL_STATE } from '../components/layout/flash'
+import {
+  Avatar,
+  BottomSheet,
+  Button,
+  EmptyState,
+  ErrorState,
+  Icon,
+  LoadingState,
+  SectionHeader,
+  SkeletonBlock,
+  SlowHint,
+  buttonClasses,
+  cn,
+} from '../components/ui'
+import {
+  CategoryTag,
+  ErrorLine,
+  MetaLine,
+  NoteBox,
+  SourceLocaleChip,
+  formatPostTime,
+  useDistanceLabel,
+  writeErrorKey,
+} from '../components/board/PostParts'
+import { PostGallery } from '../components/board/PostPhotos'
+
+/** 신고·차단 줄의 조용한 글자 버튼(44px 높이, 회색 글자). */
+const QUIET_ACTION =
+  'inline-flex h-11 items-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 text-small font-bold text-ink-muted transition-colors hover:bg-surface active:bg-surface-2'
 
 export function BoardPostDetail() {
   const { t, locale } = useTranslation()
   const { postId } = useParams()
   const { user } = useAuth()
   const navigate = useNavigate()
-  const { data: post, isLoading, isError, refetch, isFetching } = usePost(postId)
+  const { data: post, isPending, isError, refetch, isFetching } = usePost(postId)
   const { data: regions } = useRegions()
   const { regionId: viewerRegionId } = useSelectedRegion()
   const deletePost = useDeletePost()
   const [confirmingDelete, setConfirmingDelete] = useState(false)
   const { data: blockedIds } = useBlockedIds(user?.id)
   const unblock = useUnblockUser(user?.id)
-  // 게시판에서 고른 거르기(?category= 등)를 지켜 돌아간다(CardLink state)
+  const distanceOf = useDistanceLabel()
+  const titleRef = useRef<HTMLHeadingElement>(null)
+  // 게시판에서 고른 거르기(?category= 등)를 지켜 돌아간다(목록 카드의 링크 state)
   const boardSearch = (useLocation().state as { boardSearch?: string } | null)?.boardSearch ?? ''
   const boardHref = `/board${boardSearch.startsWith('?') ? boardSearch : ''}`
 
-  if (isLoading) {
+  // isPending: 불러오는 중 + 오프라인으로 멈춘 경우(없는 글로 잘못 보이지 않게)
+  if (isPending && !isError) {
     return (
-      <p className="rounded-card bg-white/70 px-4 py-8 text-center text-sm text-gray-500">
-        {t('board.loading')}
-      </p>
+      <LoadingState
+        variant="inline"
+        tone="da"
+        label={t('board.loading')}
+        offlineLabel={t('board.waitingNetwork')}
+      >
+        <PostDetailSkeleton />
+      </LoadingState>
     )
   }
 
-  if (isError) {
+  // 받아 둔 글이 없을 때만 오류 화면 — 다시 받다가 실패해도 이미 보던 글은 그대로 둔다
+  if (isError && post === undefined) {
     return (
-      <div className="rounded-card bg-red-50 px-4 py-8 text-center text-sm text-red-700">
-        <p className="mb-3">{t('board.error')}</p>
-        <button
-          type="button"
-          onClick={() => void refetch()}
-          disabled={isFetching}
-          className="min-h-[44px] rounded-full border border-red-300 px-4 text-red-700 disabled:opacity-50"
-        >
-          {t('common.retry')}
-        </button>
-      </div>
+      <ErrorState
+        className="mt-2"
+        title={t('board.error')}
+        onRetry={() => void refetch()}
+        retrying={isFetching}
+        tone="da"
+        fallback={{ label: t('postDetail.back'), to: boardHref }}
+      />
     )
   }
 
   if (!post) {
     return (
-      <div className="text-center">
-        <p className="rounded-card bg-white/70 px-4 py-8 text-sm text-gray-500">
-          {t('postDetail.empty')}
-        </p>
-        <Link to={boardHref} className="mt-4 inline-block text-green-700 underline">
-          {t('postDetail.back')}
-        </Link>
-      </div>
+      <EmptyState
+        className="mt-2"
+        icon="document"
+        title={t('postDetail.empty')}
+        body={t('post.notFoundBody')}
+        action={{ label: t('postDetail.back'), to: boardHref }}
+      />
     )
   }
 
@@ -80,130 +112,172 @@ export function BoardPostDetail() {
   const viewerRegion = viewerRegionId
     ? (regions ?? []).find((r) => r.id === viewerRegionId)
     : undefined
-  const dist = regionDistanceKm(viewerRegion, region)
-  const distanceLabel =
-    dist === null
-      ? null
-      : dist === 0
-        ? t('neighbors.sameTown')
-        : t('neighbors.aboutKm').replace('{n}', String(Math.max(1, Math.round(dist))))
+  const distanceLabel = distanceOf(viewerRegion, region)
   const isOwn = user?.id === post.author_id
-  const createdDate = post.created_at.slice(0, 10)
+  const nickname = post.authorNickname ?? t('board.unknownAuthor')
+  const photos = post.image_paths ?? []
+  const regionName = region ? regionLabel(region.id, region.names, locale) : null
 
   // 차단한 작성자의 글: 본문 대신 안내(뒤로가기·직접 URL 접근 커버, 재검수 P1-1a)
   if (!isOwn && blockedIds?.has(post.author_id)) {
     return (
-      <div className="text-center">
-        <p className="rounded-card bg-white/70 px-4 py-8 text-sm text-gray-500">
-          {t('block.postHidden')}
-        </p>
-        <button
-          type="button"
-          disabled={unblock.isPending}
-          onClick={() => unblock.mutate(post.author_id)}
-          className="mt-3 min-h-[44px] text-sm text-green-700 underline disabled:opacity-50"
-        >
-          {t('block.unblock')}
-        </button>
-        <br />
-        <Link to={boardHref} className="mt-2 inline-block text-sm text-gray-500 underline">
-          {t('postDetail.back')}
-        </Link>
+      <div className="mt-2 rounded-xl border border-line px-5 py-6 text-center">
+        <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-surface text-ink-muted">
+          <Icon name="block" size={26} />
+        </span>
+        <p className="mt-3 text-body font-bold text-ink">{t('block.postHidden')}</p>
+        <div className="mt-4 flex flex-col items-center gap-1">
+          <Button
+            variant="secondary"
+            loading={unblock.isPending}
+            loadingLabel={t('post.unblocking')}
+            onClick={() => unblock.mutate(post.author_id)}
+          >
+            {t('block.unblock')}
+          </Button>
+          <SlowHint busy={unblock.isPending} />
+          {unblock.isError ? <ErrorLine className="mt-1">{t(writeErrorKey('report.error'))}</ErrorLine> : null}
+          <Link to={boardHref} className={buttonClasses({ variant: 'ghost', size: 'sm', tone: 'da' })}>
+            {t('postDetail.back')}
+          </Link>
+        </div>
       </div>
     )
   }
 
+  // 사진이 있으면 읍·면은 사진 위 알약에 있으니 메타 줄에서는 뺀다(PostDetail 아트보드)
+  const meta = [
+    photos.length > 0 ? null : regionName,
+    distanceLabel,
+    formatPostTime(post.created_at, locale, t),
+  ].filter((part): part is string => Boolean(part))
+  const closeDelete = () => {
+    if (!deletePost.isPending) setConfirmingDelete(false)
+  }
+
   return (
-    <article className="flex flex-col gap-4">
-      <header>
-        <h1 className="text-xl font-extrabold tracking-tight text-gray-900">{post.title}</h1>
-        <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-gray-500">
-          <span>{t(postCategoryLabelKey(post.category))}</span>
-          {region ? <span>{regionLabel(region.id, region.names, locale)}</span> : null}
-          {distanceLabel ? <span className="text-green-700">{distanceLabel}</span> : null}
-          <span>
-            {post.authorNickname ?? t('board.unknownAuthor')}
-            {post.authorCountry ? ` · ${post.authorCountry}` : ''}
-          </span>
-          <span>{createdDate}</span>
+    <div className="anim-fade">
+      <article>
+        {/* 사진이 먼저: 헤더 바로 아래, 화면 폭 전체 */}
+        {photos.length > 0 ? <PostGallery paths={photos} regionName={regionName} className="-mt-3 mb-5" /> : null}
+
+        <div className="flex items-center gap-3">
+          <Avatar name={nickname} seed={post.author_id} />
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-label text-ink">{nickname}</p>
+            <p className="break-words text-caption text-ink-muted">
+              <MetaLine parts={meta} timeIso={post.created_at} />
+            </p>
+          </div>
+          <CategoryTag category={post.category} />
+        </div>
+
+        <h1
+          ref={titleRef}
+          tabIndex={-1}
+          lang={post.source_locale}
+          className="mt-4 break-words text-title text-ink outline-none"
+        >
+          {post.title}
+        </h1>
+        <p lang={post.source_locale} className="mt-2 whitespace-pre-line break-words text-body text-ink-body">
+          {post.body}
         </p>
-      </header>
 
-      <p className="whitespace-pre-line text-sm text-gray-800">{post.body}</p>
+        {post.source_locale !== locale ? <SourceLocaleChip code={post.source_locale} className="mt-4" /> : null}
 
-      <PostPhotos paths={post.image_paths ?? []} />
+        {post.category === 'help' ? (
+          /* v1.5 §5 데모 완료 조건: 만남 안전 문구 */
+          <NoteBox icon="shield" className="mt-4">
+            <p>{t('postDetail.helpSafety')}</p>
+          </NoteBox>
+        ) : null}
 
-      {post.category === 'help' ? (
-        <div className="rounded-md bg-amber-50 px-4 py-3 text-xs text-amber-900">
-          {/* v1.5 §5 데모 완료 조건: 만남 안전 문구 */}
-          <p>{t('postDetail.helpSafety')}</p>
-        </div>
-      ) : null}
+        {post.category === 'recommend' ? (
+          /* 이용자가 쓴 추천은 농사다마가 확인한 생활정보와 다르다(D-043) */
+          <NoteBox icon="info" className="mt-4">
+            <p>{t('postDetail.recommendNote')}</p>
+          </NoteBox>
+        ) : null}
 
-      {post.category === 'recommend' ? (
-        <div className="rounded-md bg-gray-50 px-4 py-3 text-xs text-gray-700">
-          {/* 이용자가 쓴 추천은 농사다마가 확인한 생활정보와 다르다(D-043) */}
-          <p>{t('postDetail.recommendNote')}</p>
-        </div>
-      ) : null}
-
-      {/* in-app 신고·차단(Play UGC 정책, D-022) — 로그인 사용자, 타인 글에만 */}
-      {user && !isOwn ? <ModerationActions postId={post.id} authorId={post.author_id} /> : null}
-
-      {isOwn ? (
-        <div className="flex gap-2">
-          <Link
-            to={`/board/${post.id}/edit`}
-            state={{ boardSearch }}
-            className="inline-flex min-h-[44px] flex-1 items-center justify-center rounded-full border border-gray-300 text-sm font-semibold text-gray-700"
-          >
-            {t('postDetail.edit')}
-          </Link>
-          {confirmingDelete ? (
-            <>
-              <button
-                type="button"
-                disabled={deletePost.isPending}
-                onClick={() =>
-                  deletePost.mutate(
-                    { id: post.id, imagePaths: post.image_paths ?? [] },
-                    { onSuccess: () => navigate(boardHref) },
-                  )
-                }
-                className="min-h-[44px] flex-1 rounded-full bg-red-600 text-sm font-semibold text-white disabled:opacity-50"
-              >
-                {t('postDetail.deleteConfirm')}
-              </button>
-              <button
-                type="button"
-                onClick={() => setConfirmingDelete(false)}
-                className="min-h-[44px] flex-1 rounded-full border border-gray-300 text-sm text-gray-700"
-              >
-                {t('postDetail.deleteCancel')}
-              </button>
-            </>
-          ) : (
-            <button
-              type="button"
+        {isOwn ? (
+          <div className="mt-5 flex gap-2 border-t border-line pt-4">
+            <Link
+              to={`/board/${post.id}/edit`}
+              // 저장하면 이 화면으로 뒤로 돌아온다(같은 글이 history에 두 번 쌓이지 않게) + 게시판 거르기 유지
+              state={{ ...FROM_DETAIL_STATE, boardSearch }}
+              className={buttonClasses({ variant: 'secondary', size: 'sm', className: 'flex-1' })}
+            >
+              <Icon name="edit" size={18} />
+              {t('postDetail.edit')}
+            </Link>
+            <Button
+              variant="danger"
+              size="sm"
+              icon="trash"
+              className="flex-1"
               onClick={() => setConfirmingDelete(true)}
-              className="min-h-[44px] flex-1 rounded-full border border-red-300 text-sm font-semibold text-red-700"
             >
               {t('postDetail.delete')}
-            </button>
-          )}
-        </div>
+            </Button>
+          </div>
+        ) : null}
+
+        {/* in-app 신고·차단(Play UGC 정책, D-022) — 로그인 사용자, 타인 글에만 */}
+        {user && !isOwn ? (
+          <ModerationActions postId={post.id} authorId={post.author_id} boardHref={boardHref} titleRef={titleRef} />
+        ) : null}
+      </article>
+
+      {deletePost.isError && !confirmingDelete ? (
+        <ErrorLine className="mt-3">{t(writeErrorKey('post.deleteError'))}</ErrorLine>
       ) : null}
 
-      {deletePost.isError ? (
-        <p className="rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">{t('board.error')}</p>
-      ) : null}
+      <SimilarPosts postId={post.id} boardHref={boardHref} />
 
-      <SimilarPosts postId={post.id} />
+      <div className="mt-8 flex justify-center">
+        <Link to={boardHref} className={buttonClasses({ variant: 'ghost', size: 'sm', tone: 'da' })}>
+          {t('postDetail.back')}
+        </Link>
+      </div>
 
-      <Link to={boardHref} className="text-green-700 underline">
-        {t('postDetail.back')}
-      </Link>
-    </article>
+      <BottomSheet
+        open={confirmingDelete}
+        onClose={closeDelete}
+        title={t('post.deleteTitle')}
+        description={t('post.deleteBody')}
+        initialFocus="panel"
+        returnFocusRef={titleRef}
+      >
+        <Button
+          fullWidth
+          variant="danger"
+          icon="trash"
+          loading={deletePost.isPending}
+          loadingLabel={t('state.deleting')}
+          onClick={() =>
+            deletePost.mutate(
+              { id: post.id, imagePaths: photos },
+              // 지운 글로 뒤로 돌아오지 않게 이 자리를 게시판으로 바꾼다 + "삭제했어요"
+              { onSuccess: () => navigate(boardHref, { replace: true, state: { toast: 'state.deleted' } }) },
+            )
+          }
+        >
+          {t('postDetail.deleteConfirm')}
+        </Button>
+        <SlowHint busy={deletePost.isPending} className="mt-2" />
+        {deletePost.isError ? <ErrorLine className="mt-2">{t(writeErrorKey('post.deleteError'))}</ErrorLine> : null}
+        <Button
+          fullWidth
+          variant="tertiary"
+          className="mt-2"
+          disabled={deletePost.isPending}
+          onClick={closeDelete}
+        >
+          {t('postDetail.deleteCancel')}
+        </Button>
+      </BottomSheet>
+    </div>
   )
 }
 
@@ -212,101 +286,158 @@ const REPORT_REASONS = ['spam', 'abuse', 'scam', 'other'] as const
 
 /**
  * in-app 신고·차단(Play UGC 정책, D-022).
- * 신고: 사유 4택 → reports insert(중복은 "이미 접수됨"). 차단: 확인 후 blocks insert → 게시판으로.
+ * 신고: 사유 4택(시트) → reports insert(중복은 "이미 접수됨"). 차단: 확인(시트) 후 blocks insert → 게시판으로.
+ * 보내는 중에는 시트를 닫지 않는다(바탕·Esc·취소 모두).
  */
-function ModerationActions({ postId, authorId }: { postId: string; authorId: string }) {
+function ModerationActions({
+  postId,
+  authorId,
+  boardHref,
+  titleRef,
+}: {
+  postId: string
+  authorId: string
+  boardHref: string
+  titleRef: RefObject<HTMLHeadingElement>
+}) {
   const { t } = useTranslation()
   const { user } = useAuth()
   const navigate = useNavigate()
   const [reporting, setReporting] = useState(false)
   const [reported, setReported] = useState<null | 'ok' | 'dup'>(null)
+  const [pendingReason, setPendingReason] = useState<string | null>(null)
   const [confirmingBlock, setConfirmingBlock] = useState(false)
   const report = useReportPost(user?.id)
   const block = useBlockUser(user?.id)
   const { data: blockedIds } = useBlockedIds(user?.id)
   const alreadyBlocked = blockedIds?.has(authorId) ?? false
+  // 신고를 마치면 신고 버튼이 이 안내 줄로 바뀐다: 시트를 닫으면 초점이 여기로 온다
+  const reportedRef = useRef<HTMLParagraphElement>(null)
+  const closeReport = () => {
+    if (!report.isPending) setReporting(false)
+  }
+  const closeBlock = () => {
+    if (!block.isPending) setConfirmingBlock(false)
+  }
+  const reportedText = reported === 'dup' ? t('report.duplicated') : t('report.done')
 
   return (
-    <div className="flex flex-col gap-2 rounded-card border border-gray-100 bg-white shadow-card px-4 py-3 text-xs">
+    <div className="mt-5 flex flex-wrap items-center justify-between gap-x-2 border-y border-line py-1">
       {reported ? (
-        <p className="text-green-800">
-          {reported === 'dup' ? t('report.duplicated') : t('report.done')}
-        </p>
-      ) : reporting ? (
-        <div>
-          <p className="mb-2 font-semibold text-gray-700">{t('report.pickReason')}</p>
-          <div className="flex flex-wrap gap-2">
-            {REPORT_REASONS.map((r) => (
-              <button
-                key={r}
-                type="button"
-                disabled={report.isPending}
-                onClick={() =>
-                  report.mutate(
-                    { postId, reason: r },
-                    { onSuccess: (res) => setReported(res.duplicated ? 'dup' : 'ok') },
-                  )
-                }
-                className="min-h-[44px] rounded-md border border-gray-300 px-3 text-gray-700 disabled:opacity-50"
-              >
-                {t(`report.reason.${r}`)}
-              </button>
-            ))}
-            <button
-              type="button"
-              onClick={() => setReporting(false)}
-              className="min-h-[44px] px-3 text-gray-500 underline"
-            >
-              {t('postDetail.deleteCancel')}
-            </button>
-          </div>
-          {report.isError ? <p className="mt-2 text-red-700">{t('report.error')}</p> : null}
-        </div>
-      ) : (
-        <button
-          type="button"
-          onClick={() => setReporting(true)}
-          className="min-h-[44px] self-start font-semibold text-gray-600 underline"
+        <p
+          ref={reportedRef}
+          tabIndex={-1}
+          className="flex min-h-11 items-center gap-1.5 text-small text-ink-body outline-none"
         >
-          <Flag aria-hidden size={16} strokeWidth={2.25} className="mr-1 inline align-[-2px]" />
+          <Icon name="check" size={18} className="shrink-0 text-ink-muted" />
+          {reportedText}
+        </p>
+      ) : (
+        <button type="button" onClick={() => setReporting(true)} className={cn(QUIET_ACTION, '-ml-2.5')}>
+          <Icon name="flag" size={18} />
           {t('postDetail.report')}
         </button>
       )}
 
-      {/* 차단 영역 — 신고 상태와 무관하게 항상 표시(신고 후에도 차단 가능) */}
-      <div className="flex flex-wrap items-center gap-3">
-        {alreadyBlocked ? (
-          <span className="text-gray-400">{t('block.already')}</span>
-        ) : confirmingBlock ? (
+      {/* 차단 — 신고 상태와 무관하게 항상 표시(신고 후에도 차단 가능) */}
+      {alreadyBlocked ? (
+        <span className="flex min-h-11 items-center text-small text-ink-muted">{t('block.already')}</span>
+      ) : (
+        <button type="button" onClick={() => setConfirmingBlock(true)} className={cn(QUIET_ACTION, '-mr-2.5')}>
+          <Icon name="block" size={18} />
+          {t('block.action')}
+        </button>
+      )}
+
+      <BottomSheet
+        open={reporting}
+        onClose={closeReport}
+        returnFocusRef={reported ? reportedRef : titleRef}
+        initialFocus="panel"
+        title={reported ? t('post.reported') : t('report.pickReason')}
+        description={reported ? reportedText : t('report.sheetBody')}
+      >
+        {/* 접수 결과를 화면 읽기 프로그램에 알린다(시트 설명이 바뀌는 것만으로는 읽히지 않는다) */}
+        <p role="status" className="sr-only">
+          {reported ? reportedText : ''}
+        </p>
+        {reported ? (
+          <Button fullWidth variant="tertiary" autoFocus onClick={() => setReporting(false)}>
+            {t('common.close')}
+          </Button>
+        ) : (
           <>
-            <button
-              type="button"
-              disabled={block.isPending}
-              onClick={() => block.mutate(authorId, { onSuccess: () => navigate('/board') })}
-              className="min-h-[44px] rounded-full bg-red-600 px-3 font-semibold text-white disabled:opacity-50"
-            >
-              {t('block.confirm')}
-            </button>
-            <button
-              type="button"
-              onClick={() => setConfirmingBlock(false)}
-              className="min-h-[44px] px-2 text-gray-500 underline"
+            <div className="flex flex-col gap-2">
+              {REPORT_REASONS.map((r) => (
+                <Button
+                  key={r}
+                  fullWidth
+                  variant="secondary"
+                  disabled={report.isPending && pendingReason !== r}
+                  loading={report.isPending && pendingReason === r}
+                  loadingLabel={t('state.sending')}
+                  onClick={() => {
+                    setPendingReason(r)
+                    report.mutate(
+                      { postId, reason: r },
+                      { onSuccess: (res) => setReported(res.duplicated ? 'dup' : 'ok') },
+                    )
+                  }}
+                >
+                  {t(`report.reason.${r}`)}
+                </Button>
+              ))}
+            </div>
+            <SlowHint busy={report.isPending} className="mt-3" />
+            {report.isError ? <ErrorLine className="mt-3">{t(writeErrorKey('report.error'))}</ErrorLine> : null}
+            <Button
+              fullWidth
+              variant="tertiary"
+              className="mt-3"
+              disabled={report.isPending}
+              onClick={closeReport}
             >
               {t('postDetail.deleteCancel')}
-            </button>
+            </Button>
           </>
-        ) : (
-          <button
-            type="button"
-            onClick={() => setConfirmingBlock(true)}
-            className="min-h-[44px] font-semibold text-red-600 underline"
-          >
-            <Ban aria-hidden size={16} strokeWidth={2.25} className="mr-1 inline align-[-2px]" />
-            {t('block.action')}
-          </button>
         )}
-        {block.isError ? <p className="text-red-700">{t('report.error')}</p> : null}
-      </div>
+      </BottomSheet>
+
+      <BottomSheet
+        open={confirmingBlock}
+        onClose={closeBlock}
+        title={t('block.action')}
+        description={t('post.blockBody')}
+        initialFocus="panel"
+        returnFocusRef={titleRef}
+      >
+        <Button
+          fullWidth
+          variant="danger"
+          icon="block"
+          loading={block.isPending}
+          loadingLabel={t('post.blocking')}
+          onClick={() =>
+            block.mutate(authorId, {
+              // 차단한 사람의 글로 뒤로 돌아오지 않게 이 자리를 게시판으로 바꾼다 + "차단했어요"
+              onSuccess: () => navigate(boardHref, { replace: true, state: { toast: 'state.blocked' } }),
+            })
+          }
+        >
+          {t('block.confirm')}
+        </Button>
+        <SlowHint busy={block.isPending} className="mt-2" />
+        {block.isError ? <ErrorLine className="mt-2">{t(writeErrorKey('report.error'))}</ErrorLine> : null}
+        <Button
+          fullWidth
+          variant="tertiary"
+          className="mt-2"
+          disabled={block.isPending}
+          onClick={closeBlock}
+        >
+          {t('postDetail.deleteCancel')}
+        </Button>
+      </BottomSheet>
     </div>
   )
 }
@@ -316,11 +447,12 @@ function ModerationActions({ postId, authorId }: { postId: string; authorId: str
  * 후보가 없으면 억지로 채우지 않고 "아직 비슷한 글이 없어요"를 보여 준다(무관한 글 노출 금지).
  * 차단한 작성자의 글은 추천에서 제외한다(재검수 P1-1b). 로딩·오류 중에는 섹션을 숨긴다(부가 기능).
  */
-function SimilarPosts({ postId }: { postId: string }) {
-  const { t } = useTranslation()
+function SimilarPosts({ postId, boardHref }: { postId: string; boardHref: string }) {
+  const { t, locale } = useTranslation()
   const { user } = useAuth()
   const { data: raw, isLoading, isError } = useSimilarPosts(postId)
   const { data: blockedIds } = useBlockedIds(user?.id)
+  const { data: regions } = useRegions()
   // 다른 지역 글은 아직 열리지 않은 사람에게 보이지 않는다(D-045) — 목록과 같은 규칙
   const gate = useBoardGate()
   const data = (raw ?? [])
@@ -328,53 +460,68 @@ function SimilarPosts({ postId }: { postId: string }) {
     .filter((s) => gate.unlocked || inScope(gate.ownScope, s.region_id))
   // 지역·글 수를 아직 모르면 "비슷한 글이 없어요"라고 잘못 말하지 않게 섹션을 숨긴다
   const gateUnknown = gate.pending || gate.countPending || (!gate.unlocked && !gate.ownScope)
-  if (isLoading || isError || gateUnknown) return null
+  if (isLoading || isError || gateUnknown || raw === undefined) return null
   return (
-    <section className="rounded-card border border-gray-100 bg-white shadow-card px-4 py-3">
-      <p className="mb-2 text-xs font-semibold text-gray-500">{t('postDetail.similar')}</p>
+    <section className="mt-8" aria-labelledby="similar-posts-title">
+      <SectionHeader
+        id="similar-posts-title"
+        title={t('postDetail.similar')}
+        seeAll={data.length > 0 ? { to: boardHref } : undefined}
+        tone="da"
+      />
       {data.length === 0 ? (
-        <p className="py-2 text-sm text-gray-500">{t('postDetail.similarEmpty')}</p>
+        <p className="text-small text-ink-muted">{t('postDetail.similarEmpty')}</p>
       ) : (
-      <ul className="flex flex-col gap-1">
-        {data.map((s) => (
-          <li key={s.id}>
-            <Link to={`/board/${s.id}`} className="block min-h-[44px] py-2 text-sm text-gray-800 active:bg-gray-50">
-              <MessagesSquare aria-hidden size={16} strokeWidth={2} className="mr-1.5 inline align-[-2px] text-gray-400" />
-              {s.title}
-              <span className="ml-2 text-[11px] text-gray-400">{t(postCategoryLabelKey(s.category))}</span>
-            </Link>
-          </li>
-        ))}
-      </ul>
+        <ul>
+          {data.map((s, i) => {
+            const region = (regions ?? []).find((r) => r.id === s.region_id)
+            const meta = [
+              region ? regionLabel(region.id, region.names, locale) : null,
+              formatPostTime(s.created_at, locale, t),
+            ]
+              .filter(Boolean)
+              .join(' · ')
+            return (
+              <li key={s.id} className={i > 0 ? 'border-t border-line' : undefined}>
+                <Link
+                  to={`/board/${s.id}`}
+                  className="-mx-5 flex min-h-16 items-center gap-3 px-5 py-3 transition-colors active:bg-surface"
+                >
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-caption text-ink-muted">
+                      <b className="font-bold text-ink-body">{t(postCategoryLabelKey(s.category))}</b>
+                      {meta ? ` · ${meta}` : ''}
+                    </span>
+                    <span className="mt-0.5 line-clamp-2 break-words text-body font-bold text-ink">{s.title}</span>
+                  </span>
+                  <Icon name="chevron" size={20} className="shrink-0 text-ink-muted" />
+                </Link>
+              </li>
+            )
+          })}
+        </ul>
       )}
     </section>
   )
 }
 
-/**
- * 글에 붙은 사진(D-044). 이름에 적힌 가로·세로로 자리를 먼저 잡아 그림이 늦게 와도 아래 버튼이 밀리지 않는다.
- * 비율은 1:3 ~ 3:1로 묶는다 — 이름의 크기는 올린 사람이 정하므로, 이상한 값으로 신고·차단 버튼을 화면 밖으로 밀지 못하게.
- * 링크를 걸지 않는다(Android 앱에서 누르면 앱을 떠나 같은 그림을 다시 받는다). 이미 화면 폭 전체로 보인다.
- */
-function PostPhotos({ paths }: { paths: string[] }) {
-  const { t } = useTranslation()
-  if (paths.length === 0) return null
+/** 글 상세 자리 잡기: 사진 자리 + 작성자 줄 + 제목 + 본문 줄. */
+function PostDetailSkeleton() {
   return (
-    <div className="flex flex-col gap-2">
-      {paths.map((path, i) => {
-        const size = imageSize(path)
-        return (
-          <img
-            key={path}
-            src={imageUrl(path)}
-            alt={t('postDetail.photo').replace('{n}', String(i + 1))}
-            loading="lazy"
-            decoding="async"
-            style={{ aspectRatio: size ? String(Math.min(3, Math.max(1 / 3, size.width / size.height))) : '4 / 3' }}
-            className="block h-auto w-full rounded-md bg-gray-100 object-contain"
-          />
-        )
-      })}
+    <div aria-hidden="true" className="pt-3">
+      <div className="flex items-center gap-3">
+        <SkeletonBlock className="h-10 w-10 shrink-0 rounded-full" />
+        <span className="flex-1">
+          <SkeletonBlock className="h-3.5 w-[34%] rounded-full" />
+          <SkeletonBlock className="mt-2 h-3 w-[52%] rounded-full" />
+        </span>
+      </div>
+      <SkeletonBlock className="mt-6 h-[22px] w-[78%] rounded-full" />
+      <div className="mt-5 flex flex-col gap-3">
+        <SkeletonBlock className="h-3.5 w-[94%] rounded-full" />
+        <SkeletonBlock className="h-3.5 w-[88%] rounded-full" />
+        <SkeletonBlock className="h-3.5 w-[62%] rounded-full" />
+      </div>
     </div>
   )
 }

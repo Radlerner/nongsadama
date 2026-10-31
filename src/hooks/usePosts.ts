@@ -29,29 +29,30 @@ export class PostSaveError extends Error {
 }
 const dbError = (error: { message: string; code?: string }) => new PostSaveError(error.message, Boolean(error.code))
 
+/**
+ * 공개 화면(게시판·글 상세·비슷한 글)에는 작성자 닉네임만 보여 준다. 작성자 국적은 보여 주지 않는다.
+ * public_profiles 뷰에는 id, nickname 만 있다(country_code 열은 2026-10-29에 뺐다) — 그 둘만 읽는다.
+ */
 export interface PostWithAuthor extends Post {
   authorNickname: string | null
-  /** 작성자가 매칭 공개에 동의한 경우에만 값이 있다(public_profiles 뷰가 강제). */
-  authorCountry: string | null
 }
 
 async function attachAuthors(posts: Post[]): Promise<PostWithAuthor[]> {
   const supabase = getSupabaseClient()
   const ids = [...new Set(posts.map((p) => p.author_id))]
-  const authors = new Map<string, { nickname: string | null; country_code: string | null }>()
+  const authors = new Map<string, string | null>()
   if (ids.length > 0) {
     const { data } = await supabase
       .from('public_profiles')
-      .select('*')
+      .select('id,nickname')
       .in('id', ids)
     for (const a of data ?? []) {
-      if (a.id) authors.set(a.id, { nickname: a.nickname, country_code: a.country_code })
+      if (a.id) authors.set(a.id, a.nickname)
     }
   }
   return posts.map((p) => ({
     ...p,
-    authorNickname: authors.get(p.author_id)?.nickname ?? null,
-    authorCountry: authors.get(p.author_id)?.country_code ?? null,
+    authorNickname: authors.get(p.author_id) ?? null,
   }))
 }
 

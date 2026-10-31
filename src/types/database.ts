@@ -373,17 +373,14 @@ export type Database = {
       }
       public_profiles: {
         Row: {
-          country_code: string | null
           id: string | null
           nickname: string | null
         }
         Insert: {
-          country_code?: never
           id?: string | null
           nickname?: string | null
         }
         Update: {
-          country_code?: never
           id?: string | null
           nickname?: string | null
         }

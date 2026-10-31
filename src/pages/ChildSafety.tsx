@@ -1,6 +1,15 @@
-import { Link } from 'react-router-dom'
+import type { ReactNode } from 'react'
 import { childSafetyEmail } from '../config/app'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
+import {
+  LEGAL_INLINE_LINK,
+  LegalHomeLink,
+  LegalLangHeading,
+  LegalPage,
+  LegalSection,
+  LegalTitle,
+  Strong,
+} from '../components/legal/LegalParts'
 
 /**
  * 아동 안전 표준(Google Play Console "Child Safety Standards" 제출용 공개 페이지).
@@ -8,6 +17,7 @@ import { useDocumentTitle } from '../hooks/useDocumentTitle'
  * 정책 고지문이라 i18n 사전 대신 한·영을 정적으로 병기한다(D-020 원칙).
  *
  * 문안을 고치면 LAST_UPDATED도 같은 날짜로 올린다(재검수 D-032 — 게시일보다 앞선 날짜 금지).
+ * 디자인 v5: 모양만 바꿨다(문안 그대로) — 흰 바탕, 1px 선 카드, 본문 16/25.
  */
 const LAST_UPDATED = '2026-09-09'
 const PAGE_TITLE = 'NongsaDaMa 아동 안전 표준 / Child Safety Standards'
@@ -19,8 +29,8 @@ function EmailLink({ block = false }: { block?: boolean }) {
     <a
       className={
         block
-          ? 'inline-flex min-h-[44px] items-center font-semibold text-green-800 underline'
-          : 'font-semibold text-green-800 underline'
+          ? 'inline-flex min-h-11 items-center font-bold text-nong-600 underline underline-offset-2 [overflow-wrap:anywhere]'
+          : LEGAL_INLINE_LINK
       }
       href={MAILTO}
     >
@@ -29,20 +39,22 @@ function EmailLink({ block = false }: { block?: boolean }) {
   )
 }
 
+/** 연락처 줄: 카드 안 마지막, 위 1px 선 */
+function Contact({ children }: { children: ReactNode }) {
+  return <p className="border-t border-line pt-3">{children}</p>
+}
+
 export function ChildSafety() {
   useDocumentTitle(PAGE_TITLE)
 
   return (
-    <div className="mx-auto min-h-screen max-w-screen-sm bg-brand-cream px-6 py-8 text-gray-900 md:max-w-2xl">
-      <h1 className="text-xl font-extrabold tracking-tight text-green-800 md:text-2xl">{PAGE_TITLE}</h1>
-      <p className="mt-1 text-xs text-gray-500">
-        마지막 업데이트 / Last updated: {LAST_UPDATED} · 앱/App: 농사다마 NongsaDaMa
-      </p>
+    <LegalPage>
+      <LegalTitle title={PAGE_TITLE} meta={<>마지막 업데이트 / Last updated: {LAST_UPDATED} · 앱/App: 농사다마 NongsaDaMa</>} />
 
       {/* ── 한국어 ── */}
-      <section lang="ko" className="mt-6 space-y-3 text-sm leading-relaxed">
-        <h2 className="text-base font-extrabold tracking-tight">한국어</h2>
-        <div className="space-y-3 rounded-card border border-gray-100 bg-white px-4 py-4 shadow-card text-gray-800">
+      <div lang="ko">
+        <LegalLangHeading>한국어</LegalLangHeading>
+        <LegalSection boxed first>
           <p>
             농사다마는 아동 성적 학대 및 착취(CSAE)와 아동 성적 학대물(CSAM)을 어떠한 형태로도
             허용하지 않습니다.
@@ -59,18 +71,18 @@ export function ChildSafety() {
             농사다마는 적용 가능한 아동 안전 관련 법률과 규정을 준수하며, 법적으로 필요한 경우 관계
             기관 및 수사기관의 적법한 요청에 협조합니다.
           </p>
-          <p className="border-t border-gray-100 pt-3">
-            <strong>아동 안전 관련 문의 및 신고:</strong>
+          <Contact>
+            <Strong>아동 안전 관련 문의 및 신고:</Strong>
             <br />
             <EmailLink block />
-          </p>
-        </div>
-      </section>
+          </Contact>
+        </LegalSection>
+      </div>
 
       {/* ── English ── */}
-      <section lang="en" className="mt-8 space-y-3 text-sm leading-relaxed">
-        <h2 className="text-base font-extrabold tracking-tight">English</h2>
-        <div className="space-y-3 rounded-card border border-gray-100 bg-white px-4 py-4 shadow-card text-gray-800">
+      <div lang="en">
+        <LegalLangHeading>English</LegalLangHeading>
+        <LegalSection boxed first>
           <p>
             NongsaDaMa has zero tolerance for child sexual abuse and exploitation (CSAE) and child
             sexual abuse material (CSAM).
@@ -88,20 +100,15 @@ export function ChildSafety() {
             NongsaDaMa complies with applicable child safety laws and regulations and cooperates with
             relevant authorities in response to valid legal requests when required.
           </p>
-          <p className="border-t border-gray-100 pt-3">
-            <strong>Child safety contact and reporting:</strong>
+          <Contact>
+            <Strong>Child safety contact and reporting:</Strong>
             <br />
             <EmailLink block />
-          </p>
-        </div>
-      </section>
+          </Contact>
+        </LegalSection>
+      </div>
 
-      <Link
-        to="/"
-        className="mt-8 inline-flex min-h-[44px] items-center text-sm text-green-800 underline"
-      >
-        <span aria-hidden="true">← </span>홈으로 돌아가기 / Back to home
-      </Link>
-    </div>
+      <LegalHomeLink>홈으로 돌아가기 / Back to home</LegalHomeLink>
+    </LegalPage>
   )
 }

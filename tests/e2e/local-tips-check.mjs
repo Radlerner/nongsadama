@@ -136,7 +136,12 @@ async function section(name, fn) {
   }
 }
 async function done(page) { pageErrors.push(...page.pageErrors, ...page.consoleErrors); await page.close() }
-const pressed = (page) => page.evaluate(`[...document.querySelectorAll('[role=group] button')].map((b) => b.getAttribute('aria-pressed') === 'true' ? 1 : 0).join('')`)
+// 게시판 종류 알약 = PillTabs(role=radiogroup, 버튼은 role=radio + aria-checked) — 디자인 v5
+const FILTER_PILLS = '[role=radiogroup] [role=radio]'
+const pressed = (page) => page.evaluate(`[...document.querySelectorAll('${FILTER_PILLS}')].map((b) => b.getAttribute('aria-checked') === 'true' ? 1 : 0).join('')`)
+// 글쓰기 종류 = 라디오(input[name=category]) — 디자인 v5(옛 select)
+const formCategory = (page) => page.evaluate(`document.querySelector('input[name=category]:checked')?.value ?? null`)
+const pickFormCategory = (page, value) => page.evaluate(`document.querySelector('input[name=category][value=${value}]').click()`)
 const bodyHas = (page, text) => page.evaluate(`document.body.innerText.includes(${JSON.stringify(text)})`)
 const viewing = (name) => ko['board.viewing'].replace('{region}', name)
 const listCount = (page) => page.evaluate(`document.querySelectorAll('main ul li a[href^="/board/"]').length`)
@@ -180,9 +185,9 @@ function jpegSize(jpeg) {
 await section('1', async () => {
   const page = await newPage()
   await page.goto(`${BASE}/board`, { waitMs: 2500 })
-  await page.waitFor(`document.querySelectorAll('[role=group] button').length === 7`, { timeout: 20000 })
+  await page.waitFor(`document.querySelectorAll('${FILTER_PILLS}').length === 7`, { timeout: 20000 })
   check('종류 버튼 7개, 처음엔 전체', (await pressed(page)) === '1000000')
-  await page.tap({ text: ko['board.category.recommend'], within: '[role=group] button' })
+  await page.tap({ text: ko['board.category.recommend'], within: FILTER_PILLS })
   await page.sleep(400)
   const url = await page.evaluate('location.href')
   check('추천 버튼 → 주소 ?category=recommend, 눌림 표시', url.endsWith('/board?category=recommend') && (await pressed(page)) === '0100000', url)
@@ -201,9 +206,9 @@ await section('1', async () => {
 for (const locale of ['ru', 'uz', 'km', 'ne', 'mn', 'th', 'vi', 'en']) await section(`2-${locale}`, async () => {
   const page = await newPage({ locale })
   await page.goto(`${BASE}/board`, { waitMs: 2500 })
-  await page.waitFor(`document.querySelectorAll('[role=group] button').length === 7`, { timeout: 20000 })
+  await page.waitFor(`document.querySelectorAll('${FILTER_PILLS}').length === 7`, { timeout: 20000 })
   const m = await page.evaluate(`(() => {
-    const g = document.querySelector('[role=group]'); const bs = [...g.querySelectorAll('button')]
+    const g = document.querySelector('[role=radiogroup]'); const bs = [...g.querySelectorAll('[role=radio]')]
     const other = [...document.querySelectorAll('button')].find((b) => b.getAttribute('aria-expanded') !== null)
     return { overflow: document.scrollingElement.scrollWidth - innerWidth, rows: new Set(bs.map((b) => Math.round(b.getBoundingClientRect().top))).size,
       minH: Math.min(...bs.map((b) => b.getBoundingClientRect().height)), clipped: bs.filter((b) => b.scrollWidth > b.clientWidth + 1).map((b) => b.textContent),
@@ -239,8 +244,8 @@ await section('4', async () => {
   await page.goto(`${BASE}/board?category=recommend`, { waitMs: 2500 })
   await page.waitFor(`document.body.innerText.includes(${JSON.stringify(ko['board.recommendWrite'])})`, { timeout: 20000 })
   await page.tap({ text: ko['board.recommendWrite'], exact: true })
-  await page.waitFor(`location.pathname === '/board/new' && !!document.querySelector('select')`, { timeout: 15000 })
-  check('추천 쓰기 → 글쓰기 종류가 우리 동네 추천', (await page.evaluate(`document.querySelector('select').value`)) === 'recommend')
+  await page.waitFor(`location.pathname === '/board/new' && !!document.querySelector('input[name=category]:checked')`, { timeout: 15000 })
+  check('추천 쓰기 → 글쓰기 종류가 우리 동네 추천', (await formCategory(page)) === 'recommend')
   check('추천 안내 문구', await bodyHas(page, ko['postForm.recommendGuide']))
   await page.tap({ selector: 'input[type=text]' })
   await page.type('밀양 시장 국밥집')
@@ -270,7 +275,7 @@ await section('4', async () => {
   await page.sleep(300)
   check('번호를 지우면 경고가 사라짐', !(await bodyHas(page, ko['postForm.mobileWarning'])))
   await page.evaluate(`(() => { const t = document.querySelector('textarea'); const set = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value').set; set.call(t, '010-1234-5678'); t.dispatchEvent(new Event('input', { bubbles: true })) })()`)
-  await setSelect(page, 0, 'question')
+  await pickFormCategory(page, 'question')
   await page.sleep(300)
   check('질문 종류에는 추천 안내·번호 경고 없음', !(await bodyHas(page, ko['postForm.recommendGuide'])) && !(await bodyHas(page, ko['postForm.mobileWarning'])))
   await done(page)
@@ -403,7 +408,8 @@ await section('7', async () => {
   const ins = sim.inserts[0] ?? {}
   check('저장 내용: 내 지역(밀양시)에, 사진 경로 1개', ins.region_id === MIRYANG && JSON.stringify(ins.image_paths) === JSON.stringify([full.name]), { region_id: ins.region_id, image_paths: ins.image_paths })
   await page.waitFor(`!!document.querySelector('article img') && document.querySelector('article img').complete && document.querySelector('article img').naturalWidth > 0`, { timeout: 20000 })
-  const img = await page.evaluate(`(() => { const i = document.querySelector('article img'); return { alt: i.alt, w: i.naturalWidth, h: i.naturalHeight, ratio: i.style.aspectRatio } })()`)
+  // 자리 비율은 사진 넘김 틀(PostGallery)이 잡는다 — 디자인 v5(옛: img의 style)
+  const img = await page.evaluate(`(() => { const i = document.querySelector('article img'); const box = i.closest('[style*="aspect-ratio"]'); return { alt: i.alt, w: i.naturalWidth, h: i.naturalHeight, ratio: box ? box.style.aspectRatio : '' } })()`)
   check('상세: 사진이 보이고 자리(가로세로 비)가 먼저 잡힘', img.w === 1280 && img.h === 960 && img.alt === ko['postDetail.photo'].replace('{n}', '1') && Math.abs(img.ratio.split('/').reduce((a, b) => Number(a) / Number(b)) - 4 / 3) < 0.001, img)
   await page.shot(OUT('7-detail-photo-ko.png'))
   await page.tap({ text: ko['postDetail.delete'], exact: true })
