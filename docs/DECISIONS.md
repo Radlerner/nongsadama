@@ -738,3 +738,19 @@ PRD_v1_3.md를 기준으로 한 기술·제품 의사결정과 이유를 남긴�
   들어올 때 스크롤, 탭 줄에 가림, 화면 읽기 안내·초점, 회원탈퇴 글자 대비, 가입 안내가 사라지던 문제, 버전 줄 위치, 날짜·옛 앱 경로).
 - **Play 정책**: 앱 안 삭제는 그대로 있고(내 정보 아래), 공개 안내 페이지에 정확한 경로를 적었다.
 - **버전**: v1.5에 함께 넣는다.
+
+### D-048. public_profiles에서 country_code 제거 (2026-10-29, D-012 (b) 철회)
+- **결정(오너)**: 게시글 작성자 국적을 DB 공개 뷰에서도 뺀다. public_profiles는 D-006 원형 `(id, nickname)`으로 복귀.
+  D-012 (b) "동의자 국적의 비로그인 포함 공개"를 철회한다. 동의(is_matching_visible)는 이제 이웃 목록 노출만 뜻한다.
+- **이유**: 화면 표시를 없애도 뷰가 anon에게 열려 있어 동의자 국적이 API로 계속 공개됐다(취약 사용자층의 국적+지역 프로파일링
+  위험 — D-006 재검수 논지). 화면에 안 쓰는 민감값은 내보내지 않는다.
+- **마이그레이션**: `20261029160405_public_profiles_drop_country` — 컬럼 제거는 create or replace 불가라 drop + create.
+  D-012 규칙대로 security_barrier + revoke all(public·anon·authenticated) → grant select(anon·authenticated). 공개 스키마 기본 권한이
+  새 뷰에 anon/authenticated ALL을 주므로 revoke 누락 시 쓰기까지 열린다 — 반드시 유지.
+- **사전 확인(라이브)**: 뷰·함수·정책·행 타입 의존 객체 0. 롤백되는 트랜잭션에서 리허설(컬럼 id·nickname, barrier, anon/authenticated
+  SELECT만, anon UPDATE 거부, 18행 동일) 후 2026-10-29 적용.
+- **적용 후 확인(라이브)**: 컬럼 id·nickname, 소유자 postgres, barrier=true, 권한이 적용 전과 같음(국적 컬럼만 빠짐), anon 18행 조회,
+  anon `select country_code` → undefined_column. 보안 어드바이저 새 항목 없음(security_definer_view는 D-006/D-010의 의도된 수용 항목).
+- **호환성**: 배포된 v1.5는 `select('*')`로 읽어 깨지지 않고 국적만 비게 된다(= 운영 화면에서도 적용 즉시 미표시).
+  이 브랜치 코드는 id·nickname만 읽는다. Edge Function 참조 없음. country_code를 명시 요청하는 클라이언트는 400(확인된 사용처 없음).
+- **동반 변경**: src/types/database.ts의 public_profiles.country_code 제거, 동의 고지문 수정(D-047), supabase/tests/rls_check.sql R2b.

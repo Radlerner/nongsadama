@@ -44,6 +44,9 @@ set local role anon;
 set local request.jwt.claims = '{"role":"anon"}';
 -- 기대: 공개 닉네임 3(뷰), published 글 1, 공개 생활정보 1, 활성 지역 1
 select 'R2 anon public_profiles (기대 3)' as check, count(*) from public.public_profiles;
+select 'R2b public_profiles 노출 컬럼 (기대 id,nickname — 국적 없음, D-048)' as check,
+  string_agg(column_name, ',' order by ordinal_position)
+  from information_schema.columns where table_schema = 'public' and table_name = 'public_profiles';
 select 'R2 anon posts (기대 1)'           as check, count(*) from public.posts;
 select 'R2 anon life_info (기대 1)'       as check, count(*) from public.life_info;
 select 'R2 anon regions (기대 1)'         as check, count(*) from public.regions;
