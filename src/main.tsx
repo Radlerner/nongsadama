@@ -5,8 +5,8 @@ import { BrowserRouter } from 'react-router-dom'
 import { App } from './App'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { I18nProvider } from './i18n/I18nContext'
-import { SelectedRegionProvider } from './context/SelectedRegionContext'
 import { AuthProvider } from './context/AuthContext'
+import { RegionChoiceProvider } from './context/RegionChoiceContext'
 import { AnalyticsListener } from './components/AnalyticsListener'
 import { queryClient } from './lib/queryClient'
 import './index.css'
@@ -35,14 +35,15 @@ createRoot(rootElement).render(
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
       <I18nProvider>
-        <SelectedRegionProvider>
-          <AuthProvider>
+        <AuthProvider>
+          {/* 보는 지역(v1.6 D-047): 로그인 상태를 알아야 하므로 AuthProvider 안에 둔다 */}
+          <RegionChoiceProvider>
             <BrowserRouter basename={routerBasename}>
               <AnalyticsListener />
               <App />
             </BrowserRouter>
-          </AuthProvider>
-        </SelectedRegionProvider>
+          </RegionChoiceProvider>
+        </AuthProvider>
       </I18nProvider>
       </QueryClientProvider>
     </ErrorBoundary>

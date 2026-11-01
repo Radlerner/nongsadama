@@ -3,15 +3,13 @@ import { BottomNav } from './BottomNav'
 import { LanguageSwitcher } from './LanguageSwitcher'
 import { OfflineBanner } from '../OfflineBanner'
 import { useTranslation } from '../../i18n/useTranslation'
-import { useStaleRegionCleanup } from '../../hooks/useRegions'
 import { ChevronLeft } from 'lucide-react'
 
 export function AppLayout() {
   const { t } = useTranslation()
   const location = useLocation()
   const navigate = useNavigate()
-  // v1.1(D-033): 비활성·삭제된 지역 id가 localStorage에 남아 조용히 '전체 범위'가 되지 않도록 정리
-  useStaleRegionCleanup()
+  // 비활성·삭제된 지역 정리(v1.1 D-033)는 v1.6부터 RegionChoiceProvider가 한다(D-047).
   // 10세 원칙: 뒤로 가기는 항상 화면 상단에(홈 제외). history가 없으면 홈으로.
   const showBack = location.pathname !== '/home'
 

@@ -12,7 +12,7 @@ import { useRegions } from '../hooks/useRegions'
 import { useBoardGate } from '../hooks/useBoardGate'
 import { inScope } from '../lib/regionGate'
 import { imageSize, imageUrl } from '../lib/postImages'
-import { useSelectedRegion } from '../context/SelectedRegionContext'
+import { useRegionChoice } from '../context/RegionChoiceContext'
 import {
   useBlockedIds,
   useBlockUser,
@@ -30,7 +30,8 @@ export function BoardPostDetail() {
   const navigate = useNavigate()
   const { data: post, isLoading, isError, refetch, isFetching } = usePost(postId)
   const { data: regions } = useRegions()
-  const { regionId: viewerRegionId } = useSelectedRegion()
+  // 거리 표시 기준 = 유효한 프로필 지역(내 지역, D4). 없으면 거리를 숨긴다(v1.6 D-047).
+  const { profileRegionId: viewerRegionId } = useRegionChoice()
   const deletePost = useDeletePost()
   const [confirmingDelete, setConfirmingDelete] = useState(false)
   const { data: blockedIds } = useBlockedIds(user?.id)

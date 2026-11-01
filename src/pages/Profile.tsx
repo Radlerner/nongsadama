@@ -14,6 +14,8 @@ import { regionLabel } from '../lib/regionName'
 import { toAsciiDigits } from '../lib/digits'
 import { TAP_GUARD_MS } from '../components/ui/BottomSheet'
 import { ChevronRight } from '../components/ui/icons'
+import { RegionSaveOffer } from '../components/RegionSaveOffer'
+import { regionChoiceStore } from '../lib/regionChoiceStore'
 
 export function Profile() {
   const { t, locale } = useTranslation()
@@ -89,6 +91,10 @@ export function Profile() {
             </div>
           </dl>
         )}
+        {/* 내 지역이 비어 있으면 지금 보는 지역을 저장하라고 제안한다(v1.6 D-047, 가입 때 자동 저장 안 함) */}
+        <div className="mt-3 empty:hidden">
+          <RegionSaveOffer />
+        </div>
 
         <Link
           to="/profile/edit"
@@ -241,7 +247,10 @@ function AccountDeletion({ user }: { user: User }) {
     setStep('confirm')
   }
   const finish = async () => {
+    // 지운 계정이 이 기기에 남긴 보는 지역·"나중에" 기록도 지운다(v1.6 D-047). 로그아웃 전에 계정 id를 잡아 둔다.
+    const uid = user.id
     await signOut()
+    regionChoiceStore.clearForUid(uid)
     navigate('/', { replace: true })
   }
   const onDelete = async () => {

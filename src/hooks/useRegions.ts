@@ -1,9 +1,7 @@
-import { useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { getSupabaseClient } from '../lib/supabase'
 import { appConfig } from '../config/app'
 import { regionName } from '../lib/regionName'
-import { useSelectedRegion } from '../context/SelectedRegionContext'
 import type { Tables } from '../types/database'
 
 export type Region = Tables<'regions'>
@@ -35,35 +33,8 @@ export function useRegions() {
   return useQuery({ queryKey: ['regions'], queryFn: fetchRegions, staleTime: 60 * 60_000 })
 }
 
-/**
- * 선택 지역이 속한 시/군 하위(시 + 그 읍·면) 지역 id 집합을 반환한다.
- * 미선택이거나 로드된 목록에 없으면 null(→ 소비 측은 전체 범위로 처리). 시·도는 선택 단위가 아니라 null.
- */
-export function countyRegionIds(regions: Region[], selectedId: string | null): string[] | null {
-  if (!selectedId) return null
-  const selected = regions.find((r) => r.id === selectedId)
-  if (!selected || selected.level === 'province') return null
-  const countyId = selected.level === 'city' ? selected.id : selected.parent_id ?? selected.id
-  const ids = regions.filter((r) => r.id === countyId || r.parent_id === countyId).map((r) => r.id)
-  return ids.length > 0 ? ids : [countyId]
-}
-
-/** 지역이 속한 시·군·구 행(시·군·구면 자기 자신). 시·도·없음이면 null. */
-export function countyOf(regions: Region[], region: Region | undefined | null): Region | null {
-  if (!region) return null
-  if (region.level === 'city') return region
-  if (region.level === 'town') return regions.find((r) => r.id === region.parent_id) ?? null
-  return null
-}
-
-/** 지역이 속한 시·도 행(v1.2). 시·도면 자기 자신, 시·군·구는 부모, 읍·면은 부모의 부모. 없으면 null. */
-export function provinceOf(regions: Region[], region: Region | undefined | null): Region | null {
-  if (!region) return null
-  if (region.level === 'province') return region
-  const county = countyOf(regions, region)
-  if (!county?.parent_id) return null
-  return regions.find((r) => r.id === county.parent_id && r.level === 'province') ?? null
-}
+// 순수 범위 함수는 lib/regionScope.ts로 옮겼다(node:test에서 바로 쓰려고, v1.6). 기존 import 경로는 그대로 둔다.
+export { countyRegionIds, countyOf, provinceOf } from '../lib/regionScope'
 
 /**
  * 시·군·구별 선택 단위 묶음(v1.1, D-033). provinceId를 주면 그 시·도의 시·군·구만.
@@ -136,17 +107,6 @@ export function groupSelectableByProvince(regions: Region[]): ProvinceGroup[] {
   return groups.filter((g) => g.members.length > 0)
 }
 
-/**
- * 저장된 regionId가 활성 목록에 없으면(비활성·삭제·다른 환경의 id) null로 정리한다.
- * 앱 셸(AppLayout)에서 호출해, 오래된 id가 조용히 '전체 범위'로 바뀌는 일을 막는다(v1.1, D-033).
- * 목록이 0행이면(일시적 정책 오류 등) '이 id가 무효'라는 증거가 아니므로 건드리지 않는다(재검수 P2).
- */
-export function useStaleRegionCleanup(): void {
-  const { data: regions } = useRegions()
-  const { regionId, setRegionId } = useSelectedRegion()
-  useEffect(() => {
-    if (regions && regions.length > 0 && regionId && !regions.some((r) => r.id === regionId)) {
-      setRegionId(null)
-    }
-  }, [regions, regionId, setRegionId])
-}
+// 저장된 지역이 활성 목록에 없을 때의 정리(v1.1 D-033의 useStaleRegionCleanup)는 v1.6(D-047)부터
+// RegionChoiceProvider가 한다: 목록으로 무효가 확인되면 '없음'(묘비)으로 바꾸고, 목록을 못 읽었거나 0행이면
+// 건드리지 않는다. 무효 지역이 '전체 범위' 조회가 되는 길은 lib/regionScope의 태그 범위로 막았다.

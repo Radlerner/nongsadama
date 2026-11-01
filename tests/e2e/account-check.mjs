@@ -14,7 +14,9 @@ const ROOT = process.env.BUNDLE_ROOT ?? join(repo, 'dist')
 const DATA = process.env.NSD_DATA_DIR ?? join(repo, '..', 'nongsadama_data')
 const day = new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10)
 const OUT = outDir(join(DATA, 'account-check', day))
-if (!existsSync(join(ROOT, 'index.html'))) throw new Error(`번들이 없다: ${ROOT} (npm run build 먼저)`)
+// LIVE_URL=https://nongsadama.app 이면 운영 사이트를 그대로 점검한다(로컬 서버를 띄우지 않음, 쓰기는 똑같이 막거나 브라우저 안에서 받음)
+const LIVE_URL = process.env.LIVE_URL?.replace(/\/$/, '')
+if (!LIVE_URL && !existsSync(join(ROOT, 'index.html'))) throw new Error(`번들이 없다: ${ROOT} (npm run build 먼저)`)
 const ko = JSON.parse(readFileSync(join(repo, 'src/i18n/dictionaries/ko.json'), 'utf8'))
 const FAKE_USER = '00000000-0000-4000-8000-00000000d046'
 const GOOD_PASSWORD = 'right-password-1'
@@ -25,8 +27,8 @@ const server = http.createServer((req, res) => {
   if (!existsSync(file) || statSync(file).isDirectory()) file = join(ROOT, 'index.html')
   res.writeHead(200, { 'Content-Type': TYPES[extname(file)] ?? 'application/octet-stream' }); res.end(readFileSync(file))
 })
-await new Promise((r) => server.listen(5196, 'localhost', r))
-const BASE = 'http://localhost:5196'
+if (!LIVE_URL) await new Promise((r) => server.listen(5196, 'localhost', r))
+const BASE = LIVE_URL ?? 'http://localhost:5196'
 const browser = await launch({ port: 9373, profileDir: join(DATA, 'account-check-profile') })
 const results = { startedAt: new Date().toISOString(), bundle: ROOT, checks: [] }
 // 전체 시간 제한 — 멈추면 기록을 남기고 끝낸다(조용히 매달리지 않게)
@@ -115,6 +117,8 @@ await section('1-placement', async (keep) => {
   await page.sleep(100)
   check('회원탈퇴 → 그때 경고와 계정 삭제 버튼, 펼친 직후 누름은 무시', (await page.evaluate(`!!document.getElementById('account-withdraw-panel')`)) && (await has(page, ko['profile.deleteAccountWarn'])) && !(await page.evaluate(`!!document.querySelector('form input')`)))
   await page.shot(OUT('1-withdraw-open.png'))
+  // 펼친 직후 350ms는 일부러 무시한다(두 번 누름 방지) — 스크린샷이 빨리 끝나면 그 안에 눌러 실패하던 시간 문제를 없앤다
+  await page.sleep(400)
   await page.tap({ text: ko['profile.withdraw'], exact: true })
   await page.sleep(200)
   check('회원탈퇴를 다시 누르면 접힘', !(await page.evaluate(`!!document.getElementById('account-withdraw-panel')`)))
@@ -250,5 +254,5 @@ results.summary = { pass: results.checks.filter((c) => c.ok).length, fail: resul
 writeFileSync(OUT('result.json'), JSON.stringify(results, null, 1))
 console.log(JSON.stringify(results.summary), errors.length ? `pageErrors ${errors.length}` : '')
 await browser.close()
-server.close()
+if (!LIVE_URL) server.close()
 process.exit(results.summary.fail ? 1 : 0)

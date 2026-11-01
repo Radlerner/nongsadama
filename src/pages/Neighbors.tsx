@@ -7,6 +7,8 @@ import { useBlockedIds } from '../hooks/useModeration'
 import { useRegions } from '../hooks/useRegions'
 import { matchScore } from '../lib/matching'
 import { NeighborCard } from '../components/NeighborCard'
+import { RegionSaveOffer } from '../components/RegionSaveOffer'
+import { useRegionChoice, viewRegionId } from '../context/RegionChoiceContext'
 import { EmptyBox, ErrorBox, LoadingBox } from '../components/ui/StateBoxes'
 
 /**
@@ -23,6 +25,7 @@ export function Neighbors() {
   )
   const { data: regions } = useRegions()
   const { data: blockedIds } = useBlockedIds(user?.id)
+  const { view, own, profileRegionId } = useRegionChoice()
 
   if (initializing || (user && profileLoading)) {
     return (
@@ -69,15 +72,30 @@ export function Neighbors() {
 
   // v1.1(D-033): 이웃 범위는 프로필 지역의 시·군 기준(DB 뷰). 지역이 없으면 항상 0명이 되므로
   // '이웃이 없다'가 아니라 '지역을 정하라'고 알려 준다(다지역에서 특히 중요).
-  if (!profile?.region_id) {
+  // v1.6(D-047): 가입 때 지역을 자동 저장하지 않으므로 새 회원은 여기서 시작한다 — 이유와 저장 경로를 함께 보여 준다.
+  // 둘러보는 지역은 이웃 범위에 쓰지 않는다(내 지역 = 프로필 지역, 비활성 지역은 없는 것으로 본다).
+  if (!profile?.region_id || (profileRegionId === null && own.state === 'ready')) {
     return (
       <section>
         <h1 className="mb-4 text-xl font-extrabold tracking-tight">{t('neighbors.title')}</h1>
-        <div className="rounded-card border border-gray-100 bg-white shadow-card px-4 py-6 text-center">
+        <div className="flex flex-col gap-3 rounded-card border border-gray-100 bg-white shadow-card px-4 py-6 text-center">
           <p className="text-sm text-gray-700">{t('neighbors.regionRequired')}</p>
+          <p className="text-xs text-gray-500">{t('neighbors.regionWhy')}</p>
+          <div className="text-left">
+            <RegionSaveOffer />
+          </div>
+          {viewRegionId(view) === null ? (
+            <Link
+              to="/select"
+              state={{ returnTo: '/neighbors' }}
+              className="inline-flex min-h-[44px] items-center justify-center rounded-full border border-gray-300 px-6 text-sm text-gray-700"
+            >
+              {t('region.needed.pick')}
+            </Link>
+          ) : null}
           <Link
             to="/profile/edit"
-            className="mt-4 inline-flex min-h-[44px] items-center justify-center rounded-full bg-brand-greenDark px-6 py-3 text-base font-semibold text-white"
+            className="inline-flex min-h-[44px] items-center justify-center rounded-full bg-brand-greenDark px-6 py-3 text-base font-semibold text-white"
           >
             {t('neighbors.regionCta')}
           </Link>

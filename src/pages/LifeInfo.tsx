@@ -1,8 +1,11 @@
 import { useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useLocation, useSearchParams } from 'react-router-dom'
 import { useTranslation } from '../i18n/useTranslation'
-import { useRegions, countyRegionIds } from '../hooks/useRegions'
-import { useSelectedRegion } from '../context/SelectedRegionContext'
+import { useRegions } from '../hooks/useRegions'
+import { useRegionChoice } from '../context/RegionChoiceContext'
+import { lifeInfoScope } from '../lib/regionScope'
+import { RegionViewBar } from '../components/RegionViewBar'
+import { RegionNeededBox } from '../components/RegionNeededBox'
 import { useLifeInfoList, type LifeInfo as LifeInfoRow } from '../hooks/useLifeInfo'
 import {
   LIFE_INFO_CATEGORIES,
@@ -30,15 +33,12 @@ export function LifeInfo() {
     refetch: refetchRegions,
     isFetching: regionsFetching,
   } = useRegions()
-  const { regionId } = useSelectedRegion()
-  const scopeIds = countyRegionIds(regions ?? [], regionId)
-  // 지역이 선택돼 있으면 regions 로드가 끝나 범위(scopeIds)가 확정된 뒤에만 조회한다.
-  // (로딩 중 전체 범위로 선조회했다가 재조회하는 중복 요청·범위 오염 방지)
-  const scopeReady = !regionId || regions !== undefined
-  const { data: items, isLoading, isError, refetch, isFetching } = useLifeInfoList(
-    scopeIds,
-    scopeReady,
-  )
+  // 지금 보는 지역(v1.6 D-047). 지역을 정하는 중이거나 없으면 조회하지 않는다 — 전국은 직접 고른 경우만(D2).
+  const { view, retry: retryChoice } = useRegionChoice()
+  const location = useLocation()
+  const scope = lifeInfoScope(regions, view)
+  const { data: list, isLoading, isError, refetch, isFetching } = useLifeInfoList(scope)
+  const items = list?.rows
   // 라우터(🎤)에서 ?category=support / ?from=talk 로 진입할 수 있다(PRD v1.5 §3.1 ②③).
   const [searchParams] = useSearchParams()
   // §3.2-1: 라우터 경유(②) 진입 시엔 카테고리와 무관하게 도움 배너를 보인다(오분류 대비).
@@ -57,17 +57,22 @@ export function LifeInfo() {
 
   const filtered = (items ?? []).filter((i) => category === 'all' || i.category === category)
   // 지역 범위 계산에 regions가 필요한 경우 그 실패도 오류로 다룬다(조용한 전체 폴백 방지).
-  const showError = (Boolean(regionId) && regionsError) || isError
+  const showError = view.status === 'error' || isError
   const retrying = regionsFetching || isFetching
   const retry = () => {
-    if (regionsError) void refetchRegions()
+    if (regionsError || view.status === 'error') {
+      void refetchRegions()
+      retryChoice()
+    }
     if (isError) void refetch()
   }
-  const loading = !showError && (regionsLoading || isLoading || !scopeReady)
+  const loading = !showError && (view.status === 'deciding' || (scope !== null && (regionsLoading || isLoading)))
+  const supportPath = category === 'support' || fromTalk
 
   return (
     <section>
       <h1 className="mb-4 text-xl font-extrabold tracking-tight">{t('lifeInfo.title')}</h1>
+      <RegionViewBar />
 
       <div className="mb-4 flex flex-wrap gap-2">
         {FILTERS.map((c) => {
@@ -115,7 +120,17 @@ export function LifeInfo() {
         </CardLink>
       )}
 
-      {loading ? (
+      {list?.truncated ? (
+        <p className="mb-3 rounded-card bg-amber-50 px-4 py-3 text-center text-sm text-amber-900">{t('lifeInfo.truncated')}</p>
+      ) : null}
+
+      {/* 지역이 없으면 고르게 한다. 상담·도움 길에서는 위의 안전 안내를 먼저 보여 주고 그 아래에 둔다(막지 않음). */}
+      {view.status === 'none' ? (
+        <RegionNeededBox
+          returnTo={`${location.pathname}${location.search}`}
+          returnState={supportPath ? undefined : location.state}
+        />
+      ) : loading ? (
         <LoadingBox text={t('lifeInfo.loading')} />
       ) : showError ? (
         <ErrorBox

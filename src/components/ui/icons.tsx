@@ -45,6 +45,7 @@ import {
   Lock,
   ImagePlus,
   X,
+  Pencil,
 } from 'lucide-react'
 
 /** 하단 5탭(nav) — BottomNav 전용 */
@@ -106,5 +107,6 @@ export {
   Lock,
   ImagePlus,
   X,
+  Pencil,
 }
 export type { LucideIcon }

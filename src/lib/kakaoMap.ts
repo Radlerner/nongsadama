@@ -51,6 +51,7 @@ export interface KakaoMapsNs {
   LatLng: new (lat: number, lng: number) => KakaoLatLng
   Map: new (el: HTMLElement, opts: { center: KakaoLatLng; level: number }) => KakaoMap
   CustomOverlay: new (opts: { position: KakaoLatLng; content: HTMLElement; yAnchor?: number }) => KakaoOverlay
+  event?: { addListener(target: KakaoMap, type: string, handler: () => void): void }
   services?: {
     Geocoder: new () => {
       coord2RegionCode(

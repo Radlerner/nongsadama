@@ -6,7 +6,7 @@ import { z } from 'zod'
 import { zodResolver } from '../lib/zodResolver'
 import { useAuth } from '../context/AuthContext'
 import { useTranslation } from '../i18n/useTranslation'
-import { useSelectedRegion } from '../context/SelectedRegionContext'
+import { useRegionChoice } from '../context/RegionChoiceContext'
 import { useRegions, groupSelectableByProvince } from '../hooks/useRegions'
 import { getSupabaseClient } from '../lib/supabase'
 import { useOwnProfile } from '../hooks/useOwnProfile'
@@ -34,7 +34,7 @@ type FormValues = z.infer<typeof schema>
 export function ProfileEdit() {
   const { t, locale, setLocale } = useTranslation()
   const { user, initializing } = useAuth()
-  const { setRegionId } = useSelectedRegion()
+  const { showOwn } = useRegionChoice()
   const { data: regions } = useRegions()
   const queryClient = useQueryClient()
   const navigate = useNavigate()
@@ -145,7 +145,9 @@ export function ProfileEdit() {
     const mutation = profile
       ? profiles.update(changes).eq('id', user.id)
       : profiles.insert({ id: user.id, ...changes })
-    const { data: saved, error } = await mutation.select('preferred_locale, preferred_locale_explicit').single()
+    const { data: saved, error } = await mutation
+      .select('id, region_id, preferred_locale, preferred_locale_explicit')
+      .single()
     if (error) {
       setSubmitError('profileEdit.error.saveFailed')
       return
@@ -159,8 +161,10 @@ export function ProfileEdit() {
           : saved.preferred_locale
       setLocale(next, saved.preferred_locale_explicit)
     }
-    setRegionId(regionIdValue)
-    await queryClient.invalidateQueries({ queryKey: ['profiles', 'own', user.id] })
+    // 내 지역을 바꿨을 때만 보는 지역도 그 지역을 따른다(v1.6 D-047). 닉네임만 바꿨거나 지역을 비웠으면
+    // 보는 지역(직접 고른 둘러보기 설정)은 그대로 둔다. 서버가 돌려준 값으로만 따른다.
+    if (saved.region_id && saved.region_id !== (profile?.region_id ?? null)) showOwn(saved.region_id)
+    await queryClient.invalidateQueries({ queryKey: ['profiles'] })
     navigate('/profile')
   })
 

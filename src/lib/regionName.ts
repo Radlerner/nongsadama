@@ -29,3 +29,29 @@ export function regionLabel(id: string, names: Json, locale: Locale): string {
   if (name !== '') return name
   return `#${id.slice(0, 8)}`
 }
+
+interface RegionRow {
+  id: string
+  level: string
+  parent_id: string | null
+  names: Json
+}
+
+/**
+ * 보는 지역·내 지역 표시용 이름(v1.6 D-047). 읍·면은 "시·군 읍·면", 이름이 같은 시·군·구가
+ * 다른 시·도에도 있으면(중구·고성군 등) 앞에 시·도를 붙인다.
+ */
+export function regionDisplayLabel(regions: readonly RegionRow[], id: string, locale: Locale): string {
+  const row = regions.find((r) => r.id === id)
+  if (!row) return ''
+  const county = row.level === 'town' ? regions.find((r) => r.id === row.parent_id) : row.level === 'city' ? row : undefined
+  const own = regionLabel(row.id, row.names, locale)
+  if (!county) return own
+  const countyName = regionLabel(county.id, county.names, locale)
+  const duplicated = regions.some(
+    (r) => r.level === 'city' && r.id !== county.id && regionLabel(r.id, r.names, locale) === countyName,
+  )
+  const province = duplicated ? regions.find((r) => r.id === county.parent_id && r.level === 'province') : undefined
+  const prefix = province ? `${regionLabel(province.id, province.names, locale)} ` : ''
+  return row.level === 'town' ? `${prefix}${countyName} ${own}` : `${prefix}${own}`
+}

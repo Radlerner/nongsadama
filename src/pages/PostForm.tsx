@@ -5,7 +5,9 @@ import { z } from 'zod'
 import { zodResolver } from '../lib/zodResolver'
 import { useAuth } from '../context/AuthContext'
 import { useTranslation } from '../i18n/useTranslation'
-import { useSelectedRegion } from '../context/SelectedRegionContext'
+import { useRegionChoice } from '../context/RegionChoiceContext'
+import { RegionSaveOffer } from '../components/RegionSaveOffer'
+import { ErrorBox } from '../components/ui/StateBoxes'
 import { useOwnProfile } from '../hooks/useOwnProfile'
 import { useRegions } from '../hooks/useRegions'
 import {
@@ -52,8 +54,8 @@ export function PostForm() {
   const { postId } = useParams()
   const isEdit = Boolean(postId)
   const { user, initializing } = useAuth()
-  const { regionId } = useSelectedRegion()
-  const { data: profile, isLoading: profileLoading } = useOwnProfile(user?.id)
+  const { own, retry: retryOwn } = useRegionChoice()
+  const { isLoading: profileLoading } = useOwnProfile(user?.id)
   const { data: regions } = useRegions()
   const { data: existing, isLoading: postLoading } = usePost(isEdit ? postId : undefined)
   const createPost = useCreatePost()
@@ -121,7 +123,7 @@ export function PostForm() {
   const mobileOk = numbersKey !== '' && approvedNumbers === numbersKey
   const processing = photos.some((p) => p.kind === 'new' && !p.prepared)
 
-  if (initializing || (isEdit && postLoading) || (user && profileLoading)) {
+  if (initializing || (isEdit && postLoading) || (user && profileLoading) || (user && !isEdit && own.state === 'pending')) {
     return (
       <p className="rounded-card bg-white/70 px-4 py-8 text-center text-sm text-gray-500">
         {t('board.loading')}
@@ -155,9 +157,15 @@ export function PostForm() {
     )
   }
 
-  // 게시 지역: 내 지역(프로필 지역 → 없으면 기기에서 고른 지역). 다른 지역 보기 제한(D-045)의 글 수가
-  // 내 지역 글로 세지므로, 다른 지역을 보고 있어도 글은 내 지역 게시판에 올라간다.
-  const postRegionId = profile?.region_id ?? regionId ?? null
+  // 게시 지역: 내 지역(유효한 프로필 지역 → 없으면 지금 보는, 직접 고른 지역 — D-045, v1.6 D-047).
+  // 다른 지역 보기 제한의 글 수가 내 지역 글로 세지므로, 다른 지역을 둘러보고 있어도 글은 내 지역 게시판에 올라간다.
+  // 프로필을 못 불러왔으면 기기 지역으로 대신하지 않는다.
+  if (!isEdit && own.state === 'error') {
+    return (
+      <ErrorBox text={t('region.needed.profileFailed')} retryLabel={t('common.retry')} onRetry={retryOwn} />
+    )
+  }
+  const postRegionId = own.state === 'ready' ? own.regionId : null
   const postRegion = (regions ?? []).find((r) => r.id === (isEdit ? existing?.region_id : postRegionId))
 
   if (!isEdit && !postRegionId) {
@@ -166,7 +174,8 @@ export function PostForm() {
         <p className="mb-4 rounded-card bg-white/70 px-4 py-8 text-sm text-gray-500">
           {t('postForm.regionRequired')}
         </p>
-        <Link to="/select" className="text-green-700 underline">
+        {/* 지역을 고르면 이 글쓰기로 돌아온다(말하기에서 넘어온 초안도 그대로) */}
+        <Link to="/select" state={{ returnTo: '/board/new', returnState: location.state }} className="text-green-700 underline">
           {t('postForm.selectRegion')}
         </Link>
       </section>
@@ -281,6 +290,12 @@ export function PostForm() {
       <p className="mb-4 min-h-[20px] text-sm text-gray-600">
         {postRegion ? t('postForm.targetRegion').replace('{region}', regionLabel(postRegion.id, postRegion.names, locale)) : ''}
       </p>
+      {/* 내 지역(프로필)이 없으면 보는 지역에 올라간다 — 그 지역을 내 지역으로 저장할지 제안(D3·D5). form 밖에 둔다. */}
+      {!isEdit ? (
+        <div className="mb-4">
+          <RegionSaveOffer />
+        </div>
+      ) : null}
 
       <form onSubmit={(e) => void onSubmit(e)} className="flex flex-col gap-4" noValidate>
         <label className="flex flex-col gap-1 text-sm font-semibold text-gray-700">

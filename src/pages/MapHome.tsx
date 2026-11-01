@@ -3,9 +3,14 @@ import { Link } from 'react-router-dom'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { useTranslation } from '../i18n/useTranslation'
-import { useRegions, countyRegionIds, countyOf } from '../hooks/useRegions'
+import { useRegions, countyOf } from '../hooks/useRegions'
 import { regionConfig } from '../config/app'
-import { useSelectedRegion } from '../context/SelectedRegionContext'
+import { useRegionChoice, viewRegionId } from '../context/RegionChoiceContext'
+import { regionChoiceStore } from '../lib/regionChoiceStore'
+import { lifeInfoScope } from '../lib/regionScope'
+import { RegionViewBar } from '../components/RegionViewBar'
+import { RegionNeededBox } from '../components/RegionNeededBox'
+import { ErrorBox } from '../components/ui/StateBoxes'
 import { useLifeInfoList, type LifeInfo } from '../hooks/useLifeInfo'
 import {
   LIFE_INFO_CATEGORIES,
@@ -96,10 +101,12 @@ function emojiIcon(emoji: string, count?: number): L.DivIcon {
 export default function MapHome() {
   const { t, locale } = useTranslation()
   const { data: regions } = useRegions()
-  const { regionId, setRegionId } = useSelectedRegion()
-  const scopeIds = countyRegionIds(regions ?? [], regionId)
-  const scopeReady = !regionId || regions !== undefined
-  const { data: items, isLoading } = useLifeInfoList(scopeIds, scopeReady)
+  // 지금 보는 지역(v1.6 D-047) — 목록 화면과 같은 판단·같은 조회 범위(같은 캐시 키)
+  const { view, pickRegion, retry } = useRegionChoice()
+  const regionId = viewRegionId(view)
+  const decided = view.status !== 'deciding'
+  const { data: list, isLoading } = useLifeInfoList(lifeInfoScope(regions, view))
+  const items = list?.rows
 
   const [category, setCategory] = useState<string>('all')
   const [sheet, setSheet] = useState<LifeInfo[] | null>(null)
@@ -122,6 +129,15 @@ export default function MapHome() {
   const kakaoOverlaysRef = useRef<KakaoOverlay[]>([])
   const kakaoUserOverlayRef = useRef<KakaoOverlay | null>(null)
   const [kakaoError, setKakaoError] = useState(false)
+  // 지도를 만들 때는 그 순간의 보는 지역을 쓴다(SDK를 기다리는 동안 지역이 정해져도 옛 값으로 만들지 않게)
+  const viewTargetRef = useRef(initialView(regions ?? [], regionId))
+  viewTargetRef.current = initialView(regions ?? [], regionId)
+  const regionIdRef = useRef(regionId)
+  regionIdRef.current = regionId
+  // 지도가 지금 어느 보는 지역에 맞춰져 있는가(undefined = 아직 지도 없음), 사용자가 직접 움직였는가
+  const centredForRef = useRef<string | null | undefined>(undefined)
+  const userMovedRef = useRef(false)
+  const localPickRef = useRef(regionChoiceStore.getLocalPickRev())
 
   useEffect(() => {
     let active = true
@@ -187,23 +203,29 @@ export default function MapHome() {
   // ── kakao 제공자: SDK 로드·지도 생성(키 존재 시에만) ──────────────────────
   useEffect(() => {
     if (provider !== 'kakao' || !containerRef.current || kakaoMapRef.current) return
-    if (regions === undefined) return
-    const view = initialView(regions, regionId)
+    // 보는 지역이 정해진 뒤에만 만든다 — 전국 보기로 먼저 열렸다가 튀지 않게(D-047)
+    if (regions === undefined || !decided) return
     loadKakaoMaps()
       .then((ns) => {
         if (!containerRef.current || kakaoMapRef.current) return
+        const target = viewTargetRef.current
         kakaoNsRef.current = ns
-        kakaoMapRef.current = new ns.Map(containerRef.current, {
-          center: new ns.LatLng(view.center[0], view.center[1]),
-          level: view.kakaoLevel,
+        const map = new ns.Map(containerRef.current, {
+          center: new ns.LatLng(target.center[0], target.center[1]),
+          level: target.kakaoLevel,
         })
+        kakaoMapRef.current = map
+        ns.event?.addListener(map, 'dragstart', () => {
+          userMovedRef.current = true
+        })
+        centredForRef.current = regionIdRef.current
         setKakaoReady(true)
       })
       .catch(() => {
         setKakaoError(true)
         setProvider('osm') // 검증된 기본 지도로 자동 폴백
       })
-  }, [provider, regions, regionId])
+  }, [provider, regions, decided])
 
   // kakao 핀(CustomOverlay) 갱신
   useEffect(() => {
@@ -225,12 +247,16 @@ export default function MapHome() {
   // ── osm(Leaflet) 제공자: 초기화 — regions 준비 후 정확히 1회 ─────────────
   useEffect(() => {
     if (provider !== 'osm') return
-    if (!containerRef.current || mapRef.current || regions === undefined) return
-    const view = initialView(regions, regionId)
+    if (!containerRef.current || mapRef.current || regions === undefined || !decided) return
+    const target = viewTargetRef.current
     const map = L.map(containerRef.current, { zoomControl: true }).setView(
-      view.center,
-      view.leafletZoom,
+      target.center,
+      target.leafletZoom,
     )
+    map.on('dragstart', () => {
+      userMovedRef.current = true
+    })
+    centredForRef.current = regionIdRef.current
     // 타일: OSM 표준(§10-B 확정 전 잠정, 저트래픽 데모 — attribution 필수)
     L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 18,
@@ -239,7 +265,30 @@ export default function MapHome() {
     }).addTo(map)
     layerRef.current = L.layerGroup().addTo(map)
     mapRef.current = map
-  }, [provider, regions, regionId])
+  }, [provider, regions, decided])
+
+  // 보는 지역이 바뀌면 다시 가운데 맞춘다. 이 탭에서 직접 고른 경우는 늘, 그 밖(다른 탭·프로필 갱신)은
+  // 사용자가 지도를 움직이거나 "내 위치"를 쓰지 않았을 때만(D-047).
+  useEffect(() => {
+    if (!decided || centredForRef.current === undefined || centredForRef.current === regionId) return
+    centredForRef.current = regionId
+    const pickRev = regionChoiceStore.getLocalPickRev()
+    const explicit = pickRev !== localPickRef.current
+    localPickRef.current = pickRev
+    if (!explicit && userMovedRef.current) return
+    userMovedRef.current = false
+    const target = viewTargetRef.current
+    if (provider === 'kakao') {
+      const ns = kakaoNsRef.current
+      const kmap = kakaoMapRef.current
+      if (ns && kmap) {
+        kmap.setCenter(new ns.LatLng(target.center[0], target.center[1]))
+        kmap.setLevel(target.kakaoLevel)
+      }
+    } else {
+      mapRef.current?.setView(target.center, target.leafletZoom)
+    }
+  }, [decided, regionId, provider, kakaoReady])
 
   // 언마운트 시에만 지도 해제
   useEffect(
@@ -270,6 +319,8 @@ export default function MapHome() {
     setLocating(true)
     try {
       const pos = await getCurrentPosition()
+      // 내 위치로 옮긴 뒤에는 다른 탭·프로필 갱신으로 지도를 다시 옮기지 않는다
+      userMovedRef.current = true
       if (provider === 'kakao') {
         const ns = kakaoNsRef.current
         const kmap = kakaoMapRef.current
@@ -308,6 +359,7 @@ export default function MapHome() {
 
   return (
     <section className="flex flex-col gap-3">
+      <RegionViewBar />
       {/* 카테고리 = 아이콘 타일 행(디자인 v1.5) — 색+그림 이중 부호화, 글 없이도 구분 */}
       <div className="flex gap-3 overflow-x-auto pb-1">
         {FILTERS.map((c) => {
@@ -371,7 +423,29 @@ export default function MapHome() {
         >
           <MapPin size={24} strokeWidth={2.25} className={locating ? 'animate-pulse text-gray-400' : 'text-green-800'} />
         </button>
+        {/* 지역을 정하는 중·없음·목록 오류는 같은 크기의 지도 틀 안에 덮는다(아래 버튼이 밀리지 않게, D-047) */}
+        {view.status === 'deciding' ? (
+          <div className="absolute inset-0 z-[600] flex items-center justify-center rounded-card bg-white/90 px-4 text-center text-sm text-gray-500">
+            {t('region.bar.deciding')}
+          </div>
+        ) : view.status === 'none' ? (
+          <div className="absolute inset-0 z-[600] flex items-center overflow-y-auto rounded-card bg-brand-cream/95 p-3">
+            <div className="w-full">
+              <RegionNeededBox returnTo="/home" />
+            </div>
+          </div>
+        ) : view.status === 'error' ? (
+          <div className="absolute inset-0 z-[600] flex items-center rounded-card bg-brand-cream/95 p-3">
+            <div className="w-full">
+              <ErrorBox text={t('select.regionError')} retryLabel={t('common.retry')} onRetry={retry} />
+            </div>
+          </div>
+        ) : null}
       </div>
+
+      {list?.truncated ? (
+        <p className="rounded-card bg-amber-50 px-4 py-3 text-center text-sm text-amber-900">{t('lifeInfo.truncated')}</p>
+      ) : null}
 
       {isLoading ? (
         <p className="rounded-card bg-white/70 px-4 py-3 text-center text-sm text-gray-500">
@@ -404,7 +478,7 @@ export default function MapHome() {
             <button
               type="button"
               onClick={() => {
-                setRegionId(nearest.region.id)
+                pickRegion(nearest.region.id)
                 setNearest(null)
                 setSheet(null)
               }}

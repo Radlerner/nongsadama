@@ -6,6 +6,8 @@ import { useRegions, countyRegionIds, countyOf, provinceOf } from '../hooks/useR
 import { useBoardPosts, postCategoryLabelKey, type PostWithAuthor } from '../hooks/usePosts'
 import { useBlockedIds } from '../hooks/useModeration'
 import { useBoardGate } from '../hooks/useBoardGate'
+import { useRegionChoice } from '../context/RegionChoiceContext'
+import { RegionSaveOffer } from '../components/RegionSaveOffer'
 import { BOARD_FILTERS, parseBoardCategory } from '../lib/postCategories'
 import { boardView, inScope } from '../lib/regionGate'
 import { imageUrl, thumbPath } from '../lib/postImages'
@@ -28,6 +30,7 @@ export function Board() {
     isFetching: regionsFetching,
   } = useRegions()
   const gate = useBoardGate()
+  const { showOwn, retry: retryOwn } = useRegionChoice()
   const location = useLocation()
   const [searchParams, setSearchParams] = useSearchParams()
   const [panelOpen, setPanelOpen] = useState(false)
@@ -91,12 +94,14 @@ export function Board() {
   const boardSearch = location.search
   const writeLink = { to: user ? '/board/new' : '/login', state: user ? { category, boardSearch } : undefined }
 
-  // 지역 목록은 이웃의 글 보기에서도 거르기에 필요하다 — 실패하면 어느 모드든 오류로 보인다(무한 로딩 방지)
-  const showError = regionsError || isError
+  // 지역 목록은 이웃의 글 보기에서도 거르기에 필요하다 — 실패하면 어느 모드든 오류로 보인다(무한 로딩 방지).
+  // 내 프로필을 못 불러왔을 때도 기기 지역으로 대신하지 않고 오류로 보인다(v1.6 D-047).
+  const showError = regionsError || isError || (!authorId && gate.ownFailed)
   const retrying = regionsFetching || isFetching
   const retry = () => {
     if (regionsError) void refetchRegions()
     if (isError) void refetch()
+    if (gate.ownFailed) retryOwn()
   }
   const loading = !showError && !needsRegion && (waitingScope || isLoading)
   // 내 지역 밖을 보고 있는가(둘러보기 ?region= 이든, 기기에서 고른 지역이 밖이든)
@@ -144,6 +149,13 @@ export function Board() {
               {t('board.otherRegions')}
             </button>
           )}
+        </div>
+      )}
+
+      {/* 내 지역(프로필)이 없는 회원: 지금 보는 지역이 게시판·글쓰기 지역이 된다(D-045) — 저장을 제안한다(D3·D5) */}
+      {authorId ? null : (
+        <div className="empty:hidden mb-3">
+          <RegionSaveOffer />
         </div>
       )}
 
@@ -212,8 +224,12 @@ export function Board() {
 
       {needsRegion ? (
         <div className="flex flex-col items-center gap-3">
-          <EmptyBox text={t('postForm.regionRequired')} />
-          <Link to="/select" className="inline-flex min-h-[44px] items-center text-green-700 underline">
+          <EmptyBox text={t('board.regionRequired')} />
+          <Link
+            to="/select"
+            state={{ returnTo: `${location.pathname}${location.search}` }}
+            className="inline-flex min-h-[44px] items-center text-green-700 underline"
+          >
             {t('postForm.selectRegion')}
           </Link>
         </div>
@@ -238,10 +254,22 @@ export function Board() {
                   .replace('{need}', String(gate.need))
                   .replace('{count}', countText)}
               </p>
-              {/* 이사했거나 내 지역이 틀렸으면 프로필에서 바꾼다(내 지역 = 프로필 지역) */}
-              <Link to="/profile/edit" className="mt-1 inline-flex min-h-[44px] items-center font-semibold underline">
-                {t('profile.editCta')}
-              </Link>
+              <div className="mt-1 flex flex-wrap items-center gap-x-4">
+                {/* D1(v1.6 D-047): 예전에 고른 지역을 보고 있으면 한 번에 내 지역으로 돌아간다 */}
+                {gate.profileRegionId ? (
+                  <button
+                    type="button"
+                    onClick={() => showOwn(gate.profileRegionId as string)}
+                    className="inline-flex min-h-[44px] items-center font-semibold underline"
+                  >
+                    {t('region.showOwn').replace('{name}', countyNameOf(gate.profileRegionId))}
+                  </button>
+                ) : null}
+                {/* 이사했거나 내 지역이 틀렸으면 프로필에서 바꾼다(내 지역 = 프로필 지역) */}
+                <Link to="/profile/edit" className="inline-flex min-h-[44px] items-center font-semibold underline">
+                  {t('profile.editCta')}
+                </Link>
+              </div>
             </div>
           ) : null}
           {authorId && hiddenOtherRegion > 0 ? (
@@ -271,7 +299,7 @@ export function Board() {
                   key={post.id}
                   post={post}
                   regionsById={regionsById}
-                  viewerRegionId={gate.selectedRegionId}
+                  viewerRegionId={gate.profileRegionId}
                   boardSearch={boardSearch}
                 />
               ))}

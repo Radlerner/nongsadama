@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useEffect, useRef, useState } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { getLocaleLabel, type Locale } from '../config/app'
 import { useTranslation } from '../i18n/useTranslation'
 import { MapPin } from '../components/ui/icons'
@@ -17,10 +17,11 @@ import {
   useRegions,
   splitRegionGroups,
   provinceOf,
-  useStaleRegionCleanup,
   type Region,
 } from '../hooks/useRegions'
-import { useSelectedRegion } from '../context/SelectedRegionContext'
+import { useRegionChoice, viewRegionId } from '../context/RegionChoiceContext'
+import { regionChoiceStore } from '../lib/regionChoiceStore'
+import { safeReturnTo } from '../lib/regionChoice'
 import { regionLabel } from '../lib/regionName'
 import { getCurrentPosition, nearestServiceRegion, OUT_OF_AREA_KM } from '../lib/geo'
 
@@ -29,10 +30,40 @@ import { getCurrentPosition, nearestServiceRegion, OUT_OF_AREA_KM } from '../lib
  * v1.4(PRD_v1.4 §3.2): 국적(선택)을 고르면 그 나라 기본 언어로 앱 언어를 맞춘다. 언어 9개 세로 목록은
  * 아래에서 올라오는 창으로 옮겨 지역 선택과 "계속"이 아래로 밀리지 않게 했다.
  * 지역은 Supabase regions(활성)에서 시/읍·면을 불러와 선택한다.
- * 선택 지역은 컨텍스트+localStorage에 저장되어 이후 목록 화면이 소비한다.
+ * 선택 지역은 "지금 보는 지역"(직접 고름)으로 기기에 저장되어 이후 화면이 쓴다(v1.6 D-047).
+ * 지역 없이 "계속"을 누르면 전국으로 넘어가지 않고 고르라고 알린다. 전국은 "지역 없이 전국 둘러보기"로만(D2).
  */
 export function Select() {
   const { t, locale, setLocale, supportedLocales } = useTranslation()
+  const location = useLocation()
+  const navigate = useNavigate()
+  const { view, pickAll } = useRegionChoice()
+  const { data: regions, isError: regionsError } = useRegions()
+  // 게시판·글쓰기·안내 상자에서 왔으면 그 화면으로 돌아간다(앱 안의 경로만)
+  const navState = location.state as { returnTo?: unknown; returnState?: unknown } | null
+  const returnTo = safeReturnTo(navState?.returnTo)
+  const returnState = navState?.returnState
+  const [needRegion, setNeedRegion] = useState(false)
+  const regionHeadingRef = useRef<HTMLHeadingElement>(null)
+  useEffect(() => {
+    if (view.status === 'region') setNeedRegion(false)
+  }, [view.status])
+  const goNext = () => navigate(returnTo, { state: returnState })
+  const onContinue = () => {
+    // 지역 목록을 읽었는데 아무것도 고르지 않았으면 머문다. 목록을 못 읽었으면 아무것도 쓰지 않고 넘어간다.
+    const listReady = !regionsError && regions !== undefined && regions.length > 0
+    if (listReady && view.status === 'none') {
+      setNeedRegion(true)
+      regionHeadingRef.current?.scrollIntoView({ block: 'center' })
+      regionHeadingRef.current?.focus()
+      return
+    }
+    goNext()
+  }
+  const onBrowseAll = () => {
+    pickAll()
+    goNext()
+  }
   const [countryCode, setCountryCode] = useState<string | null>(() => readStoredCountry())
   const [countryOpen, setCountryOpen] = useState(false)
   const [languageOpen, setLanguageOpen] = useState(false)
@@ -118,17 +149,32 @@ export function Select() {
       />
 
       <section className="mt-6">
-        <h2 className="mb-2 text-sm font-semibold text-gray-700">{t('select.region')}</h2>
+        <h2 ref={regionHeadingRef} tabIndex={-1} className="mb-2 text-sm font-semibold text-gray-700 focus:outline-none">
+          {t('select.region')}
+        </h2>
         <RegionPicker />
       </section>
 
-      <div className="mt-auto pt-8">
-        <Link
-          to="/home"
+      <div className="mt-auto flex flex-col gap-3 pt-8">
+        {/* 안내 자리는 처음부터 비워 두어 "계속"이 밀리지 않게 한다 */}
+        <p role="alert" className="min-h-[1.25rem] text-center text-sm font-semibold text-red-700">
+          {needRegion ? t('select.needRegion') : ''}
+        </p>
+        <button
+          type="button"
+          onClick={onContinue}
           className="flex min-h-[56px] items-center justify-center rounded-full bg-brand-greenDark px-6 py-3 text-base font-semibold text-white"
         >
           {t('select.continue')}
-        </Link>
+        </button>
+        <button
+          type="button"
+          onClick={onBrowseAll}
+          aria-pressed={view.status === 'all'}
+          className="flex min-h-[44px] items-center justify-center rounded-full px-4 text-sm text-gray-700 underline"
+        >
+          {t('region.needed.all')}
+        </button>
       </div>
     </div>
   )
@@ -137,26 +183,46 @@ export function Select() {
 function RegionPicker() {
   const { t, locale } = useTranslation()
   const { data: regions, isLoading, isError, refetch, isFetching } = useRegions()
-  const { regionId, setRegionId } = useSelectedRegion()
+  const { view, pickRegion } = useRegionChoice()
+  const regionId = viewRegionId(view)
   const [locating, setLocating] = useState(false)
   // 안내는 키+데이터로 저장하고 렌더 시 번역한다 — 같은 화면에서 언어를 바꿔도 문구가 따라온다(재검수 P2).
   const [geoNotice, setGeoNotice] = useState<{ key: string; region?: Region; km?: number } | null>(
     null,
   )
-  // P2-2: 로드된 활성 지역 목록에 없는 저장된 선택은 무효화한다(공용 훅, v1.1 D-033).
-  useStaleRegionCleanup()
-  // v1.2(D-035): 시/도 → 시·군·구 두 단계. 사용자가 고른 시/도가 없으면 현재 선택 지역의 시/도를 따른다.
+  const mountedRef = useRef(true)
+  useEffect(() => {
+    mountedRef.current = true
+    return () => {
+      mountedRef.current = false
+    }
+  }, [])
+  // v1.2(D-035): 시/도 → 시·군·구 두 단계. 사용자가 고른 시/도가 없으면 처음 정해진 보는 지역의 시/도를 따른다.
+  // 처음 정해진 뒤에는 다시 계산하지 않는다 — 늦게 정해진 지역 때문에 목록이 통째로 바뀌어 손가락 아래가 바뀌지 않게(D-047).
   const [provinceChoice, setProvinceChoice] = useState<string | null>(null)
-  const selectedRegion = (regions ?? []).find((r) => r.id === regionId)
+  const [initialProvince, setInitialProvince] = useState<string | null | undefined>(undefined)
   const provinces = (regions ?? []).filter((r) => r.level === 'province')
-  const provinceId = provinceChoice ?? provinceOf(regions ?? [], selectedRegion)?.id ?? null
+  useEffect(() => {
+    if (initialProvince !== undefined || !regions || view.status === 'deciding') return
+    const selected = regions.find((r) => r.id === regionId)
+    setInitialProvince(provinceOf(regions, selected)?.id ?? null)
+  }, [initialProvince, regions, view.status, regionId])
+  const provinceId = provinceChoice ?? initialProvince ?? null
+
+  const applyRegion = (region: Region) => {
+    pickRegion(region.id)
+    setProvinceChoice(provinceOf(regions ?? [], region)?.id ?? null)
+  }
 
   // 위치 동의 시 가까운 지역 추천(v1.3 §4.1). 좌표는 기기 내 계산만, 저장·전송 없음.
   const suggestNearest = async () => {
     setGeoNotice(null)
     setLocating(true)
+    // 위치를 받는 동안 사용자가 직접 고르거나 화면을 떠나면, 늦은 결과로 그 선택을 바꾸지 않는다(D-047)
+    const startRev = regionChoiceStore.getChoiceRev()
     try {
       const pos = await getCurrentPosition()
+      if (!mountedRef.current) return
       const near = nearestServiceRegion(regions ?? [], pos.lat, pos.lng)
       if (!near) {
         setGeoNotice({ key: 'select.geoNoRegion' })
@@ -168,13 +234,16 @@ function RegionPicker() {
         setGeoNotice({ key: 'select.geoFar', region: near.region, km: near.distanceKm })
         return
       }
-      setRegionId(near.region.id)
-      setProvinceChoice(null) // 추천된 지역의 시/도를 따라가도록 수동 선택 해제
+      if (regionChoiceStore.getChoiceRev() !== startRev) {
+        setGeoNotice({ key: 'select.geoSuggest', region: near.region, km: near.distanceKm })
+        return
+      }
+      applyRegion(near.region)
       setGeoNotice({ key: 'select.geoSet' })
     } catch {
-      setGeoNotice({ key: 'map.geoError' })
+      if (mountedRef.current) setGeoNotice({ key: 'map.geoError' })
     } finally {
-      setLocating(false)
+      if (mountedRef.current) setLocating(false)
     }
   }
   const noticeText = geoNotice
@@ -260,7 +329,7 @@ function RegionPicker() {
       <li key={region.id}>
         <button
           type="button"
-          onClick={() => setRegionId(region.id)}
+          onClick={() => pickRegion(region.id)}
           aria-pressed={active}
           className={[
             'flex min-h-[44px] w-full items-center rounded-md border px-4 text-left text-base',
@@ -289,6 +358,18 @@ function RegionPicker() {
       </button>
       {noticeText ? (
         <p className="rounded-full bg-gray-50 px-3 py-2 text-xs text-gray-700">{noticeText}</p>
+      ) : null}
+      {geoNotice?.key === 'select.geoSuggest' && geoNotice.region ? (
+        <button
+          type="button"
+          onClick={() => {
+            if (geoNotice.region) applyRegion(geoNotice.region)
+            setGeoNotice({ key: 'select.geoSet' })
+          }}
+          className="min-h-[44px] rounded-full border border-green-700 bg-white px-4 text-sm font-semibold text-green-800"
+        >
+          {t('select.geoApply')}
+        </button>
       ) : null}
       {provinceSelect}
       {provinces.length > 0 && !provinceId ? (

@@ -1,9 +1,9 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { getCurrentPosition } from '../lib/geo'
 import { coordToRegion } from '../lib/kakaoMap'
 import { useRegions, countyOf, provinceOf } from './useRegions'
-import { useSelectedRegion } from '../context/SelectedRegionContext'
+import { useRegionChoice, viewRegionId } from '../context/RegionChoiceContext'
 import type { Json } from '../types/database'
 
 const FUNCTIONS_BASE = `${import.meta.env.VITE_SUPABASE_URL as string}/functions/v1`
@@ -18,10 +18,11 @@ function koreanName(names: Json): string | null {
 }
 
 /**
- * 사용자 지역 결정(PRD v1.7 항목1 — 전국 테스터 대응).
- * 기본값: 선택 지역(읍·면 또는 시·군, v1.1 D-033)의 중심좌표 + 그 시·군 이름.
+ * 날씨·농진청 사업의 기준 지역(PRD v1.7 항목1 — 전국 테스터 대응).
+ * 기본값: 지금 보는 지역(view, v1.6 D-047)의 중심좌표 + 그 시·군 이름. 내 지역(프로필)으로 대신하지 않는다.
+ * 보는 지역이 전국·없음이면 area 없음(카드 대신 안내).
  * "내 위치" 사용 시: 브라우저 위치 → 좌표 + (카카오 지오코더 가용 시) 실제 시도/시군.
- * 좌표는 조회에만 쓰고 저장하지 않는다(v1.3 §4.1).
+ * 좌표는 조회에만 쓰고 저장하지 않는다(v1.3 §4.1). 보는 지역을 바꾸면 "내 위치" 결과는 지운다.
  */
 export interface UserArea {
   lat: number
@@ -32,11 +33,16 @@ export interface UserArea {
 }
 
 export function useUserArea() {
-  const { regionId } = useSelectedRegion()
+  const { view } = useRegionChoice()
+  const regionId = viewRegionId(view)
   const { data: regions } = useRegions()
   const [geoArea, setGeoArea] = useState<UserArea | null>(null)
   const [locating, setLocating] = useState(false)
   const [geoError, setGeoError] = useState(false)
+  // 보는 지역이 바뀌면 "내 위치"로 받은 지역은 버린다(저장하지 않고, 다른 지역 카드에 섞이지 않게)
+  useEffect(() => {
+    setGeoArea(null)
+  }, [regionId])
 
   // 선택 지역 기반 기본값: 선택 단위(읍·면이든 시·군이든)의 중심좌표 + 그 시·군 이름.
   let regionArea: UserArea | null = null
@@ -81,7 +87,14 @@ export function useUserArea() {
     }
   }, [])
 
-  return { area: geoArea ?? regionArea, useMyLocation, locating, geoError }
+  return {
+    area: geoArea ?? regionArea,
+    useMyLocation,
+    locating,
+    geoError,
+    /** 보는 지역을 아직 정하는 중이거나 지역 목록을 읽는 중 — "지역을 고르세요"를 띄우지 않는다 */
+    pending: view.status === 'deciding' || (regionId !== null && regions === undefined),
+  }
 }
 
 interface WeatherPayload {

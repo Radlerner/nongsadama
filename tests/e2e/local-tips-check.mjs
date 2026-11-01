@@ -17,7 +17,9 @@ const ROOT = process.env.BUNDLE_ROOT ?? join(repo, 'dist')
 const DATA = process.env.NSD_DATA_DIR ?? join(repo, '..', 'nongsadama_data')
 const day = new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10)
 const OUT = outDir(join(DATA, 'local-tips-check', day))
-if (!existsSync(join(ROOT, 'index.html'))) throw new Error(`번들이 없다: ${ROOT} (npm run build 먼저)`)
+// LIVE_URL=https://nongsadama.app 이면 운영 사이트를 그대로 점검한다(로컬 서버를 띄우지 않음, 쓰기는 똑같이 막거나 브라우저 안에서 받음)
+const LIVE_URL = process.env.LIVE_URL?.replace(/\/$/, '')
+if (!LIVE_URL && !existsSync(join(ROOT, 'index.html'))) throw new Error(`번들이 없다: ${ROOT} (npm run build 먼저)`)
 
 const ko = JSON.parse(readFileSync(join(repo, 'src/i18n/dictionaries/ko.json'), 'utf8'))
 const dicts = Object.fromEntries(['ko', 'en', 'vi', 'km', 'th', 'ne', 'mn', 'uz', 'ru'].map((l) => [l, JSON.parse(readFileSync(join(repo, `src/i18n/dictionaries/${l}.json`), 'utf8'))]))
@@ -41,8 +43,8 @@ const server = http.createServer((req, res) => {
   if (!existsSync(file) || statSync(file).isDirectory()) file = join(ROOT, 'index.html')
   res.writeHead(200, { 'Content-Type': TYPES[extname(file)] ?? 'application/octet-stream' }); res.end(readFileSync(file))
 })
-await new Promise((r) => server.listen(5199, 'localhost', r))
-const BASE = 'http://localhost:5199'
+if (!LIVE_URL) await new Promise((r) => server.listen(5199, 'localhost', r))
+const BASE = LIVE_URL ?? 'http://localhost:5199'
 const browser = await launch({ port: 9371, profileDir: join(DATA, 'local-tips-check-profile') })
 const blocked = []
 const results = { startedAt: new Date().toISOString(), bundle: ROOT, checks: [], blockedWrites: blocked }
@@ -95,6 +97,11 @@ async function newPage({ locale = 'ko', loggedIn = false, deviceRegion = MIRYANG
       }
       blocked.push(`${req.method} ${path.slice(0, 80)}`)
       return { action: 'fail', reason: 'BlockedByClient' }
+    }
+    // profileRegion=null은 "프로필 행 없음" — 공개 키로 운영 DB에 물으면 권한 오류가 나므로 빈 결과로 답한다
+    // (v1.6 D-047부터 프로필 조회 오류는 기기 지역으로 대신하지 않고 오류로 보인다)
+    if (loggedIn && !profileRegion && path.startsWith('/rest/v1/profiles') && path.includes(`id=eq.${FAKE_USER}`)) {
+      return { action: 'fulfill', body: [] }
     }
     if (loggedIn && profileRegion && path.startsWith('/rest/v1/profiles') && path.includes(`id=eq.${FAKE_USER}`)) {
       return rows(req, { id: FAKE_USER, nickname: '점검', preferred_locale: locale, preferred_locale_explicit: true, region_id: profileRegion, country_code: null, crop_type: null, is_matching_visible: false, role: 'user', auth_provider: 'email', created_at: '2026-10-23T00:00:00Z', updated_at: '2026-10-23T00:00:00Z' })
@@ -350,7 +357,8 @@ await section('6d', async () => {
   await done(page)
   const none = await newPage({ deviceRegion: null })
   await none.goto(`${BASE}/board`, { waitMs: 3000 })
-  check('로그인 전·지역 없음: 전국 글 대신 지역 고르기 안내', (await bodyHas(none, ko['postForm.regionRequired'])) && (await listCount(none)) === 0)
+  // v1.6(D-047): 게시판 전용 문구(postForm.regionRequired는 다른 언어에서 "글쓰기 전에"라서 게시판에 맞지 않았다)
+  check('로그인 전·지역 없음: 전국 글 대신 지역 고르기 안내', (await bodyHas(none, ko['board.regionRequired'])) && (await listCount(none)) === 0)
   await done(none)
 })
 
@@ -420,5 +428,5 @@ results.summary = { pass: results.checks.filter((c) => c.ok).length, fail: resul
 writeFileSync(OUT('result.json'), JSON.stringify(results, null, 1))
 console.log(JSON.stringify(results.summary), '\n', blocked.join('\n'))
 await browser.close()
-server.close()
+if (!LIVE_URL) server.close()
 process.exit(results.summary.fail ? 1 : 0)

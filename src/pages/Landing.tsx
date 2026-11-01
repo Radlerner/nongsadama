@@ -3,23 +3,25 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useTranslation } from '../i18n/useTranslation'
 import { LanguageSwitcher } from '../components/layout/LanguageSwitcher'
-import { useSelectedRegion } from '../context/SelectedRegionContext'
+import { useRegionChoice } from '../context/RegionChoiceContext'
 import { Map as MapIcon, MessagesSquare, Mic, type LucideIcon } from '../components/ui/icons'
 
 export function Landing() {
   const { t } = useTranslation()
-  const { regionId } = useSelectedRegion()
-  const { initializing } = useAuth()
+  const { view } = useRegionChoice()
+  const { initializing, user } = useAuth()
   const navigate = useNavigate()
 
-  // 복귀 사용자: 지역이 이미 저장돼 있으면 온보딩을 건너뛰고 바로 홈으로(M-10).
+  // 복귀 사용자: 보는 지역(또는 직접 고른 전국 보기)이 있으면 온보딩을 건너뛰고 바로 홈으로(M-10).
+  // 로그인한 사용자는 지역이 없어도 홈으로 — 홈에서 지역 고르기·내 지역 저장을 안내한다(v1.6 D-047).
   // 단, 세션 복원이 끝난 뒤에만 이동한다(재검수 P0-1): OAuth·이메일 확인 복귀 URL의
   // #access_token 해시를 supabase가 소비하기 전에 navigate가 URL을 교체하면
   // 토큰이 영구 소실되어 로그인이 무언 실패한다. initializing=false 시점에는
   // getSession()이 완료되어 해시가 이미 처리·제거된 상태다.
+  const ready = view.status === 'region' || view.status === 'all' || (Boolean(user) && view.status !== 'deciding')
   useEffect(() => {
-    if (!initializing && regionId) navigate('/home', { replace: true })
-  }, [initializing, regionId, navigate])
+    if (!initializing && ready) navigate('/home', { replace: true })
+  }, [initializing, ready, navigate])
 
   // 기능 미리보기 3칩(디자인 v0) — 아이콘·라벨은 하단 탭과 동일한 어휘를 재사용해 학습 비용 0
   const previews = [

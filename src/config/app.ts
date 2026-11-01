@@ -96,6 +96,22 @@ export const regionConfig = {
   outOfAreaKm: 30,
 } as const
 
+/**
+ * 보는 지역 동기화(v1.6, D-047).
+ * - decisionMs: 로그인했는데 기기에 쓸 기록이 없을 때 프로필 지역을 기다리는 시간. 지나면 자동 적용하지 않고
+ *   "지역을 골라 주세요" + (늦게 오면) "내 지역으로 보기" 버튼만 켠다.
+ * - autoApply: 끄면 프로필 지역을 자동으로 따르지 않는다(버튼은 그대로) — 문제가 생겼을 때의 스위치.
+ * - lifeInfoCountyLimit / lifeInfoAllLimit: 한 번에 받는 생활정보 행 수. 넘으면 "일부만 보여요"를 띄운다
+ *   (서버 기본 상한 1,000행 안에서 잘림을 알아채려고 한 행을 더 받는다).
+ */
+export const regionSyncConfig = {
+  decisionMs: 5000,
+  loadingHintDelayMs: 300,
+  autoApply: true,
+  lifeInfoCountyLimit: 999,
+  lifeInfoAllLimit: 500,
+} as const
+
 // 음성 인식(Web Speech API)용 BCP-47 태그. 설정 데이터이며 로직 분기가 아니다.
 // 언어 추가 시 여기에 태그를 더한다(없으면 locale 코드를 그대로 사용).
 export const speechLangTags: Record<Locale, string> = {

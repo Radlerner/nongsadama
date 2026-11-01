@@ -6,7 +6,8 @@ import { useFarmTips } from '../hooks/useFarmTips'
 import { localizedContent } from '../lib/localizedContent'
 import { norm } from '../lib/matching'
 import { Card, CardLink } from '../components/ui/Card'
-import { EmptyBox } from '../components/ui/StateBoxes'
+import { EmptyBox, LoadingBox } from '../components/ui/StateBoxes'
+import { RegionViewBar } from '../components/RegionViewBar'
 import { useRuralPrograms, useUserArea, useWeather } from '../hooks/useRegionalInfo'
 import { MapPin, School, Sprout, Thermometer, WEATHER_ICONS } from '../components/ui/icons'
 
@@ -16,13 +17,15 @@ import { MapPin, School, Sprout, Thermometer, WEATHER_ICONS } from '../component
  * 팁 목록은 실데이터(농사로 OpenAPI 연동 후)가 생길 때만 렌더되며, 그때 내 작목 팁이 맨 위(훅에서 정렬).
  */
 /**
- * 위치 기반 정보 묶음: ☀️ 오늘 날씨 + 🏫 우리 지역 교육·사업(농진청 실데이터).
- * 기본은 선택 지역(읍·면 또는 시·군·구), "내 위치"로 전국 어디서든 자기 지역 정보(항목1).
+ * 위치 기반 정보 묶음: ☀️ 오늘 날씨 + 🏫 보는 지역 교육·사업(농진청 실데이터).
+ * 기본은 지금 보는 지역(v1.6 D-047 — 내 지역이 아니다), "내 위치"로 전국 어디서든 지금 있는 곳 근처(항목1).
  * 지역이 없으면 안내, 지역이 있는데 둘 다 없거나 실패하면 빈 상태(정적 폴백 없음, D-036).
  */
 function RegionalInfo() {
   const { t } = useTranslation()
-  const { area, useMyLocation, locating, geoError } = useUserArea()
+  const { area, useMyLocation, locating, geoError, pending } = useUserArea()
+  // 카드 제목 옆에 기준을 밝힌다 — 보는 지역인지, "내 위치"로 받은 지금 있는 곳인지(내 지역과 헷갈리지 않게)
+  const basis = area ? t(area.source === 'geo' ? 'farm.geoBasis' : 'farm.viewBasis') : ''
   const { data: weather, isLoading: weatherLoading } = useWeather(area?.lat, area?.lon)
   const { data: programs, isLoading: programsLoading } = useRuralPrograms(
     area?.sido ?? null,
@@ -49,7 +52,7 @@ function RegionalInfo() {
       {area?.source === 'geo' && !area.sigungu && weather ? (
         <p className="text-xs text-gray-500">{t('farm.regionUnknown')}</p>
       ) : null}
-      {!area ? <EmptyBox text={t('farm.pickRegionHint')} /> : null}
+      {!area ? (pending ? <LoadingBox text={t('region.bar.deciding')} /> : <EmptyBox text={t('farm.pickRegionHint')} />) : null}
       {showNoData ? <EmptyBox text={t('farm.noRegionalData')} /> : null}
 
       {weather && area ? (
@@ -57,6 +60,7 @@ function RegionalInfo() {
           <p className="text-xs font-semibold text-gray-500">
             {t('farm.weatherTitle')}
             {area.sigungu ? ` · ${area.sigungu}` : weather.name ? ` · ${weather.name}` : ''}
+            <span className="ml-1 font-normal text-gray-400">({basis})</span>
           </p>
           <div className="mt-1 flex items-center gap-3">
             {(() => {
@@ -83,7 +87,7 @@ function RegionalInfo() {
             {t('farm.programsTitle')}
             {area?.sigungu ? ` · ${area.sigungu}` : ''}
             <span className="ml-1 font-normal text-gray-400">
-              ({programs.total}{t('farm.programsCount')})
+              ({programs.total}{t('farm.programsCount')}{basis ? ` · ${basis}` : ''})
             </span>
           </p>
           <ul className="mt-2 flex flex-col gap-1">
@@ -126,6 +130,9 @@ export function FarmTips() {
         {t('farm.title')}
       </h1>
       <p className="mb-4 text-xs text-gray-500">{t('farm.subtitle')}</p>
+
+      {/* 날씨·사업의 기준 = 지금 보는 지역(v1.6 D-047). 바꾸기·내 지역으로가 같은 자리에 있다. */}
+      <RegionViewBar />
 
       {/* 위치 기반 실시간 정보(PRD v1.7 항목1·2·3) — 비로그인, 전국 대응 */}
       <RegionalInfo />
